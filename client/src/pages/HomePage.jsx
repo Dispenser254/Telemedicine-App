@@ -1,11 +1,12 @@
 import { Button } from "flowbite-react";
 import { MdHome, MdVerifiedUser } from "react-icons/md";
 import NavbarPage from "../components/NavbarPage";
+import { Link } from "react-router-dom";
 
 const HomePage = () => {
   return (
     <div className="bg-gray-100 w-full">
-      <NavbarPage/>
+      <NavbarPage />
       {/* Start hero */}
       <section
         className="cover relative bg-blue-400 px-4 sm:px-8 lg:px-16 xl:px-40 2xl:px-64 overflow-hidden py-48 flex
@@ -26,13 +27,14 @@ const HomePage = () => {
             <p className="text-blue-100 text-center md:text-start text-xl md:text-2xl leading-snug">
               Find the best doctors and book instant appointments
             </p>
-            <Button
-              href="#"
-              className="px-8 py-4 text-lg uppercase font-medium shadow-lg hover:opacity-80"
-              gradientDuoTone="tealToLime"
-            >
-              Book Appointment
-            </Button>
+            <Link to={'/landing-page'}>
+              <Button
+                className="px-8 py-4 text-lg uppercase font-medium shadow-lg hover:opacity-80"
+                gradientDuoTone="tealToLime"
+              >
+                Book Appointment
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
