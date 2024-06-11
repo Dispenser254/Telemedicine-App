@@ -1,12 +1,14 @@
 import { Button } from "flowbite-react";
 import { MdHome, MdVerifiedUser } from "react-icons/md";
+import NavbarPage from "../components/NavbarPage";
 
 const HomePage = () => {
   return (
     <div className="bg-gray-100 w-full">
+      <NavbarPage/>
       {/* Start hero */}
       <section
-        className="cover bg-blue-teal-gradient relative bg-blue-600 px-4 sm:px-8 lg:px-16 xl:px-40 2xl:px-64 overflow-hidden py-48 flex
+        className="cover relative bg-blue-400 px-4 sm:px-8 lg:px-16 xl:px-40 2xl:px-64 overflow-hidden py-48 flex
       items-center min-h-screen"
       >
         <div className="h-full absolute">
