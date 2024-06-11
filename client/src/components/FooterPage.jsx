@@ -1,16 +1,16 @@
 /* eslint-disable react/no-unescaped-entities */
 import { Button, Footer, Label, TextInput } from "flowbite-react";
-import { MdLocationPin, MdMail, MdOutlineLockClock, MdPhone } from "react-icons/md";
 import {
-  BsFacebook,
-  BsInstagram,
-  BsTwitter,
-  BsGithub,
-} from "react-icons/bs";
+  MdLocationPin,
+  MdMail,
+  MdOutlineLockClock,
+  MdPhone,
+} from "react-icons/md";
+import { BsFacebook, BsInstagram, BsTwitter, BsGithub } from "react-icons/bs";
 
 const FooterPage = () => {
   return (
-    <Footer className="relative px-4 sm:px-8 lg:px-16 xl:px-40 pt-16 pb-4 bg-gray-900 text-white">
+    <Footer className="relative px-4 sm:px-8 lg:px-16 xl:px-40 pt-16 pb-4 md:pb-16 bg-gray-900 text-white">
       <div className="flex flex-col md:flex-row">
         <div className="w-full lg:w-2/6 lg:mx-4 lg:pr-8 md:flex md:flex-col md:items-center">
           <h3 className="font-bold text-2xl">MediClinic Center</h3>
@@ -67,7 +67,7 @@ const FooterPage = () => {
                 href="#"
                 className="flex items-center opacity-75 hover:opacity-100"
               >
-                <MdLocationPin />
+                <MdLocationPin className="h-5 w-5" />
                 <span className="ml-3">Embakasi, Nairobi, Kenya</span>
               </a>
             </li>
@@ -76,7 +76,7 @@ const FooterPage = () => {
                 href="#"
                 className="flex items-center opacity-75 hover:opacity-100"
               >
-                <MdPhone />
+                <MdPhone className="h-5 w-5" />
                 <span className="ml-3">+254 111 111 111</span>
               </a>
             </li>
@@ -85,7 +85,7 @@ const FooterPage = () => {
                 href="#"
                 className="flex items-center opacity-75 hover:opacity-100"
               >
-                <MdMail />
+                <MdMail className="h-5 w-5" />
                 <span className="ml-3">mediclinic@outlook.com</span>
               </a>
             </li>
@@ -94,7 +94,7 @@ const FooterPage = () => {
                 href="#"
                 className="flex items-center opacity-75 hover:opacity-100"
               >
-                <MdOutlineLockClock />
+                <MdOutlineLockClock className="h-5 w-5" />
                 <span className="ml-3">
                   Mon - Fri: 9:00 - 17:00 hrs <br />
                   Closed on Weekends
