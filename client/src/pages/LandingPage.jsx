@@ -28,7 +28,7 @@ const LandingPage = () => {
                 Sign Up/Login
               </Button>
             </Link>
-            <Link to={"/adminLogin"}>
+            <Link to={"/admin-login"}>
               <Button className="bg-purple-500 font-semibold hover:bg-purple-700">
                 Admin Login
               </Button>
