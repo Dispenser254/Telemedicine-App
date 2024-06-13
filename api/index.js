@@ -2,6 +2,8 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import authRoutes from "../api/routes/auth.route.js";
+import departmentRoutes from "../api/routes/department.route.js";
 
 dotenv.config();
 
@@ -19,6 +21,8 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Routes
+app.use("/mediclinic/auth", authRoutes);
+app.use("/mediclinic/department", departmentRoutes);
 
 const PORT = process.env.PORT || 5000;
 
