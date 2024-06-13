@@ -15,7 +15,7 @@ import FooterPage from "../components/FooterPage";
 
 const RegisterPage = () => {
   const [showModal, setShowModal] = useState(false);
-  const [showCredentials, setShowCredentials] = useState(false);
+  const [showCredentials, setShowCredentials] = useState(true);
 
   const handleCloseModal = () => {
     setShowModal(false);
