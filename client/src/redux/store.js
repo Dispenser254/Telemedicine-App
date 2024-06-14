@@ -1,7 +1,19 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import { persistReducer, persistStore } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import rootReducer from "./rootReducer/rootReducer";
+import authenticationReducer from "./reducers/authenticationSlice";
+
+
+const rootReducer = combineReducers({
+  // patients: patientReducer,
+  // doctor: doctorReducer,
+  // appointments: appointmentReducer,
+  // prescription: prescriptionReducer,
+  authentication: authenticationReducer,
+  // video: videoReducer,
+  // notification: notificationReducer,
+  // payment: paymentReducer,
+});
 
 const persistConfig = {
   key: "root",

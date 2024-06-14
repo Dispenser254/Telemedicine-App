@@ -6,6 +6,8 @@ import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import AdminLoginPage from "./pages/AdminLoginPage";
+import DoctorLoginPage from "./pages/DoctorLoginPage";
+import PatientLoginPage from "./pages/PatientLoginPage";
 
 const App = () => {
   return (
@@ -17,6 +19,8 @@ const App = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<RegisterPage />} />
         <Route path="/admin-login" element={<AdminLoginPage />} />
+        <Route path="/doctor-login" element={<DoctorLoginPage />} />
+        <Route path="/patient-login" element={<PatientLoginPage />} />
       </Routes>
     </BrowserRouter>
   );
