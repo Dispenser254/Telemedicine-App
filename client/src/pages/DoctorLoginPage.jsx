@@ -3,7 +3,7 @@ import FooterPage from "../components/FooterPage";
 import NavbarPage from "../components/NavbarPage";
 import backgroundImage from "/images/homepage.jpg";
 import { useState } from "react";
-import adminImage from "/images/admin_Login.png";
+import doctorIcon from "/images/doctorIcon.png";
 import { FaExclamation } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -13,14 +13,14 @@ import {
   signInSuccess,
 } from "../redux/reducers/authenticationSlice";
 
-const AdminLoginPage = () => {
+const DoctorLoginPage = () => {
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
   const { loading, error: errorMessage } = useSelector(
     (state) => state.authentication
   );
   const dispatch = useDispatch();
-  const [formData, setFormData] = useState({ role: "admin" });
+  const [formData, setFormData] = useState({ role: "doctor" });
 
   const handleCloseModal = () => {
     setShowModal(false);
@@ -56,7 +56,6 @@ const AdminLoginPage = () => {
       setShowModal(true);
     }
   };
-
   return (
     <>
       <div
@@ -70,12 +69,12 @@ const AdminLoginPage = () => {
         <div className="md:mx-auto mx-4 p-8 md:p-12 bg-white rounded-lg shadow-lg max-w-2xl">
           <div className="flex items-center gap-2">
             <img
-              src={adminImage}
-              alt="Admin"
+              src={doctorIcon}
+              alt="Doctor"
               className="w-20 h-20 mb-4 rounded-full"
             />
             <h2 className="text-2xl font-bold mb-4 uppercase">
-              Admin <span className="text-teal-400">Login</span>
+              Doctor <span className="text-teal-400">Login</span>
             </h2>
           </div>
 
@@ -129,4 +128,4 @@ const AdminLoginPage = () => {
   );
 };
 
-export default AdminLoginPage;
+export default DoctorLoginPage;
