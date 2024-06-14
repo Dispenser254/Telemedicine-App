@@ -12,7 +12,7 @@ export const signup = async (request, response, next) => {
       password,
       role,
       patient_name,
-      patient_age,
+      patient_dob,
       patient_gender,
       contact_number,
       address,
@@ -24,7 +24,7 @@ export const signup = async (request, response, next) => {
       !role ||
       (role === "patient" &&
         (!patient_name ||
-          !patient_age ||
+          !patient_dob ||
           !patient_gender ||
           !contact_number ||
           !address))
@@ -48,7 +48,7 @@ export const signup = async (request, response, next) => {
       //Create new patient
       const patientData = {
         patient_name,
-        patient_age,
+        patient_dob,
         patient_gender,
         contact_number,
         address,

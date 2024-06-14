@@ -6,8 +6,8 @@ const patientSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  patient_age: {
-    type: Number,
+  patient_dob: {
+    type: Date,
     required: true,
   },
   patient_gender: {

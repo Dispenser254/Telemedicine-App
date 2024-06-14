@@ -14,6 +14,7 @@ import {
 } from "flowbite-react";
 import FooterPage from "../components/FooterPage";
 import { useNavigate } from "react-router-dom";
+import { RingLoader } from "react-spinners";
 
 const RegisterPage = () => {
   const [showModal, setShowModal] = useState(false);
@@ -39,8 +40,8 @@ const RegisterPage = () => {
     if (!formData.patient_name) {
       errors.patient_name = "Patient name is required.";
     }
-    if (!formData.patient_age || isNaN(formData.patient_age)) {
-      errors.patient_age = "Valid patient age is required.";
+    if (!formData.patient_dob || !isValidDate(formData.patient_dob)) {
+      errors.patient_dob = "Valid patient dob is required.";
     }
     if (!formData.patient_gender) {
       errors.patient_gender = "Gender is required.";
@@ -63,6 +64,15 @@ const RegisterPage = () => {
       }
     }
     return errors;
+  };
+
+  const isValidDate = (dateString) => {
+    const regEx = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateString.match(regEx)) return false; // Invalid format
+    const d = new Date(dateString);
+    const dNum = d.getTime();
+    if (!dNum && dNum !== 0) return false; // NaN value, Invalid date
+    return d.toISOString().slice(0, 10) === dateString;
   };
 
   const handlePatientDetailsSubmit = () => {
@@ -106,7 +116,6 @@ const RegisterPage = () => {
       if (response.ok) {
         navigate("/dashboard");
       }
-      // console.log(dataToSubmit);
     } catch (error) {
       setErrorMessage(error.message);
       setShowModal(true);
@@ -116,6 +125,12 @@ const RegisterPage = () => {
 
   return (
     <>
+      {/* Loader overlay */}
+      {loading && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+          <RingLoader color="#FFFF00" size={150} />
+        </div>
+      )}
       <div
         className="min-h-screen flex items-center opacity-90 justify-center"
         style={{
@@ -151,19 +166,19 @@ const RegisterPage = () => {
                     )}
                   </div>
                   <div className="mb-4">
-                    <Label htmlFor="patientAge" className="mb-2">
-                      Patient Age
+                    <Label htmlFor="patientDob" className="mb-2">
+                      Patient Date of Birth
                     </Label>
                     <TextInput
-                      type="number"
-                      id="patient_age"
-                      name="patientAge"
-                      placeholder="Patient's Age"
+                      type="date"
+                      id="patient_dob"
+                      name="patientDob"
+                      placeholder="Patient's Date of Birth"
                       onChange={handleChange}
                       required
                     />
-                    {errorMessage?.patient_age && (
-                      <p className="text-red-500">{errorMessage.patient_age}</p>
+                    {errorMessage?.patient_dob && (
+                      <p className="text-red-500">{errorMessage.patient_dob}</p>
                     )}
                   </div>
                   <div className="mb-4">
