@@ -7,8 +7,28 @@ import Patient from "../models/patient.model.js";
 
 export const signup = async (request, response, next) => {
   try {
-    const { username, password, role } = request.body;
-    if (!username || !password || !role) {
+    const {
+      username,
+      password,
+      role,
+      patient_name,
+      patient_age,
+      patient_gender,
+      contact_number,
+      address,
+    } = request.body;
+
+    if (
+      !username ||
+      !password ||
+      !role ||
+      (role === "patient" &&
+        (!patient_name ||
+          !patient_age ||
+          !patient_gender ||
+          !contact_number ||
+          !address))
+    ) {
       return next(errorHandler(400, "All fields are required."));
     }
     // Check if the user already exists
@@ -16,32 +36,29 @@ export const signup = async (request, response, next) => {
     if (existingUser) {
       return next(errorHandler(400, "Username already exists."));
     }
+    //Create new user
+    const hashedPassword = bcryptjs.hashSync(password, 10);
+    const validUser = await User({
+      username,
+      password: hashedPassword,
+      role,
+    });
+    await validUser.save();
     if (role === "patient") {
-      //Create new user for a patient
-      const hashedPassword = bcryptjs.hashSync(password, 10);
-      const validUser = await User({
-        username,
-        password: hashedPassword,
-        role,
-      });
-      await validUser.save();
-
       //Create new patient
-      const patientData = { ...request.body, user_id: validUser._id };
+      const patientData = {
+        patient_name,
+        patient_age,
+        patient_gender,
+        contact_number,
+        address,
+        user_id: validUser._id,
+      };
       const patient = new Patient(patientData);
       await patient.save();
     }
 
     if (role === "doctor") {
-      //Create new user for a doctor
-      const hashedPassword = bcryptjs.hashSync(password, 10);
-      const validUser = await User({
-        username,
-        password: hashedPassword,
-        role,
-      });
-      await validUser.save();
-
       //Create new doctor
       const doctorData = { ...request.body, user_id: validUser._id };
       const doctor = new Doctor(doctorData);
@@ -50,7 +67,7 @@ export const signup = async (request, response, next) => {
 
     response.status(201).json("User created successfully");
   } catch (error) {
-    next(error);
+    next(errorHandler(error, "An error occurred during signup."));
   }
 };
 

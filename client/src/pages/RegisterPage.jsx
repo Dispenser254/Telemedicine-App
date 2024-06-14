@@ -34,36 +34,82 @@ const RegisterPage = () => {
     setFormData({ ...formData, [e.target.id]: e.target.value.trim() });
   };
 
-  const validateForm = () => {};
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.patient_name) {
+      errors.patient_name = "Patient name is required.";
+    }
+    if (!formData.patient_age || isNaN(formData.patient_age)) {
+      errors.patient_age = "Valid patient age is required.";
+    }
+    if (!formData.patient_gender) {
+      errors.patient_gender = "Gender is required.";
+    }
+    if (!formData.contact_number) {
+      errors.contact_number = "Contact number is required.";
+    }
+    if (!formData.address) {
+      errors.address = "Address is required.";
+    }
+    if (showCredentials) {
+      if (!formData.username) {
+        errors.username = "Username is required.";
+      }
+      if (!formData.password) {
+        errors.password = "Password is required.";
+      }
+      if (formData.password !== formData.confirmPassword) {
+        errors.confirmPassword = "Passwords do not match.";
+      }
+    }
+    return errors;
+  };
 
   const handlePatientDetailsSubmit = () => {
     const errors = validateForm();
-    setErrorMessage(errors);
-    setShowCredentials(true);
+    if (Object.keys(errors).length > 0) {
+      setErrorMessage(errors);
+    } else {
+      setErrorMessage(null);
+      setShowCredentials(true);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setErrorMessage(errors);
+      return;
+    }
+
+    // eslint-disable-next-line no-unused-vars
+    const { confirmPassword, ...dataToSubmit } = formData;
+
     try {
       setLoading(true);
       setErrorMessage(null);
       const response = await fetch("/mediclinic/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSubmit),
       });
 
       const data = await response.json();
       if (data.success === false) {
-        return setErrorMessage(data.message);
+        setErrorMessage(data.message || "An error occurred.");
+        setShowModal(true);
+        setLoading(false);
       }
       setLoading(false);
 
       if (response.ok) {
-        navigate("/loginin");
+        navigate("/dashboard");
       }
+      // console.log(dataToSubmit);
     } catch (error) {
       setErrorMessage(error.message);
+      setShowModal(true);
       setLoading(false);
     }
   };
@@ -92,11 +138,17 @@ const RegisterPage = () => {
                     </Label>
                     <TextInput
                       type="text"
-                      id="patientName"
+                      id="patient_name"
                       name="patientName"
                       placeholder="Patient's Name"
                       onChange={handleChange}
+                      required
                     />
+                    {errorMessage?.patient_name && (
+                      <p className="text-red-500">
+                        {errorMessage.patient_name}
+                      </p>
+                    )}
                   </div>
                   <div className="mb-4">
                     <Label htmlFor="patientAge" className="mb-2">
@@ -104,11 +156,15 @@ const RegisterPage = () => {
                     </Label>
                     <TextInput
                       type="number"
-                      id="patientAge"
+                      id="patient_age"
                       name="patientAge"
                       placeholder="Patient's Age"
                       onChange={handleChange}
+                      required
                     />
+                    {errorMessage?.patient_age && (
+                      <p className="text-red-500">{errorMessage.patient_age}</p>
+                    )}
                   </div>
                   <div className="mb-4">
                     <Label
@@ -117,12 +173,22 @@ const RegisterPage = () => {
                     >
                       Gender
                     </Label>
-                    <Select id="gender" name="gender">
+                    <Select
+                      id="patient_gender"
+                      name="gender"
+                      onChange={handleChange}
+                      required
+                    >
                       <option value="">Select Gender</option>
                       <option value="male">Male</option>
                       <option value="female">Female</option>
                       <option value="other">Other</option>
                     </Select>
+                    {errorMessage?.patient_gender && (
+                      <p className="text-red-500">
+                        {errorMessage.patient_gender}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="md:flex md:flex-col">
@@ -132,11 +198,18 @@ const RegisterPage = () => {
                     </Label>
                     <TextInput
                       type="text"
-                      id="contactNumber"
+                      id="contact_number"
                       name="contactNumber"
                       placeholder="Contact Number"
                       onChange={handleChange}
+                      required
+                      pattern="\d{10}"
                     />
+                    {errorMessage?.contact_number && (
+                      <p className="text-red-500">
+                        {errorMessage.contact_number}
+                      </p>
+                    )}
                   </div>
                   <div className="mb-4">
                     <Label htmlFor="address" className="mb-2">
@@ -149,7 +222,11 @@ const RegisterPage = () => {
                       placeholder="Enter your Address"
                       rows={3}
                       onChange={handleChange}
+                      required
                     ></Textarea>
+                    {errorMessage?.address && (
+                      <p className="text-red-500">{errorMessage.address}</p>
+                    )}
                   </div>
 
                   <Button
@@ -181,7 +258,11 @@ const RegisterPage = () => {
                       name="username"
                       placeholder="Username"
                       onChange={handleChange}
+                      required
                     />
+                    {errorMessage?.username && (
+                      <p className="text-red-500">{errorMessage.username}</p>
+                    )}
                   </div>
                   <div className="mb-4">
                     <Label htmlFor="password">Enter Password</Label>
@@ -191,7 +272,11 @@ const RegisterPage = () => {
                       name="password"
                       placeholder="Enter Password"
                       onChange={handleChange}
+                      required
                     />
+                    {errorMessage?.password && (
+                      <p className="text-red-500">{errorMessage.password}</p>
+                    )}
                   </div>
                   <div className="mb-4">
                     <Label htmlFor="confirmPassword">Confirm Password</Label>
@@ -201,7 +286,13 @@ const RegisterPage = () => {
                       name="confirmPassword"
                       placeholder="Confirm Password"
                       onChange={handleChange}
+                      required
                     />
+                    {errorMessage?.confirmPassword && (
+                      <p className="text-red-500">
+                        {errorMessage.confirmPassword}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex justify-between items-center">
