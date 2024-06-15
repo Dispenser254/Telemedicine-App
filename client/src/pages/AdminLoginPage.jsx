@@ -12,6 +12,7 @@ import {
   signInStart,
   signInSuccess,
 } from "../redux/reducers/authenticationSlice";
+import { RingLoader } from "react-spinners";
 
 const AdminLoginPage = () => {
   const [showModal, setShowModal] = useState(false);
@@ -49,7 +50,7 @@ const AdminLoginPage = () => {
       }
       if (response.ok) {
         dispatch(signInSuccess(data));
-        navigate("/dashboard");
+        navigate("/admin-dashboard");
       }
     } catch (error) {
       dispatch(signInFailure(error.message));
@@ -59,6 +60,12 @@ const AdminLoginPage = () => {
 
   return (
     <>
+      {/* Loader overlay */}
+      {loading && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+          <RingLoader color="#FFFF00" size={150} />
+        </div>
+      )}
       <div
         className="min-h-screen flex items-center opacity-90 justify-center"
         style={{
