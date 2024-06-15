@@ -6,13 +6,15 @@ const doctorSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  contact_number: {
+  doctor_number: {
     type: String,
     required: true,
+    unique: true,
   },
   email: {
     type: String,
     required: true,
+    unique: true,
   },
   department_id: {
     type: Schema.Types.ObjectId,
