@@ -2,9 +2,22 @@ import mongoose, { Schema } from "mongoose";
 
 // Define Doctor schema
 const doctorSchema = new mongoose.Schema({
-  doctor_name: {
+  doctor_firstName: {
     type: String,
     required: true,
+  },
+  doctor_lastName: {
+    type: String,
+    required: true,
+  },
+  doctor_idNumber: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  doctor_profilePic: {
+    type: String,
+    default: "images/default.webp",
   },
   doctor_number: {
     type: String,
@@ -26,7 +39,7 @@ const doctorSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-});
+}, {timestamps:true});
 
 const Doctor = mongoose.model("Doctor", doctorSchema);
 
