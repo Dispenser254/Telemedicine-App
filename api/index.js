@@ -7,6 +7,7 @@ import departmentRoutes from "../api/routes/department.route.js";
 import path from "path";
 import patientRoutes from "./routes/patients.route.js";
 import doctorRoutes from "./routes/doctor.route.js";
+import appointmentRoutes from "./routes/appointment.route.js";
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.use("/mediclinic/auth", authRoutes);
 app.use("/mediclinic/department", departmentRoutes);
 app.use("/mediclinic/patient", patientRoutes);
 app.use("/mediclinic/doctor", doctorRoutes);
+app.use("/mediclinic/appointment", appointmentRoutes);
 
 const PORT = process.env.PORT || 5000;
 
