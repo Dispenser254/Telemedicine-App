@@ -12,8 +12,8 @@ const router = express.Router();
 
 router.get("/getAppointments", verifyToken, getAllAppointments);
 router.get("/getAppointments/:id", verifyToken, getAppointmentByID);
-router.get("/createAppointment", verifyToken, createAppointment);
+router.post("/createAppointment", verifyToken, createAppointment);
 router.put("/getAppointments/:id", verifyToken, updateAppointment);
-router.put("/getAppointments/:id", verifyToken, deleteAppointment);
+router.delete("/getAppointments/:id", verifyToken, deleteAppointment);
 
 export default router;

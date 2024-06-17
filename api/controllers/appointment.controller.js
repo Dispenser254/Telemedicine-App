@@ -1,5 +1,7 @@
+import { APPOINTMENT_STATUS, appointmentTypeOnline } from "../config.js";
 import Appointment from "../models/appointment.model.js";
 import { errorHandler } from "../utils/error.js";
+import { createVideoConsultation } from "./video.controller.js";
 
 // Get all appointments with department_name, doctor_name, and patient_name
 export const getAllAppointments = async (request, response, next) => {
@@ -93,6 +95,17 @@ export const updateAppointment = async (request, response, next) => {
     appointment_type,
   } = request.body;
   try {
+    // Fetch the current appointment
+    const previousAppointment = await Appointment.findById(appointmentId);
+    if (!previousAppointment) {
+      return next(errorHandler(404, "Appointment not found"));
+    }
+
+    const isCreateVideoLink =
+      appointment_status === APPOINTMENT_STATUS.APPROVED &&
+      appointment_type === appointmentTypeOnline &&
+      previousAppointment.appointment_status !== APPOINTMENT_STATUS.APPROVED;
+
     const updatedAppointment = await Appointment.findByIdAndUpdate(
       appointmentId,
       {
@@ -110,6 +123,13 @@ export const updateAppointment = async (request, response, next) => {
     if (!updatedAppointment) {
       return next(errorHandler(404, "Appointment not found"));
     }
+    // Handle video consultation link creation
+    if (isCreateVideoLink) {
+      const isSuccess = await createVideoConsultation(request.body);
+      if (!isSuccess) {
+        return next(errorHandler(500, "Error creating video link"));
+      }
+    }
     response.status(200).json(updatedAppointment);
   } catch (error) {
     next(errorHandler(500, "Error updating appointment"));
@@ -117,4 +137,21 @@ export const updateAppointment = async (request, response, next) => {
 };
 
 // Delete an appointment
-export const deleteAppointment = async (request, response, next) => {};
+export const deleteAppointment = async (request, response, next) => {
+  const appointmentId = request.params.id;
+
+  try {
+    // Find and delete the appointment by its ID
+    const deletedAppointment = await Appointment.findByIdAndDelete(
+      appointmentId
+    );
+
+    if (!deletedAppointment) {
+      return next(errorHandler(404, "Appointment not found"));
+    }
+
+    response.status(200).json("Appointment deleted successfully");
+  } catch (error) {
+    next(errorHandler(500, "Error deleting appointment"));
+  }
+};
