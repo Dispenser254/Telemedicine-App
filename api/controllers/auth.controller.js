@@ -13,12 +13,16 @@ export const signup = async (request, response, next) => {
       username,
       password,
       role,
-      patient_name,
+      patient_firstName,
+      patient_lastName,
+      patient_idNumber,
       patient_dob,
       patient_gender,
       contact_number,
       address,
-      doctor_name,
+      doctor_firstName,
+      doctor_lastName,
+      doctor_idNumber,
       doctor_number,
       email,
       department_id,
@@ -34,7 +38,9 @@ export const signup = async (request, response, next) => {
     // Role-specific validations
     if (role === "patient") {
       if (
-        !patient_name ||
+        !patient_firstName ||
+        !patient_lastName ||
+        !patient_idNumber ||
         !patient_dob ||
         !patient_gender ||
         !contact_number ||
@@ -42,6 +48,13 @@ export const signup = async (request, response, next) => {
       ) {
         return next(errorHandler(400, "All patient fields are required."));
       }
+
+      // Check if patient_idNumber already exists
+      const existingPatientId = await Patient.findOne({ patient_idNumber });
+      if (existingPatientId) {
+        return next(errorHandler(409, "Patient ID number already exists."));
+      }
+
       // Check if contact number already exists for patients
       const existingPatientNo = await Patient.findOne({ contact_number });
       if (existingPatientNo) {
@@ -50,7 +63,14 @@ export const signup = async (request, response, next) => {
         );
       }
     } else if (role === "doctor") {
-      if (!doctor_name || !doctor_number || !email || !department_id) {
+      if (
+        !doctor_firstName ||
+        !doctor_lastName ||
+        !doctor_idNumber ||
+        !doctor_number ||
+        !email ||
+        !department_id
+      ) {
         return next(errorHandler(400, "All doctor fields are required."));
       }
 
@@ -77,9 +97,12 @@ export const signup = async (request, response, next) => {
 
       // Check if doctor number, contact number or email already exists for doctors
       const existingDoctor = await Doctor.findOne({
-        $or: [{ doctor_number }, { email }],
+        $or: [{ doctor_idNumber }, { doctor_number }, { email }],
       });
       if (existingDoctor) {
+        if (existingDoctor.doctor_idNumber === doctor_idNumber) {
+          return next(errorHandler(409, "Doctor ID number already exists."));
+        }
         if (existingDoctor.doctor_number === doctor_number) {
           return next(errorHandler(409, "Doctor number already exists."));
         }
@@ -110,7 +133,9 @@ export const signup = async (request, response, next) => {
       if (role === "patient") {
         //Create new patient
         const patientData = {
-          patient_name,
+          patient_firstName,
+          patient_lastName,
+          patient_idNumber,
           patient_dob,
           patient_gender,
           contact_number,
@@ -122,11 +147,14 @@ export const signup = async (request, response, next) => {
       } else if (role === "doctor") {
         //Create new doctor
         const doctorData = {
-          doctor_name,
+          doctor_firstName,
+          doctor_lastName,
+          doctor_idNumber,
           doctor_number,
           email,
           department_id,
           user_id: validUser._id,
+          doctor_profilePic: "images/default.webp",
         };
         const doctor = new Doctor(doctorData);
         await doctor.save();

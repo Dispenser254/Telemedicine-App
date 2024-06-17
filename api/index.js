@@ -4,6 +4,9 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 import authRoutes from "../api/routes/auth.route.js";
 import departmentRoutes from "../api/routes/department.route.js";
+import path from "path";
+import patientRoutes from "./routes/patients.route.js";
+import doctorRoutes from "./routes/doctor.route.js";
 
 dotenv.config();
 
@@ -16,13 +19,19 @@ mongoose
     console.log(e);
   });
 
+const __dirname = path.resolve();
+
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+// Middleware to serve static files
+app.use("/images", express.static(path.join(__dirname, "public/images")));
 
 // Routes
 app.use("/mediclinic/auth", authRoutes);
 app.use("/mediclinic/department", departmentRoutes);
+app.use("/mediclinic/patient", patientRoutes);
+app.use("/mediclinic/doctor", doctorRoutes);
 
 const PORT = process.env.PORT || 5000;
 
