@@ -155,3 +155,143 @@ export const deleteAppointment = async (request, response, next) => {
     next(errorHandler(500, "Error deleting appointment"));
   }
 };
+
+// API endpoint to fetch all reports
+export const getAllReports = async (request, response, next) => {
+  try {
+    // Query 1: Revenue by month
+    const revenueData = await Appointment.find({
+      appointment_status: { $in: ["Scheduled", "Completed", "Follow-up"] },
+    })
+      .populate({
+        path: "payments",
+        match: {
+          appointment_status: { $in: ["Scheduled", "Completed", "Follow-up"] },
+        },
+        select: "payment_amount appointment_date",
+      })
+      .then((appointments) => {
+        return appointments.reduce((acc, appointment) => {
+          const month = appointment.appointment_date.toLocaleString("default", {
+            month: "short",
+          });
+          const revenue = appointment.payments.reduce(
+            (sum, payment) => sum + payment.payment_amount,
+            0
+          );
+          if (!acc[month]) {
+            acc[month] = 0;
+          }
+          acc[month] += revenue;
+          return acc;
+        }, {});
+      });
+
+    // Convert revenueData to array of objects for consistency
+    const revenueResult = Object.keys(revenueData).map((month) => ({
+      month,
+      revenue: revenueData[month],
+    }));
+
+    // Query 2: Appointments by department
+    const departmentsData = await Appointment.find({
+      appointment_status: { $in: ["Scheduled", "Completed", "Follow-up"] },
+    })
+      .populate({
+        path: "department_id",
+        select: "department_name",
+      })
+      .then((appointments) => {
+        return appointments.reduce((acc, appointment) => {
+          const departmentName = appointment.department_id.department_name;
+          if (!acc[departmentName]) {
+            acc[departmentName] = 0;
+          }
+          acc[departmentName]++;
+          return acc;
+        }, {});
+      });
+
+    // Convert departmentsData to array of objects for consistency
+    const departmentsResult = Object.keys(departmentsData).map(
+      (departmentName) => ({
+        label: departmentName,
+        appointments: departmentsData[departmentName],
+      })
+    );
+
+    // Query 3: Appointments by doctor
+    const doctorsData = await Appointment.find({
+      appointment_status: { $in: ["Scheduled", "Completed", "Follow-up"] },
+    })
+      .populate({
+        path: "doctor_id",
+        select: "doctor_firstName doctor_lastName",
+      })
+      .then((appointments) => {
+        return appointments.reduce((acc, appointment) => {
+          const doctorName = `${appointment.doctor_id.doctor_firstName} ${appointment.doctor_id.doctor_lastName}`;
+          if (!acc[doctorName]) {
+            acc[doctorName] = 0;
+          }
+          acc[doctorName]++;
+          return acc;
+        }, {});
+      });
+
+    // Convert doctorsData to array of objects for consistency
+    const doctorsResult = Object.keys(doctorsData).map((doctorName) => ({
+      doctor: doctorName,
+      appointments: doctorsData[doctorName],
+    }));
+
+    // Query 4: Appointments by age group
+    const ageGroupData = await Appointment.find({
+      appointment_status: { $in: ["Scheduled", "Completed", "Follow-up"] },
+    })
+      .populate({
+        path: "patient_id",
+        select: "patient_dob",
+      })
+      .then((appointments) => {
+        return appointments.reduce((acc, appointment) => {
+          const patientAge = Math.floor(
+            (Date.now() -
+              new Date(appointment.patient_id.patient_dob).getTime()) /
+              (1000 * 60 * 60 * 24 * 365.25)
+          );
+          let ageGroup;
+          if (patientAge < 18) {
+            ageGroup = "Children";
+          } else if (patientAge >= 18 && patientAge <= 65) {
+            ageGroup = "Adults";
+          } else if (patientAge > 65) {
+            ageGroup = "Seniors";
+          } else {
+            ageGroup = "Unknown";
+          }
+          if (!acc[ageGroup]) {
+            acc[ageGroup] = 0;
+          }
+          acc[ageGroup]++;
+          return acc;
+        }, {});
+      });
+
+    // Convert ageGroupData to array of objects for consistency
+    const ageGroupResult = Object.keys(ageGroupData).map((ageGroup) => ({
+      age_group: ageGroup,
+      appointments: ageGroupData[ageGroup],
+    }));
+
+    // Sending the aggregated data as response
+    response.status(200).json({
+      revenue: revenueResult,
+      departments: departmentsResult,
+      doctors: doctorsResult,
+      ageGroup: ageGroupResult,
+    });
+  } catch (error) {
+    next(errorHandler(500, "Error fetching reports"));
+  }
+};

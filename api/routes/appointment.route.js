@@ -4,6 +4,7 @@ import {
   createAppointment,
   deleteAppointment,
   getAllAppointments,
+  getAllReports,
   getAppointmentByID,
   updateAppointment,
 } from "../controllers/appointment.controller.js";
@@ -15,5 +16,6 @@ router.get("/getAppointments/:id", verifyToken, getAppointmentByID);
 router.post("/createAppointment", verifyToken, createAppointment);
 router.put("/getAppointments/:id", verifyToken, updateAppointment);
 router.delete("/getAppointments/:id", verifyToken, deleteAppointment);
+router.get("/getAllReports", verifyToken, getAllReports);
 
 export default router;
