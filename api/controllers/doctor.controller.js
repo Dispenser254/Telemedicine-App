@@ -1,4 +1,6 @@
+import Appointment from "../models/appointment.model.js";
 import Doctor from "../models/doctor.model.js";
+import User from "../models/user.model.js";
 import { errorHandler } from "../utils/error.js";
 
 // Get all doctors
@@ -100,7 +102,7 @@ export const deleteDoctor = async (request, response, next) => {
     const userId = doctor.user_id;
 
     // Delete the doctor
-    await Doctor.findByIdAndDelete(patientId);
+    await Doctor.findByIdAndDelete(doctorId);
 
     // Delete the associated user
     const deletedUser = await User.findByIdAndDelete(userId);
@@ -111,7 +113,7 @@ export const deleteDoctor = async (request, response, next) => {
 
     response
       .status(200)
-      .json("Patient and associated user deleted successfully");
+      .json("Doctor and associated user deleted successfully");
   } catch (error) {
     next(errorHandler(500, "Error deleting doctor or associated user"));
   }
@@ -119,7 +121,7 @@ export const deleteDoctor = async (request, response, next) => {
 
 // Get doctors by department
 export const getDoctorsByDepartment = async (request, response, next) => {
-  const departmentId = req.params.department_id;
+  const departmentId = request.params.department_id;
 
   try {
     // Find doctors where department_id matches and populate department details
@@ -132,7 +134,7 @@ export const getDoctorsByDepartment = async (request, response, next) => {
     }
 
     // Respond with the list of doctors
-    response.json(doctors);
+    response.status(200).json(doctors);
   } catch (error) {
     next(errorHandler(500, "Error retrieving doctors from the database"));
   }
