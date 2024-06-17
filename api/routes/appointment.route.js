@@ -1,6 +1,7 @@
 import express from "express";
 import { verifyToken } from "../utils/verifyUser.js";
 import {
+  createAppointment,
   deleteAppointment,
   getAllAppointments,
   getAppointmentByID,
@@ -11,6 +12,7 @@ const router = express.Router();
 
 router.get("/getAppointments", verifyToken, getAllAppointments);
 router.get("/getAppointments/:id", verifyToken, getAppointmentByID);
+router.get("/createAppointment", verifyToken, createAppointment);
 router.put("/getAppointments/:id", verifyToken, updateAppointment);
 router.put("/getAppointments/:id", verifyToken, deleteAppointment);
 

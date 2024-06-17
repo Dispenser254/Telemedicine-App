@@ -25,6 +25,7 @@ const __dirname = path.resolve();
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+
 // Middleware to serve static files
 app.use("/images", express.static(path.join(__dirname, "public/images")));
 
