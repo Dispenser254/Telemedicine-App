@@ -1,6 +1,6 @@
 import { Button, Label, Modal, Spinner, TextInput } from "flowbite-react";
-import FooterPage from "../components/FooterPage";
-import NavbarPage from "../components/NavbarPage";
+import FooterPage from "../../components/FooterPage";
+import NavbarPage from "../../components/NavbarPage";
 import backgroundImage from "/images/homepage.jpg";
 import { useState } from "react";
 import doctorIcon from "/images/doctorIcon.png";
@@ -11,7 +11,7 @@ import {
   signInFailure,
   signInStart,
   signInSuccess,
-} from "../redux/reducers/authenticationSlice";
+} from "../../redux/reducers/authenticationSlice";
 import { RingLoader } from "react-spinners";
 
 const DoctorLoginPage = () => {

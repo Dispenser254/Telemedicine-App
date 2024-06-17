@@ -10,7 +10,7 @@ const NavbarHeader = () => {
 
   return (
     <Navbar fluid>
-      <div className="w-full p-3 lg:px-5 lg:pl-3">
+      <div className="w-full p-2 lg:px-5 lg:pl-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             {isPageWithSidebar && (
@@ -29,7 +29,7 @@ const NavbarHeader = () => {
             <Navbar.Brand href="/">
               <img src="" alt="" className="mr-3 h-6 sm:h-8" />
               <span className="self-center whitespace-nowrap text-2xl font-semibold dark:text-white">
-                Frodev Inc.
+                Medi<span className="text-green-400">Clinic</span>
               </span>
             </Navbar.Brand>
             <form action="" className="ml-16 hidden md:block">

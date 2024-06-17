@@ -26,8 +26,8 @@ function MainContent({ children, isFooter }) {
   return (
     <main
       className={classNames(
-        "overflow-y-auto relative w-full h-full bg-gray-50 dark:bg-gray-900",
-        isSidebarOpen ? "lg:ml-8 lg:mr-2" : "lg:ml-12 lg::mr-2"
+        "overflow-y-auto absolute lg:relative w-full h-full border bg-gray-50 dark:bg-gray-900",
+        isSidebarOpen ? "" : ""
       )}
     >
       {children}

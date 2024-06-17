@@ -1,6 +1,6 @@
 import { Button } from "flowbite-react";
-import FooterPage from "../components/FooterPage";
-import NavbarPage from "../components/NavbarPage";
+import FooterPage from "../../components/FooterPage";
+import NavbarPage from "../../components/NavbarPage";
 import backgroundImage from "/images/homepage.jpg";
 import doctorIcon from "/images/doctorIcon.png";
 import patientIcon from "/images/patientIcon.png";

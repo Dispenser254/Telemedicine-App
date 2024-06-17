@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import { useState } from "react";
-import NavbarPage from "../components/NavbarPage";
+import NavbarPage from "../../components/NavbarPage";
 import backgroundImage from "/images/homepage.jpg";
 import { FaExclamation } from "react-icons/fa";
 import {
@@ -12,7 +12,7 @@ import {
   TextInput,
   Textarea,
 } from "flowbite-react";
-import FooterPage from "../components/FooterPage";
+import FooterPage from "../../components/FooterPage";
 import { useNavigate } from "react-router-dom";
 import { RingLoader } from "react-spinners";
 

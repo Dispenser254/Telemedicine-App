@@ -1,27 +1,27 @@
 import { Button, Label, Modal, Spinner, TextInput } from "flowbite-react";
-import FooterPage from "../components/FooterPage";
-import NavbarPage from "../components/NavbarPage";
+import FooterPage from "../../components/FooterPage";
+import NavbarPage from "../../components/NavbarPage";
 import backgroundImage from "/images/homepage.jpg";
 import { useState } from "react";
-import adminImage from "/images/admin_Login.png";
+import patientIcon from "/images/patientIcon.png";
 import { FaExclamation } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   signInFailure,
   signInStart,
   signInSuccess,
-} from "../redux/reducers/authenticationSlice";
+} from "../../redux/reducers/authenticationSlice";
 import { RingLoader } from "react-spinners";
 
-const AdminLoginPage = () => {
+const PatientLoginPage = () => {
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
   const { loading, error: errorMessage } = useSelector(
     (state) => state.authentication
   );
   const dispatch = useDispatch();
-  const [formData, setFormData] = useState({ role: "admin" });
+  const [formData, setFormData] = useState({ role: "patient" });
 
   const handleCloseModal = () => {
     setShowModal(false);
@@ -50,14 +50,13 @@ const AdminLoginPage = () => {
       }
       if (response.ok) {
         dispatch(signInSuccess(data));
-        navigate("/admin-dashboard");
+        navigate("/dashboard");
       }
     } catch (error) {
       dispatch(signInFailure(error.message));
       setShowModal(true);
     }
   };
-
   return (
     <>
       {/* Loader overlay */}
@@ -77,12 +76,12 @@ const AdminLoginPage = () => {
         <div className="md:mx-auto mx-4 p-8 md:p-12 bg-white rounded-lg shadow-lg max-w-2xl">
           <div className="flex items-center gap-2">
             <img
-              src={adminImage}
-              alt="Admin"
+              src={patientIcon}
+              alt="Doctor"
               className="w-20 h-20 mb-4 rounded-full"
             />
             <h2 className="text-2xl font-bold mb-4 uppercase">
-              Admin <span className="text-teal-400">Login</span>
+              Patient <span className="text-teal-400">Login</span>
             </h2>
           </div>
 
@@ -120,6 +119,15 @@ const AdminLoginPage = () => {
               )}
             </Button>
           </form>
+          <div className="mt-4 text-center">
+            <p className="text-gray-700">New Patient?</p>
+            <Link
+              to={"/signup"}
+              className="font-semibold text-blue-500 hover:text-blue-600"
+            >
+              Sign up here
+            </Link>
+          </div>
         </div>
 
         <Modal
@@ -136,4 +144,4 @@ const AdminLoginPage = () => {
   );
 };
 
-export default AdminLoginPage;
+export default PatientLoginPage;
