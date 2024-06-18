@@ -3,11 +3,28 @@ import { useSidebarContext } from "../context/SidebarContext";
 import { HiBell, HiMenuAlt1, HiSearch, HiX } from "react-icons/hi";
 import { Dropdown, Label, TextInput, Navbar, Avatar } from "flowbite-react";
 import SmallScreen from "../helpers/SmallScreen";
+import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
+import { signoutSuccess } from "../redux/reducers/authenticationSlice";
 
 const NavbarHeader = () => {
   const { isOpenOnSmallScreens, isPageWithSidebar, setOpenOnSmallScreens } =
     useSidebarContext();
+  const dispatch = useDispatch();
 
+
+  const handleSignout = async () => {
+    const response = await fetch("/mediclinic/auth/signout", {
+      method: "POST",
+    });
+    if (!response.ok) {
+      toast.error("Error signing out.");
+    }
+    // eslint-disable-next-line no-unused-vars
+    const data = response.json();
+    toast.success("You have signed out successfully.");
+    dispatch(signoutSuccess());
+  };
   return (
     <Navbar fluid>
       <div className="w-full p-2 lg:px-5 lg:pl-3">
@@ -47,7 +64,7 @@ const NavbarHeader = () => {
               />
             </form>
           </div>
-          <div className="flex items-center lg:gap-3">
+          <div className="flex items-center gap-2 lg:gap-4">
             <div className="flex items-center">
               <button
                 onClick={() => setOpenOnSmallScreens(!isOpenOnSmallScreens)}
@@ -58,7 +75,7 @@ const NavbarHeader = () => {
               </button>
               <HiBell className="text-2xl text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white " />
             </div>
-            <div className="hidden lg:block">
+            <div className="block">
               <Dropdown
                 arrowIcon={false}
                 inline
@@ -79,7 +96,7 @@ const NavbarHeader = () => {
                 <Dropdown.Item>Settings</Dropdown.Item>
                 <Dropdown.Item>Earnings</Dropdown.Item>
                 <Dropdown.Divider />
-                <Dropdown.Item>Sign out</Dropdown.Item>
+                <Dropdown.Item onClick={handleSignout}>Sign out</Dropdown.Item>
               </Dropdown>
             </div>
           </div>

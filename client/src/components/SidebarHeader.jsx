@@ -7,11 +7,15 @@ import classNames from "classnames";
 import { useSidebarContext } from "../context/SidebarContext";
 import SmallScreen from "../helpers/SmallScreen";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import { useDispatch } from "react-redux";
+import { signoutSuccess } from "../redux/reducers/authenticationSlice";
 
 export function SidebarHeader() {
   const { isOpenOnSmallScreens: isSidebarOpenOnSmallScreens } =
     useSidebarContext();
   const [currentPage, setCurrentPage] = useState("");
+  const dispatch = useDispatch()
 
   useEffect(() => {
     const newPage = window.location.pathname;
@@ -19,6 +23,17 @@ export function SidebarHeader() {
     setCurrentPage(newPage);
   }, [setCurrentPage]);
 
+
+  const handleSignout = async()=>{
+    const response = await fetch('/mediclinic/auth/signout', {method:'POST'})
+    if (!response.ok) {
+      toast.error('Error signing out.')
+    }
+    // eslint-disable-next-line no-unused-vars
+    const data = response.json()
+    toast.success('You have signed out successfully.')
+    dispatch(signoutSuccess())
+  }
   return (
     <div
       className={classNames("lg:!block border-t z-50", {
@@ -106,7 +121,7 @@ export function SidebarHeader() {
                 <Sidebar.Item href="" icon={CgProfile}>
                   Profile
                 </Sidebar.Item>
-                <Sidebar.Item href="" icon={MdLogout}>
+                <Sidebar.Item icon={MdLogout} onClick={handleSignout}>
                   Sign Out
                 </Sidebar.Item>
               </Sidebar.ItemGroup>
