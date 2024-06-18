@@ -29,7 +29,26 @@ export const getVideoConsultationsByDoctorId = async (
       })
       .lean();
 
-    response.status(200).json(videoConsultations);
+    const totalVideoConsultations = await VideoConsultation.find({
+      doctor_id: doctorId,
+    }).countDocuments();
+    const now = new Date();
+    const oneMonthAgo = new Date(
+      now.getFullYear(),
+      now.getMonth() - 1,
+      now.getDate()
+    );
+
+    const lastMonthVideoConsultations = await VideoConsultation.find({
+      doctor_id: doctorId,
+    }).countDocuments({
+      createdAt: { $gte: oneMonthAgo },
+    });
+    response.status(200).json({
+      videoConsultations,
+      totalVideoConsultations,
+      lastMonthVideoConsultations,
+    });
   } catch (error) {
     next(errorHandler(500, "Error retrieving video consultations"));
   }
@@ -41,13 +60,15 @@ export const getVideoConsultationsByPatientId = async (
   response,
   next
 ) => {
-  const { patient_id } = request.params;
+  const patientId = request.params.patient_id;
 
-  if (!patient_id) {
+  if (!patientId) {
     return next(errorHandler(400, "Patient ID is required"));
   }
   try {
-    const videoConsultations = await VideoConsultation.find({ patient_id })
+    const videoConsultations = await VideoConsultation.find({
+      patient_id: patientId,
+    })
       .populate({
         path: "patient_id",
         select: "patient_firstName patient_lastName",
@@ -67,7 +88,30 @@ export const getVideoConsultationsByPatientId = async (
         errorHandler(404, "No video consultations found for this patient")
       );
     }
-    response.status(200).json(videoConsultations);
+
+    const totalVideoConsultations = await VideoConsultation.find({
+      patient_id: patientId,
+    }).countDocuments();
+    const now = new Date();
+    const oneMonthAgo = new Date(
+      now.getFullYear(),
+      now.getMonth() - 1,
+      now.getDate()
+    );
+
+    const lastMonthVideoConsultations = await VideoConsultation.find({
+      patient_id: patientId,
+    }).countDocuments({
+      createdAt: { $gte: oneMonthAgo },
+    });
+
+    response
+      .status(200)
+      .json({
+        videoConsultations,
+        totalVideoConsultations,
+        lastMonthVideoConsultations,
+      });
   } catch (error) {
     next(errorHandler(500, "Error retrieving video consultations"));
   }
@@ -113,7 +157,7 @@ export const createVideoConsultation = async (request, response, next) => {
 // Get all Video Consultations
 export const getAllVideoConsultations = async (request, response, next) => {
   try {
-    const videoConsultations = await VideoConsultation.find({})
+    const videoConsultations = await VideoConsultation.find()
       .populate({
         path: "patient_id",
         select: "patient_firstName patient_lastName",
@@ -128,7 +172,22 @@ export const getAllVideoConsultations = async (request, response, next) => {
       })
       .lean();
 
-    response.status(200).json(videoConsultations);
+    const totalVideoConsultations = await VideoConsultation.countDocuments();
+    const now = new Date();
+    const oneMonthAgo = new Date(
+      now.getFullYear(),
+      now.getMonth() - 1,
+      now.getDate()
+    );
+
+    const lastMonthVideoConsultations = await VideoConsultation.countDocuments({
+      createdAt: { $gte: oneMonthAgo },
+    });
+    response.status(200).json({
+      videoConsultations,
+      totalVideoConsultations,
+      lastMonthVideoConsultations,
+    });
   } catch (error) {
     next(errorHandler(500, "Failed to retrieve video consultations"));
   }

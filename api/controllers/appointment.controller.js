@@ -20,7 +20,20 @@ export const getAllAppointments = async (request, response, next) => {
         select: "doctor_firstName doctor_lastName",
       })
       .lean();
-    response.json(appointments);
+
+    const totalAppointments = await Appointment.countDocuments();
+    const now = new Date();
+    const oneMonthAgo = new Date(
+      now.getFullYear(),
+      now.getMonth() - 1,
+      now.getDate()
+    );
+
+    const lastMonthAppointments = await Appointment.countDocuments({
+      createdAt: { $gte: oneMonthAgo },
+    });
+
+    response.status(200).json({ appointments, totalAppointments, lastMonthAppointments });
   } catch (error) {
     next(errorHandler(500, "Error retrieving appointments from the database"));
   }

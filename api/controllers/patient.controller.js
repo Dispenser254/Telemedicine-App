@@ -8,7 +8,18 @@ import bcryptjs from "bcryptjs";
 export const getAllPatients = async (request, response, next) => {
   try {
     const patients = await Patient.find();
-    response.status(200).json(patients);
+    const totalPatients = await Patient.countDocuments();
+    const now = new Date();
+    const oneMonthAgo = new Date(
+      now.getFullYear(),
+      now.getMonth() - 1,
+      now.getDate()
+    );
+
+    const lastMonthPatients = await Patient.countDocuments({
+      createdAt: { $gte: oneMonthAgo },
+    });
+    response.status(200).json({ patients, totalPatients, lastMonthPatients });
   } catch (error) {
     next(errorHandler(500, "Error retrieving patients from the database"));
   }

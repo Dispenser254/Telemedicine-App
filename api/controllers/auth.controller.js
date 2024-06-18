@@ -209,6 +209,89 @@ export const login = async (request, response, next) => {
       .cookie("access_token", token, { httpOnly: true })
       .json(rest);
   } catch (error) {
-    next(error);
+    next(errorHandler(500, "Error signing in."));
+  }
+};
+
+export const signout = (request, response, next) => {
+  try {
+    response
+      .clearCookie("access_token")
+      .status(200)
+      .json("User has been signed out");
+  } catch (error) {
+    next(errorHandler(500, "Error signing out."));
+  }
+};
+
+export const updateUser = async (request, response, next) => {
+  const userId = request.params.id;
+  try {
+    const { username, password } = request.body;
+    if (password.length < 6) {
+      return next(errorHandler(400, "Password must be at least 6 characters"));
+    }
+    // Check if the user already exists
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return next(errorHandler(400, "Username already exists."));
+    }
+    const hashedPassword = bcryptjs.hashSync(password, 10);
+
+    const updateUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        username,
+        password: hashedPassword,
+      },
+      { new: true, runValidators: true }
+    );
+
+    response.status(200).json("User updated successfully.");
+  } catch (error) {
+    next(errorHandler(500, "Error updating user"));
+  }
+};
+
+// Delete a user with the role of admin
+export const deleteUser = async (request, response, next) => {
+  try {
+    const userId = request.params.id;
+
+    // Find the user by ID
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return response.status(404).json({ error: "User not found" });
+    }
+
+    // Check if the user has the role of 'admin'
+    if (user.role !== "admin") {
+      return response.status(403).json({ error: "Only admins can be deleted" });
+    }
+
+    // Delete the user
+    await User.findByIdAndDelete(userId);
+    response.status(200).json("Admin user has been deleted");
+  } catch (error) {
+    next(errorHandler(500, "Error deleting admin"));
+  }
+};
+
+// Get all users with the role of admin
+export const getAdminUsers = async (request, response, next) => {
+  try {
+    const adminUsers = await User.find({ role: "admin" })
+      .select("username role")
+      .lean();
+
+    if (adminUsers.length === 0) {
+      return next(errorHandler(404, "No admin users found"));
+    }
+
+    const totalAdminUsers = await User.find({ role: "admin" }).countDocuments();
+    response.status(200).json({ adminUsers, totalAdminUsers });
+  } catch (error) {
+    next(errorHandler(500, "Error fetching admins from the database."));
   }
 };

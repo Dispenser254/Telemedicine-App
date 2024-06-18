@@ -29,9 +29,10 @@ export const getAllDoctors = async (request, response, next) => {
         department_name: doctor.department_id.department_name, // Include the populated department_name
       };
     });
+    const totalDoctors = await Doctor.countDocuments();
 
     // Send the response
-    response.status(200).json(doctorsWithDepartment);
+    response.status(200).json({ doctorsWithDepartment, totalDoctors });
   } catch (error) {
     next(errorHandler(500, "Error retrieving doctors from the database"));
   }
@@ -133,8 +134,12 @@ export const getDoctorsByDepartment = async (request, response, next) => {
       return next(errorHandler(404, "No doctors found for this department"));
     }
 
+    const totalDoctors = await Doctor.find({
+      department_id: departmentId,
+    }).countDocuments();
+
     // Respond with the list of doctors
-    response.status(200).json(doctors);
+    response.status(200).json({ doctors, totalDoctors });
   } catch (error) {
     next(errorHandler(500, "Error retrieving doctors from the database"));
   }

@@ -5,7 +5,9 @@ import { errorHandler } from "../utils/error.js";
 export const getAllDepartments = async (request, response, next) => {
   try {
     const departments = await Department.find();
-    response.status(200).json(departments);
+
+    const totalDepartments = await Department.countDocuments();
+    response.status(200).json({ departments, totalDepartments });
   } catch (error) {
     next(errorHandler(500, "Error retrieving departments from the database"));
   }
