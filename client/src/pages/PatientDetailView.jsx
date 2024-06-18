@@ -1,12 +1,87 @@
 /* eslint-disable react/no-unescaped-entities */
-import { HiChevronLeft, HiChevronRight, HiHome, HiOutlineExclamationCircle, HiTrash } from "react-icons/hi";
-import { Breadcrumb, Button, Label, Modal, Table, TextInput } from "flowbite-react";
+import {
+  HiChevronLeft,
+  HiChevronRight,
+  HiHome,
+  HiOutlineExclamationCircle,
+  HiTrash,
+} from "react-icons/hi";
+import {
+  Breadcrumb,
+  Button,
+  Label,
+  Modal,
+  Table,
+  TextInput,
+} from "flowbite-react";
 import NavbarSidebar from "../components/NavbarSideBar";
 import AddPatientModal from "../components/AddPatientModal";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  deletePatientRecordsFailure,
+  deletePatientRecordsStart,
+  deletePatientRecordsSuccess,
+  fetchAllPatientRecordsFailure,
+  fetchAllPatientRecordsStart,
+  fetchAllPatientRecordsSuccess,
+} from "../redux/reducers/patientSlice";
+import { ScaleLoader } from "react-spinners";
 
 const PatientDetailView = () => {
+  const [patients, setPatients] = useState([]);
+  const [userIdToDelete, setUserIdToDelete] = useState("");
+  const [isOpen, setOpen] = useState(false);
+  const dispatch = useDispatch();
+  const { loading } = useSelector((state) => state.patients);
+
+  const fetchPatients = async () => {
+    try {
+      dispatch(fetchAllPatientRecordsStart());
+      const response = await fetch("/mediclinic/patient/getPatients");
+      if (!response.ok) {
+        toast.error("Failed to fetch patients data");
+        dispatch(fetchAllPatientRecordsFailure());
+      }
+      const data = await response.json();
+      setPatients(data.patients);
+      dispatch(fetchAllPatientRecordsSuccess(data));
+    } catch (error) {
+      toast.error(error.message);
+      console.log(error.message);
+      dispatch(fetchAllPatientRecordsFailure(error.message));
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      dispatch(deletePatientRecordsStart());
+      const response = await fetch(
+        `/mediclinic/patient/getPatients/${userIdToDelete}`,
+        { method: "DELETE" }
+      );
+      if (!response.ok) {
+        dispatch(deletePatientRecordsFailure("Failed to delete patient"));
+        toast.error("Failed to delete patient");
+        return;
+      }
+      // Filter out the deleted patient from the local state
+      setPatients(patients.filter((patient) => patient._id !== userIdToDelete));
+      dispatch(deletePatientRecordsSuccess(userIdToDelete));
+      toast.success("Patient deleted successfully");
+    } catch (error) {
+      toast.error(error.message);
+      console.log(error.message);
+      dispatch(deletePatientRecordsFailure("Failed to delete patient"));
+    }
+  };
+
+  useEffect(() => {
+    fetchPatients();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <NavbarSidebar isFooter={false}>
       <div className="block items-center justify-between border-b border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:flex">
@@ -47,77 +122,70 @@ const PatientDetailView = () => {
           </div>
         </div>
       </div>
-      <div className="flex flex-col">
+      {loading && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+          <ScaleLoader color="#36d7b7" />
+        </div>
+      )}
+      <div className="flex flex-col m-4">
         <div className="overflow-x-auto">
           <div className="inline-block min-w-full align-middle">
             <div className="overflow-hidden shadow">
               <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
-                <Table.Head className="bg-gray-100 dark:bg-gray-700">
-                  <Table.HeadCell>Name</Table.HeadCell>
-                  <Table.HeadCell>Position</Table.HeadCell>
-                  <Table.HeadCell>Country</Table.HeadCell>
-                  <Table.HeadCell>Status</Table.HeadCell>
+                <Table.Head className="bg-gray-100 dark:bg-gray-700 text-center">
+                  <Table.HeadCell>Patient Name</Table.HeadCell>
+                  <Table.HeadCell>Patient Age</Table.HeadCell>
+                  <Table.HeadCell>Patient Gender</Table.HeadCell>
+                  <Table.HeadCell>Contact Number</Table.HeadCell>
+                  <Table.HeadCell>Address</Table.HeadCell>
                   <Table.HeadCell>Actions</Table.HeadCell>
                 </Table.Head>
-                <Table.Body className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-                  <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700">
-                    <Table.Cell className="mr-12 flex items-center space-x-6 whitespace-nowrap p-4 lg:mr-0">
-                      <img
-                        className="h-10 w-10 rounded-full"
-                        src="../../images/users/neil-sims.png"
-                        alt="Neil Sims avatar"
-                      />
-                      <Link to={"/"}>
-                        <div className="text-sm font-normal text-gray-500 dark:text-gray-400">
-                          <div className="text-base font-semibold text-gray-900 dark:text-white">
-                            Neil Sims
-                          </div>
-                          <div className="text-sm font-normal text-gray-500 dark:text-gray-400">
-                            neil.sims@flowbite.com
-                          </div>
+                {patients.map((patient) => (
+                  <Table.Body
+                    key={patient._id}
+                    className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
+                  >
+                    <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
+                      <Table.Cell className="whitespace-nowrap text-center p-4 text-base font-medium text-gray-900 dark:text-white">
+                        {patient.patient_firstName} {patient.patient_lastName}
+                      </Table.Cell>
+                      <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                        {patient.age}
+                      </Table.Cell>
+                      <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                        {patient.patient_gender}
+                      </Table.Cell>
+                      <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                        {patient.contact_number}
+                      </Table.Cell>
+                      <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                        {patient.address}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <div className="flex items-center gap-x-3 whitespace-nowrap">
+                          <Button
+                            color="failure"
+                            onClick={() => {
+                              setOpen(true);
+                              setUserIdToDelete(patient._id);
+                            }}
+                          >
+                            <div className="flex items-center gap-x-2">
+                              <HiTrash className="text-lg" />
+                              Delete
+                            </div>
+                          </Button>
                         </div>
-                      </Link>
-                    </Table.Cell>
-                    <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                      Front-end developer
-                    </Table.Cell>
-                    <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                      United States
-                    </Table.Cell>
-                    <Table.Cell className="whitespace-nowrap p-4 text-base font-normal text-gray-900 dark:text-white">
-                      <div className="flex items-center">
-                        <div className="mr-2 h-2.5 w-2.5 rounded-full bg-green-400"></div>{" "}
-                        Active
-                      </div>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <div className="flex items-center gap-x-3 whitespace-nowrap">
-                        <DeleteUserModal />
-                      </div>
-                    </Table.Cell>
-                  </Table.Row>
-                </Table.Body>
+                      </Table.Cell>
+                    </Table.Row>
+                  </Table.Body>
+                ))}
               </Table>
             </div>
           </div>
         </div>
       </div>
       <Pagination />
-    </NavbarSidebar>
-  );
-};
-
-const DeleteUserModal = () => {
-  const [isOpen, setOpen] = useState(false);
-
-  return (
-    <>
-      <Button color="failure" onClick={() => setOpen(true)}>
-        <div className="flex items-center gap-x-2">
-          <HiTrash className="text-lg" />
-          Delete
-        </div>
-      </Button>
       <Modal onClose={() => setOpen(false)} show={isOpen} size="md">
         <Modal.Header className="px-6 pb-0 pt-6">
           <span className="sr-only">Delete user</span>
@@ -129,7 +197,13 @@ const DeleteUserModal = () => {
               Are you sure you want to delete this user?
             </p>
             <div className="flex items-center gap-x-3">
-              <Button color="failure" onClick={() => setOpen(false)}>
+              <Button
+                color="failure"
+                onClick={() => {
+                  setOpen(false);
+                  handleDelete();
+                }}
+              >
                 Yes, I'm sure
               </Button>
               <Button color="gray" onClick={() => setOpen(false)}>
@@ -139,7 +213,7 @@ const DeleteUserModal = () => {
           </div>
         </Modal.Body>
       </Modal>
-    </>
+    </NavbarSidebar>
   );
 };
 

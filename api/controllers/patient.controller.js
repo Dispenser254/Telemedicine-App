@@ -19,7 +19,17 @@ export const getAllPatients = async (request, response, next) => {
     const lastMonthPatients = await Patient.countDocuments({
       createdAt: { $gte: oneMonthAgo },
     });
-    response.status(200).json({ patients, totalPatients, lastMonthPatients });
+    // Calculate age for each patient based on patient_dob
+    const patientsWithAge = patients.map((patient) => {
+      const dob = patient.patient_dob;
+      const ageDiffMs = Date.now() - dob.getTime();
+      const ageDate = new Date(ageDiffMs);
+      return {
+        ...patient.toObject(),
+        age: Math.abs(ageDate.getUTCFullYear() - 1970),
+      };
+    });
+    response.status(200).json({ patients: patientsWithAge, totalPatients, lastMonthPatients });
   } catch (error) {
     next(errorHandler(500, "Error retrieving patients from the database"));
   }
