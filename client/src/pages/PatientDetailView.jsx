@@ -18,62 +18,55 @@ import NavbarSidebar from "../components/NavbarSideBar";
 import AddPatientModal from "../components/AddPatientModal";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  deletePatientRecordsFailure,
-  deletePatientRecordsStart,
-  deletePatientRecordsSuccess,
-  fetchAllPatientRecordsFailure,
-  fetchAllPatientRecordsStart,
-  fetchAllPatientRecordsSuccess,
-} from "../redux/reducers/patientSlice";
 import { ScaleLoader } from "react-spinners";
 
 const PatientDetailView = () => {
   const [patients, setPatients] = useState([]);
   const [userIdToDelete, setUserIdToDelete] = useState("");
   const [isOpen, setOpen] = useState(false);
-  const dispatch = useDispatch();
-  const { loading } = useSelector((state) => state.patients);
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const fetchPatients = async () => {
     try {
-      dispatch(fetchAllPatientRecordsStart());
+      setLoading(true);
+      setErrorMessage(null);
       const response = await fetch("/mediclinic/patient/getPatients");
       if (!response.ok) {
-        toast.error("Failed to fetch patients data");
-        dispatch(fetchAllPatientRecordsFailure());
+        setErrorMessage("Failed to fetch patient data.");
+        toast.error(errorMessage);
+        setLoading(false);
       }
       const data = await response.json();
       setPatients(data.patients);
-      dispatch(fetchAllPatientRecordsSuccess(data));
+      setLoading(false);
     } catch (error) {
       toast.error(error.message);
-      console.log(error.message);
-      dispatch(fetchAllPatientRecordsFailure(error.message));
+      setErrorMessage(error.message);
     }
   };
 
   const handleDelete = async () => {
     try {
-      dispatch(deletePatientRecordsStart());
+      setLoading(true);
+      setErrorMessage(null);
       const response = await fetch(
         `/mediclinic/patient/getPatients/${userIdToDelete}`,
         { method: "DELETE" }
       );
       if (!response.ok) {
-        dispatch(deletePatientRecordsFailure("Failed to delete patient"));
-        toast.error("Failed to delete patient");
+        setErrorMessage("Failed to delete patient");
+        toast.error(errorMessage);
+        setLoading(false);
         return;
       }
       // Filter out the deleted patient from the local state
       setPatients(patients.filter((patient) => patient._id !== userIdToDelete));
-      dispatch(deletePatientRecordsSuccess(userIdToDelete));
+      setLoading(false);
       toast.success("Patient deleted successfully");
     } catch (error) {
       toast.error(error.message);
-      console.log(error.message);
-      dispatch(deletePatientRecordsFailure("Failed to delete patient"));
+      setErrorMessage(error.message);
     }
   };
 
