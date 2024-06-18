@@ -15,7 +15,7 @@ export function SidebarHeader() {
   const { isOpenOnSmallScreens: isSidebarOpenOnSmallScreens } =
     useSidebarContext();
   const [currentPage, setCurrentPage] = useState("");
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const newPage = window.location.pathname;
@@ -23,17 +23,18 @@ export function SidebarHeader() {
     setCurrentPage(newPage);
   }, [setCurrentPage]);
 
-
-  const handleSignout = async()=>{
-    const response = await fetch('/mediclinic/auth/signout', {method:'POST'})
+  const handleSignout = async () => {
+    const response = await fetch("/mediclinic/auth/signout", {
+      method: "POST",
+    });
     if (!response.ok) {
-      toast.error('Error signing out.')
+      toast.error("Error signing out.");
     }
     // eslint-disable-next-line no-unused-vars
-    const data = response.json()
-    toast.success('You have signed out successfully.')
-    dispatch(signoutSuccess())
-  }
+    const data = response.json();
+    toast.success("You have signed out successfully.");
+    dispatch(signoutSuccess());
+  };
   return (
     <div
       className={classNames("lg:!block border-t z-50", {
@@ -121,7 +122,11 @@ export function SidebarHeader() {
                 <Sidebar.Item href="" icon={CgProfile}>
                   Profile
                 </Sidebar.Item>
-                <Sidebar.Item icon={MdLogout} onClick={handleSignout}>
+                <Sidebar.Item
+                  icon={MdLogout}
+                  onClick={handleSignout}
+                  className="bg-red-100 hover:bg-red-300 font-bold"
+                >
                   Sign Out
                 </Sidebar.Item>
               </Sidebar.ItemGroup>

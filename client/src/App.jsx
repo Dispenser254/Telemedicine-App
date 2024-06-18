@@ -33,6 +33,7 @@ const App = () => {
         <Route path="/signup" element={<RegisterPage />} />
         {/* Doctor signup  */}
         <Route path="/signup" element={<DoctorSignupPage />} />
+
         <Route element={<OnlyAdminPrivateRoute />}>
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/patients-list" element={<PatientDetailView />} />
@@ -43,6 +44,7 @@ const App = () => {
             element={<VideoConsultationView />}
           />
         </Route>
+
         <Route element={<OnlyDoctorPrivateRoute />}>
           <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
         </Route>

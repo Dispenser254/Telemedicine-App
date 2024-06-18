@@ -1,10 +1,9 @@
-import { Button, Label, Modal, Spinner, TextInput } from "flowbite-react";
+import { Button, Label, Spinner, TextInput } from "flowbite-react";
 import FooterPage from "../../components/FooterPage";
 import NavbarPage from "../../components/NavbarPage";
 import backgroundImage from "/images/homepage.jpg";
 import { useState } from "react";
 import adminImage from "/images/admin_Login.png";
-import { FaExclamation } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -13,19 +12,15 @@ import {
   signInSuccess,
 } from "../../redux/reducers/authenticationSlice";
 import { RingLoader } from "react-spinners";
+import { toast } from "react-toastify";
 
 const AdminLoginPage = () => {
-  const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
-  const { loading, error: errorMessage } = useSelector(
+  const { loading } = useSelector(
     (state) => state.authentication
   );
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({ role: "admin" });
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value.trim() });
@@ -45,16 +40,17 @@ const AdminLoginPage = () => {
       });
       const data = await response.json();
       if (data.success === false) {
+        toast.error(data.message)
         dispatch(signInFailure(data.message));
-        setShowModal(true);
       }
       if (response.ok) {
+        toast.success("You have signed in successfully.");
         dispatch(signInSuccess(data));
         navigate("/admin-dashboard");
       }
     } catch (error) {
+      toast.error(error.message)
       dispatch(signInFailure(error.message));
-      setShowModal(true);
     }
   };
 
@@ -121,15 +117,6 @@ const AdminLoginPage = () => {
             </Button>
           </form>
         </div>
-
-        <Modal
-          showModal={showModal}
-          setShowModal={setShowModal}
-          title="Error"
-          message={errorMessage}
-          onClose={handleCloseModal}
-          icon={FaExclamation}
-        />
       </div>
       <FooterPage />
     </>
