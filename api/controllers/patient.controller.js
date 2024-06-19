@@ -29,7 +29,9 @@ export const getAllPatients = async (request, response, next) => {
         age: Math.abs(ageDate.getUTCFullYear() - 1970),
       };
     });
-    response.status(200).json({ patients: patientsWithAge, totalPatients, lastMonthPatients });
+    response
+      .status(200)
+      .json({ patients: patientsWithAge, totalPatients, lastMonthPatients });
   } catch (error) {
     next(errorHandler(500, "Error retrieving patients from the database"));
   }
@@ -186,6 +188,11 @@ export const deletePatient = async (request, response, next) => {
     // Retrieve the user_id from the patient document
     const userId = patient.user_id;
 
+    // Find and delete all appointments associated with the patient
+    const deletedAppointments = await Appointment.deleteMany({
+      patient_id: patientId,
+    });
+
     // Delete the patient
     await Patient.findByIdAndDelete(patientId);
 
@@ -196,9 +203,11 @@ export const deletePatient = async (request, response, next) => {
       return next(errorHandler(404, "Associated user with ID not found."));
     }
 
-    response
-      .status(200)
-      .json("Patient and associated user deleted successfully");
+    response.status(200).json({
+      message:
+        "Patient, associated user, and appointments deleted successfully",
+      deletedAppointments: deletedAppointments.deletedCount,
+    });
   } catch (error) {
     next(errorHandler(500, "Error deleting patient or associated user"));
   }

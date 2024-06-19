@@ -20,6 +20,7 @@ import PatientDetailView from "./pages/PatientDetailView";
 import DoctorDetailView from "./pages/DoctorDetailView";
 import PaymentDetailView from "./pages/PaymentDetailView";
 import VideoConsultationView from "./pages/VideoConsultationView";
+import AppointmentDetailView from "./pages/AppointmentDetailView";
 
 const App = () => {
   return (
@@ -39,6 +40,7 @@ const App = () => {
           <Route path="/patients-list" element={<PatientDetailView />} />
           <Route path="/doctors-list" element={<DoctorDetailView />} />
           <Route path="/payments-list" element={<PaymentDetailView />} />
+          <Route path="/appointment-list" element={<AppointmentDetailView />} />
           <Route
             path="/video-consultation"
             element={<VideoConsultationView />}
