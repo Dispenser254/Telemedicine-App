@@ -62,6 +62,8 @@ const PatientDetailView = () => {
       }
       // Filter out the deleted patient from the local state
       setPatients(patients.filter((patient) => patient._id !== userIdToDelete));
+      // Fetch the updated list of patients after deletion
+      fetchPatients();
       setLoading(false);
       toast.success("Patient deleted successfully");
     } catch (error) {
@@ -110,7 +112,7 @@ const PatientDetailView = () => {
               </form>
             </div>
             <div className="ml-auto flex items-center space-x-2 sm:space-x-3 bg-green-200 hover:bg-green-300 cursor-pointer rounded-lg">
-              <AddPatientModal />
+              <AddPatientModal onPatientAdded={fetchPatients} />
             </div>
           </div>
         </div>

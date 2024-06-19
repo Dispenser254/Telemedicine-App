@@ -1,12 +1,10 @@
 import bcryptjs from "bcryptjs";
-import mongoose from "mongoose";
 import User from "../models/user.model.js";
 import { errorHandler } from "../utils/error.js";
 import jwt from "jsonwebtoken";
-import Doctor from "../models/doctor.model.js";
 import Patient from "../models/patient.model.js";
-import Department from "../models/department.model.js";
 
+// Create a signup
 export const signup = async (request, response, next) => {
   try {
     const {
@@ -20,12 +18,6 @@ export const signup = async (request, response, next) => {
       patient_gender,
       contact_number,
       address,
-      doctor_firstName,
-      doctor_lastName,
-      doctor_idNumber,
-      doctor_number,
-      email,
-      department_id,
     } = request.body;
 
     // Check for common required fields
@@ -62,54 +54,6 @@ export const signup = async (request, response, next) => {
           errorHandler(409, "Contact number already exists for a patient.")
         );
       }
-    } else if (role === "doctor") {
-      if (
-        !doctor_firstName ||
-        !doctor_lastName ||
-        !doctor_idNumber ||
-        !doctor_number ||
-        !email ||
-        !department_id
-      ) {
-        return next(errorHandler(400, "All doctor fields are required."));
-      }
-
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        return next(errorHandler(400, "Invalid email format."));
-      }
-
-      // Validate if department_id is a valid ObjectId
-      if (!mongoose.Types.ObjectId.isValid(department_id)) {
-        return next(errorHandler(400, "Invalid department ID format."));
-      }
-
-      // Validate if the department exists
-      const departmentExists = await Department.exists({
-        _id: department_id,
-      });
-      if (!departmentExists) {
-        return next(
-          errorHandler(400, "The specified department does not exist.")
-        );
-      }
-
-      // Check if doctor number, contact number or email already exists for doctors
-      const existingDoctor = await Doctor.findOne({
-        $or: [{ doctor_idNumber }, { doctor_number }, { email }],
-      });
-      if (existingDoctor) {
-        if (existingDoctor.doctor_idNumber === doctor_idNumber) {
-          return next(errorHandler(409, "Doctor ID number already exists."));
-        }
-        if (existingDoctor.doctor_number === doctor_number) {
-          return next(errorHandler(409, "Doctor number already exists."));
-        }
-        if (existingDoctor.email === email) {
-          return next(errorHandler(409, "Email already exists."));
-        }
-      }
     } else if (role !== "admin") {
       return next(errorHandler(400, "Invalid role specified."));
     }
@@ -144,20 +88,6 @@ export const signup = async (request, response, next) => {
         };
         const patient = new Patient(patientData);
         await patient.save();
-      } else if (role === "doctor") {
-        //Create new doctor
-        const doctorData = {
-          doctor_firstName,
-          doctor_lastName,
-          doctor_idNumber,
-          doctor_number,
-          email,
-          department_id,
-          user_id: validUser._id,
-          doctor_profilePic: "images/default.webp",
-        };
-        const doctor = new Doctor(doctorData);
-        await doctor.save();
       }
 
       // User and respective role entity creation successful

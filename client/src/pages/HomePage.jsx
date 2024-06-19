@@ -2,6 +2,7 @@ import { Button } from "flowbite-react";
 import { MdHome, MdVerifiedUser } from "react-icons/md";
 import NavbarPage from "../components/NavbarPage";
 import { Link } from "react-router-dom";
+import FooterPage from "../components/FooterPage";
 
 const HomePage = () => {
   return (
@@ -27,7 +28,7 @@ const HomePage = () => {
             <p className="text-blue-100 text-center md:text-start text-xl md:text-2xl leading-snug">
               Find the best doctors and book instant appointments
             </p>
-            <Link to={'/landing-page'}>
+            <Link to={"/landing-page"}>
               <Button
                 className="px-8 py-4 text-lg uppercase font-medium shadow-lg hover:opacity-80"
                 gradientDuoTone="tealToLime"
@@ -181,6 +182,7 @@ const HomePage = () => {
         </div>
       </section>
       {/* End testimonials */}
+      <FooterPage />
     </div>
   );
 };

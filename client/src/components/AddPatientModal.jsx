@@ -12,7 +12,8 @@ import { useState } from "react";
 import { HiPlus } from "react-icons/hi";
 import { toast } from "react-toastify";
 
-const AddPatientModal = () => {
+// eslint-disable-next-line react/prop-types
+const AddPatientModal = ({ onPatientAdded }) => {
   const [isOpen, setOpen] = useState(false);
   const [formData, setFormData] = useState({});
   const [showCredentials, setShowCredentials] = useState(false);
@@ -119,6 +120,9 @@ const AddPatientModal = () => {
       setOpen(false);
       setShowCredentials(false);
       toast.success("Patient created successfully");
+      if (onPatientAdded) {
+        onPatientAdded();
+      }
     } catch (error) {
       setErrorMessage(error.message);
       toast.error(error.message);

@@ -1,7 +1,10 @@
 import Appointment from "../models/appointment.model.js";
+import Department from "../models/department.model.js";
 import Doctor from "../models/doctor.model.js";
 import User from "../models/user.model.js";
 import { errorHandler } from "../utils/error.js";
+import bcryptjs from "bcryptjs";
+import mongoose from "mongoose";
 
 // Get all doctors
 export const getAllDoctors = async (request, response, next) => {
@@ -234,5 +237,118 @@ export const getDoctorDetails = async (request, response, next) => {
     next(
       errorHandler(500, "Error retrieving patient details from the database")
     );
+  }
+};
+
+// Create a new doctor
+export const createDoctor = async (request, response, next) => {
+  const {
+    doctor_firstName,
+    doctor_lastName,
+    doctor_idNumber,
+    doctor_number,
+    email,
+    department_id,
+    username, // Username for the new user
+    password, // Password for the new user
+    role = "doctor", // Default role for the new user
+  } = request.body;
+
+  try {
+    // Check for common required fields
+    if (!username || !password || !role) {
+      return next(
+        errorHandler(400, "Username, password, and role are required.")
+      );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return next(errorHandler(400, "Invalid email format."));
+    }
+
+    // Validate if department_id is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(department_id)) {
+      return next(errorHandler(400, "Invalid department ID format."));
+    }
+
+    // Validate if the department exists
+    const departmentExists = await Department.exists({
+      _id: department_id,
+    });
+    if (!departmentExists) {
+      return next(
+        errorHandler(400, "The specified department does not exist.")
+      );
+    }
+
+    // Check if doctor number, contact number or email already exists for doctors
+    const existingDoctor = await Doctor.findOne({
+      doctor_idNumber,
+      doctor_number,
+      email,
+    });
+    if (existingDoctor) {
+      if (existingDoctor.doctor_idNumber === doctor_idNumber) {
+        return next(errorHandler(409, "Doctor ID number already exists."));
+      }
+      if (existingDoctor.doctor_number === doctor_number) {
+        return next(errorHandler(409, "Doctor number already exists."));
+      }
+      if (existingDoctor.email === email) {
+        return next(errorHandler(409, "Email already exists."));
+      }
+    }
+    // Check if the user already exists
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return next(errorHandler(400, "Username already exists."));
+    }
+    // Hash the password
+    const hashedPassword = bcryptjs.hashSync(password, 10);
+
+    // Create a new user with hashed password
+    const newUser = new User({
+      username,
+      password: hashedPassword,
+      role,
+    });
+
+    // Save the new user
+    const savedUser = await newUser.save();
+
+    try {
+      // Use the saved user's ID for the doctor
+      const newDoctor = new Doctor({
+        doctor_firstName,
+        doctor_lastName,
+        doctor_idNumber,
+        doctor_number,
+        email,
+        department_id,
+        user_id: newUser._id,
+        doctor_profilePic:
+          "https://imgs.search.brave.com/gV6Xy99WsNTWpgT2KUNxopKhP45u8QMrrL2DGi5HYxg/rs:fit:500:0:0/g:ce/aHR0cHM6Ly90NC5m/dGNkbi5uZXQvanBn/LzAyLzE1Lzg0LzQz/LzM2MF9GXzIxNTg0/NDMyNV90dFg5WWlJ/SXllYVI3TmU2RWFM/TGpNQW15NEd2UEM2/OS5qcGc",
+      });
+
+      // Save the new doctor
+      const savedDoctor = await newDoctor.save();
+
+      // Respond with the new doctor data
+      response.status(201).json(savedDoctor);
+    } catch (rollError) {
+      console.log(rollError);
+      // Error occurred while creating role-specific data
+      await User.findByIdAndDelete(savedUser._id);
+      return next(
+        errorHandler(
+          500,
+          "An error occurred while creating role-specific data."
+        )
+      );
+    }
+  } catch (error) {
+    next(errorHandler(500, "Error creating doctor and user"));
   }
 };
