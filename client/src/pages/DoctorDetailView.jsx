@@ -3,6 +3,7 @@
 import {
   HiChevronLeft,
   HiChevronRight,
+  HiEye,
   HiHome,
   HiOutlineExclamationCircle,
   HiTrash,
@@ -112,7 +113,7 @@ const DoctorDetailView = () => {
               </form>
             </div>
             <div className="ml-auto flex items-center space-x-2 sm:space-x-3 bg-green-200 hover:bg-green-300 cursor-pointer rounded-lg">
-              <AddDoctorModal />
+              <AddDoctorModal onDoctorAdded={fetchDoctors} />
             </div>
           </div>
         </div>
@@ -129,7 +130,7 @@ const DoctorDetailView = () => {
               <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                 <Table.Head className="bg-gray-100 dark:bg-gray-700 text-center">
                   <Table.HeadCell>Doctor Name</Table.HeadCell>
-                  <Table.HeadCell>Email</Table.HeadCell>
+                  <Table.HeadCell>Doctor ID Number</Table.HeadCell>
                   <Table.HeadCell>Doctor Number</Table.HeadCell>
                   <Table.HeadCell>Department Name</Table.HeadCell>
                   <Table.HeadCell>Actions</Table.HeadCell>
@@ -165,7 +166,13 @@ const DoctorDetailView = () => {
                         {doctor.department_name}
                       </Table.Cell>
                       <Table.Cell>
-                        <div className="flex items-center gap-x-3 whitespace-nowrap">
+                        <div className="flex items-center gap-x-4 whitespace-nowrap">
+                          <Button color="blue">
+                            <div className="flex items-center gap-x-2">
+                              <HiEye className="text-lg" />
+                              View
+                            </div>
+                          </Button>
                           <Button
                             color="failure"
                             onClick={() => {
@@ -199,7 +206,7 @@ const DoctorDetailView = () => {
             <p className="text-xl text-gray-500">
               Are you sure you want to delete this user?
             </p>
-            <div className="flex items-center gap-x-3">
+            <div className="flex items-center gap-x-6">
               <Button
                 color="failure"
                 onClick={() => {

@@ -1,6 +1,6 @@
 import { Sidebar, TextInput } from "flowbite-react";
 import { HiChartPie, HiSearch } from "react-icons/hi";
-import { FaUserDoctor, FaUserInjured, FaVideo } from "react-icons/fa6";
+import { FaBookMedical, FaUserDoctor, FaUserInjured, FaVideo } from "react-icons/fa6";
 import { CgProfile } from "react-icons/cg";
 import { MdLogout, MdNotifications, MdPayments } from "react-icons/md";
 import classNames from "classnames";
@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
 import { signoutSuccess } from "../redux/reducers/authenticationSlice";
+import { Link } from "react-router-dom";
 
 export function SidebarHeader() {
   const { isOpenOnSmallScreens: isSidebarOpenOnSmallScreens } =
@@ -59,69 +60,101 @@ export function SidebarHeader() {
             </form>
             <Sidebar.Items>
               <Sidebar.ItemGroup>
-                <Sidebar.Item
-                  href="/admin-dashboard"
-                  icon={HiChartPie}
-                  className={
-                    "/admin-dashboard" === currentPage
-                      ? "bg-gray-100 dark:bg-gray-700"
-                      : ""
-                  }
-                >
-                  Dashboard
-                </Sidebar.Item>
-                <Sidebar.Item
-                  href="/doctors-list"
-                  icon={FaUserDoctor}
-                  className={
-                    "/doctors-list" === currentPage
-                      ? "bg-gray-100 dark:bg-gray-700"
-                      : ""
-                  }
-                >
-                  Doctors
-                </Sidebar.Item>
-                <Sidebar.Item
-                  href="/patients-list"
-                  icon={FaUserInjured}
-                  className={
-                    "/patients-list" === currentPage
-                      ? "bg-gray-100 dark:bg-gray-700"
-                      : ""
-                  }
-                >
-                  Patients
-                </Sidebar.Item>
-                <Sidebar.Item
-                  href="/payments-list"
-                  icon={MdPayments}
-                  className={
-                    "/payments-list" === currentPage
-                      ? "bg-gray-100 dark:bg-gray-700"
-                      : ""
-                  }
-                >
-                  Payments
-                </Sidebar.Item>
-                <Sidebar.Item
-                  href="/video-consultation"
-                  icon={FaVideo}
-                  className={
-                    "/video-consultation" === currentPage
-                      ? "bg-gray-100 dark:bg-gray-700"
-                      : ""
-                  }
-                >
-                  Video Consultation
-                </Sidebar.Item>
+                <Link to={"/admin-dashboard"}>
+                  <Sidebar.Item
+                    icon={HiChartPie}
+                    className={
+                      "/admin-dashboard" === currentPage
+                        ? "bg-gray-100 dark:bg-gray-700"
+                        : ""
+                    }
+                  >
+                    Dashboard
+                  </Sidebar.Item>
+                </Link>
+                <Link to={"/doctors-list"}>
+                  <Sidebar.Item
+                    icon={FaUserDoctor}
+                    className={
+                      "/doctors-list" === currentPage
+                        ? "bg-gray-100 dark:bg-gray-700"
+                        : ""
+                    }
+                  >
+                    Doctors
+                  </Sidebar.Item>
+                </Link>
+
+                <Link to={"/patients-list"}>
+                  <Sidebar.Item
+                    icon={FaUserInjured}
+                    className={
+                      "/patients-list" === currentPage
+                        ? "bg-gray-100 dark:bg-gray-700"
+                        : ""
+                    }
+                  >
+                    Patients
+                  </Sidebar.Item>
+                </Link>
+
+                <Link to={"/appointment-list"}>
+                  <Sidebar.Item
+                    icon={FaBookMedical}
+                    className={
+                      "/appointment-list" === currentPage
+                        ? "bg-gray-100 dark:bg-gray-700"
+                        : ""
+                    }
+                  >
+                    Appointments
+                  </Sidebar.Item>
+                </Link>
+
+                <Link to={"/payments-list"}>
+                  <Sidebar.Item
+                    icon={MdPayments}
+                    className={
+                      "/payments-list" === currentPage
+                        ? "bg-gray-100 dark:bg-gray-700"
+                        : ""
+                    }
+                  >
+                    Payments
+                  </Sidebar.Item>
+                </Link>
+
+                <Link to={"/video-consultation"}>
+                  <Sidebar.Item
+                    icon={FaVideo}
+                    className={
+                      "/video-consultation" === currentPage
+                        ? "bg-gray-100 dark:bg-gray-700"
+                        : ""
+                    }
+                  >
+                    Video Consultation
+                  </Sidebar.Item>
+                </Link>
               </Sidebar.ItemGroup>
               <Sidebar.ItemGroup>
                 <Sidebar.Item href="" icon={MdNotifications}>
                   Notification
                 </Sidebar.Item>
-                <Sidebar.Item href="" icon={CgProfile}>
-                  Profile
-                </Sidebar.Item>
+
+                <Link to={"/user-profile"}>
+                  <Sidebar.Item
+                    icon={CgProfile}
+                    className={
+                      "/user-profile" === currentPage
+                        ? "bg-gray-100 dark:bg-gray-700"
+                        : ""
+                    }
+                  >
+                    Profile
+                  </Sidebar.Item>
+                </Link>
+
                 <Sidebar.Item
                   icon={MdLogout}
                   onClick={handleSignout}
