@@ -129,6 +129,17 @@ export const login = async (request, response, next) => {
       return next(errorHandler(401, "Invalid user access"));
     }
 
+    // If the user is a patient, fetch the patient_id
+    let patientId = null;
+    if (validUser.role === "patient") {
+      const patient = await Patient.findOne({ user_id: validUser._id });
+      if (patient) {
+        patientId = patient._id;
+      } else {
+        return next(errorHandler(404, "Patient record not found."));
+      }
+    }
+
     const token = !isWalkingPatient
       ? jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: "1h" })
       : null;
@@ -137,7 +148,7 @@ export const login = async (request, response, next) => {
     response
       .status(200)
       .cookie("access_token", token, { httpOnly: true })
-      .json(rest);
+      .json({ ...rest, patient_id: patientId });
   } catch (error) {
     next(errorHandler(500, "Error signing in."));
   }

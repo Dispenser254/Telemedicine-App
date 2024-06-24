@@ -16,7 +16,7 @@ const appointmentSchema = new mongoose.Schema(
     doctor_id: {
       type: Schema.Types.ObjectId,
       ref: "Doctor",
-      required: true,
+      default: null,
     },
     appointment_date: {
       type: Date,
@@ -32,7 +32,7 @@ const appointmentSchema = new mongoose.Schema(
     },
     appointment_status: {
       type: String,
-      required: true,
+      default: "Pending with admin",
     },
   },
   { timestamps: true }

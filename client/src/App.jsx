@@ -21,6 +21,7 @@ import DoctorDetailView from "./pages/DoctorDetailView";
 import PaymentDetailView from "./pages/PaymentDetailView";
 import VideoConsultationView from "./pages/VideoConsultationView";
 import AppointmentDetailView from "./pages/AppointmentDetailView";
+import AddPaymentModal from "./components/AddPaymentModal";
 
 const App = () => {
   return (
@@ -34,13 +35,14 @@ const App = () => {
         <Route path="/signup" element={<RegisterPage />} />
         {/* Doctor signup  */}
         <Route path="/signup" element={<DoctorSignupPage />} />
+        <Route path="/appointment-list" element={<AppointmentDetailView />} />
 
         <Route element={<OnlyAdminPrivateRoute />}>
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/patients-list" element={<PatientDetailView />} />
           <Route path="/doctors-list" element={<DoctorDetailView />} />
           <Route path="/payments-list" element={<PaymentDetailView />} />
-          <Route path="/appointment-list" element={<AppointmentDetailView />} />
+
           <Route
             path="/video-consultation"
             element={<VideoConsultationView />}
@@ -52,6 +54,7 @@ const App = () => {
         </Route>
         <Route element={<OnlyPatientPrivateRoute />}>
           <Route path="/dashboard" element={<PatientDashboard />} />
+          <Route path="/payments" element={<AddPaymentModal />} />
         </Route>
 
         <Route path="/admin-login" element={<AdminLoginPage />} />

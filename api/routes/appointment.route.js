@@ -6,6 +6,7 @@ import {
   getAllAppointments,
   getAllReports,
   getAppointmentByID,
+  getAppointmentByPatientID,
   updateAppointment,
 } from "../controllers/appointment.controller.js";
 
@@ -13,6 +14,11 @@ const router = express.Router();
 
 router.get("/getAppointments", verifyToken, getAllAppointments);
 router.get("/getAppointments/:id", verifyToken, getAppointmentByID);
+router.get(
+  "/getAppointments/patient/:patient_id",
+  verifyToken,
+  getAppointmentByPatientID
+);
 router.post("/createAppointment", verifyToken, createAppointment);
 router.put("/getAppointments/:id", verifyToken, updateAppointment);
 router.delete("/getAppointments/:id", verifyToken, deleteAppointment);

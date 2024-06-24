@@ -2,11 +2,9 @@
 import { useState } from "react";
 import NavbarPage from "../../components/NavbarPage";
 import backgroundImage from "/images/homepage.jpg";
-import { FaExclamation } from "react-icons/fa";
 import {
   Button,
   Label,
-  Modal,
   Select,
   Spinner,
   TextInput,
@@ -15,48 +13,59 @@ import {
 import FooterPage from "../../components/FooterPage";
 import { useNavigate } from "react-router-dom";
 import { RingLoader } from "react-spinners";
+import { toast } from "react-toastify";
+import { HiOutlineArrowRight } from "react-icons/hi";
 
 const RegisterPage = () => {
-  const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({ role: "patient" });
   const [showCredentials, setShowCredentials] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-  };
   const handleGoBack = () => {
     setShowCredentials(false);
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value.trim() });
+    setFormData((prevData) => ({
+      ...prevData,
+      [e.target.id]: e.target.value.trim(),
+    }));
   };
 
   const validateForm = () => {
     const errors = {};
-    if (!formData.patient_name) {
-      errors.patient_name = "Patient name is required.";
+    if (!formData || !formData.patient_firstName) {
+      errors.patient_firstName = "Patient First Name is required.";
     }
-    if (!formData.patient_dob || !isValidDate(formData.patient_dob)) {
-      errors.patient_dob = "Valid patient dob is required.";
+    if (!formData || !formData.patient_lastName) {
+      errors.patient_lastName = "Patient Last Name is required.";
     }
-    if (!formData.patient_gender) {
+    if (
+      !formData ||
+      !formData.patient_dob ||
+      !isValidDate(formData.patient_dob)
+    ) {
+      errors.patient_dob = "Patient Date of Birth is required.";
+    }
+    if (!formData || !formData.patient_idNumber) {
+      errors.patient_idNumber = "ID Number is required.";
+    }
+    if (!formData || !formData.patient_gender) {
       errors.patient_gender = "Gender is required.";
     }
-    if (!formData.contact_number) {
+    if (!formData || !formData.contact_number) {
       errors.contact_number = "Contact number is required.";
     }
-    if (!formData.address) {
+    if (!formData || !formData.address) {
       errors.address = "Address is required.";
     }
     if (showCredentials) {
-      if (!formData.username) {
+      if (!formData || !formData.username) {
         errors.username = "Username is required.";
       }
-      if (!formData.password) {
+      if (!formData || !formData.password) {
         errors.password = "Password is required.";
       }
       if (formData.password !== formData.confirmPassword) {
@@ -107,18 +116,16 @@ const RegisterPage = () => {
 
       const data = await response.json();
       if (data.success === false) {
-        setErrorMessage(data.message || "An error occurred.");
-        setShowModal(true);
+        setErrorMessage(data.message);
+        toast.error(data.message);
         setLoading(false);
       }
       setLoading(false);
-
-      if (response.ok) {
-        navigate("/dashboard");
-      }
+      toast.success("Patient created successfully");
+      navigate("/patient-login");
     } catch (error) {
       setErrorMessage(error.message);
-      setShowModal(true);
+      toast.error(error.message);
       setLoading(false);
     }
   };
@@ -139,29 +146,65 @@ const RegisterPage = () => {
         }}
       >
         <NavbarPage />
-        <div className="md:mx-auto mx-4 p-8 md:p-12 bg-white rounded-lg shadow-lg max-w-2xl">
+        <div className="md:mx-auto mx-4 mt-24 mb-8 md:mt-32 p-8 md:p-12 bg-white rounded-lg shadow-lg max-w-2xl">
           {!showCredentials ? (
             <div>
               <h2 className="text-2xl font-bold mb-4 text-center uppercase">
                 Patient's <span className="text-yellow-300">Signup</span>
               </h2>
-              <form className="flex flex-col md:flex-row items-center justify-center gap-4">
-                <div className="md:flex md:flex-col">
+              <form className="flex flex-col">
+                <div className="grid grid-cols-1 gap-2 lg:gap-6 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <div className="mb-4">
-                    <Label htmlFor="patientName" className="mb-2">
-                      Patient Name
+                    <Label htmlFor="patientfirstName" className="mb-2">
+                      Patient First Name
                     </Label>
                     <TextInput
                       type="text"
-                      id="patient_name"
-                      name="patientName"
-                      placeholder="Patient's Name"
+                      id="patient_firstName"
+                      name="patientfirstName"
+                      placeholder="Patient's First Name"
                       onChange={handleChange}
                       required
                     />
-                    {errorMessage?.patient_name && (
+                    {errorMessage?.patient_firstName && (
                       <p className="text-red-500">
-                        {errorMessage.patient_name}
+                        {errorMessage.patient_firstName}
+                      </p>
+                    )}
+                  </div>
+                  <div className="mb-4">
+                    <Label htmlFor="patientlastName" className="mb-2">
+                      Patient Last Name
+                    </Label>
+                    <TextInput
+                      type="text"
+                      id="patient_lastName"
+                      name="patientlastName"
+                      placeholder="Patient's Last Name"
+                      onChange={handleChange}
+                      required
+                    />
+                    {errorMessage?.patient_lastName && (
+                      <p className="text-red-500">
+                        {errorMessage.patient_lastName}
+                      </p>
+                    )}
+                  </div>
+                  <div className="mb-4">
+                    <Label htmlFor="patientlastName" className="mb-2">
+                      Patient ID Number
+                    </Label>
+                    <TextInput
+                      type="text"
+                      id="patient_idNumber"
+                      name="patientidNumber"
+                      placeholder="Patient's ID Number"
+                      onChange={handleChange}
+                      required
+                    />
+                    {errorMessage?.patient_idNumber && (
+                      <p className="text-red-500">
+                        {errorMessage.patient_idNumber}
                       </p>
                     )}
                   </div>
@@ -195,9 +238,9 @@ const RegisterPage = () => {
                       required
                     >
                       <option value="">Select Gender</option>
-                      <option value="male">Male</option>
-                      <option value="female">Female</option>
-                      <option value="other">Other</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
                     </Select>
                     {errorMessage?.patient_gender && (
                       <p className="text-red-500">
@@ -205,8 +248,6 @@ const RegisterPage = () => {
                       </p>
                     )}
                   </div>
-                </div>
-                <div className="md:flex md:flex-col">
                   <div className="mb-4">
                     <Label htmlFor="contactNumber" className="mb-2">
                       Contact Number
@@ -243,14 +284,17 @@ const RegisterPage = () => {
                       <p className="text-red-500">{errorMessage.address}</p>
                     )}
                   </div>
-
+                </div>
+                <div className="flex justify-end">
                   <Button
+                    size="lg"
                     type="submit"
-                    className="bg-blue-400 hover:bg-blue-500"
+                    className="bg-blue-400 hover:bg-blue-500 justify-end"
                     outline
                     onClick={handlePatientDetailsSubmit}
                   >
                     Next
+                    <HiOutlineArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </div>
               </form>
@@ -339,14 +383,6 @@ const RegisterPage = () => {
             </div>
           )}
         </div>
-        <Modal
-          showModal={showModal}
-          setShowModal={setShowModal}
-          title="Error"
-          message={errorMessage}
-          onClose={handleCloseModal}
-          icon={FaExclamation}
-        />
       </div>
       <FooterPage />
     </>

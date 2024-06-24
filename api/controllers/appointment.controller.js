@@ -33,7 +33,9 @@ export const getAllAppointments = async (request, response, next) => {
       createdAt: { $gte: oneMonthAgo },
     });
 
-    response.status(200).json({ appointments, totalAppointments, lastMonthAppointments });
+    response
+      .status(200)
+      .json({ appointments, totalAppointments, lastMonthAppointments });
   } catch (error) {
     next(errorHandler(500, "Error retrieving appointments from the database"));
   }
@@ -67,17 +69,54 @@ export const getAppointmentByID = async (request, response, next) => {
   }
 };
 
+// Get an appointment by Patient ID
+export const getAppointmentByPatientID = async (request, response, next) => {
+  const patientId = request.params.patient_id;
+
+  if (!patientId) {
+    return next(errorHandler(400, "Patient ID is required"));
+  }
+  try {
+    const appointment = await Appointment.find({
+      patient_id: patientId,
+    })
+      .populate({
+        path: "patient_id",
+        select: "patient_firstName patient_lastName",
+      })
+      .populate({
+        path: "department_id",
+        select: "department_name",
+      })
+      .populate({
+        path: "doctor_id",
+        select: "doctor_firstName doctor_lastName",
+      })
+      .lean();
+
+    if (!appointment) {
+      return next(errorHandler(404, "Patient Appointment not found"));
+    }
+    response.status(200).json(appointment);
+  } catch (error) {
+    next(errorHandler(500, "Error retrieving patient appointments from the database"));
+  }
+};
+
 // Create a new appointment
 export const createAppointment = async (request, response, next) => {
   const {
     patient_id,
-    doctor_id,
     department_id,
     appointment_date,
     appointment_time,
-    appointment_status,
     appointment_type,
   } = request.body;
+
+  // Set default values for doctor_id and appointment_status
+  const doctor_id = null; // Doctor is not assigned initially
+  const appointment_status = "Pending with admin"; // Default status
+
   try {
     const newAppointment = new Appointment({
       patient_id,

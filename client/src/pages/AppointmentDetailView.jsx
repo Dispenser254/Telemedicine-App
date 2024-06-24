@@ -21,13 +21,17 @@ import { useEffect, useState } from "react";
 import { ScaleLoader } from "react-spinners";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+import AddAppointmentModal from "../components/AddAppointmentModal";
 
 const AppointmentDetailView = () => {
   const [appointments, setAppointments] = useState([]);
+  const [appointmentsPatients, setAppointmentsPatients] = useState([]);
   const [appointmentIdToDelete, setAppointmentIdToDelete] = useState("");
   const [isOpen, setOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { currentUser } = useSelector((state) => state.authentication);
 
   const fetchAppointments = async () => {
     try {
@@ -78,9 +82,34 @@ const AppointmentDetailView = () => {
     }
   };
 
+  const fetchAppointmentsByPatientsID = async (patientId) => {
+    try {
+      const response = await fetch(
+        `/mediclinic/appointment/getAppointments/patient/${patientId}`
+      );
+
+      if (!response.ok) {
+        setErrorMessage("Failed to fetch patient appointments data.");
+        toast.error(errorMessage);
+        setLoading(false);
+      }
+      const data = await response.json();
+      setAppointmentsPatients(data);
+      setLoading(false);
+    } catch (error) {
+      toast.error(error.message);
+      setErrorMessage(error.message);
+    }
+  };
+  console.log(appointmentsPatients);
+
   useEffect(() => {
-    fetchAppointments();
-  }, []);
+    if (currentUser?.role === "admin") {
+      fetchAppointments();
+    } else if (currentUser?.role === "patient") {
+      fetchAppointmentsByPatientsID(currentUser.patient_id);
+    }
+  }, [currentUser]);
 
   return (
     <NavbarSidebar isFooter={false}>
@@ -119,6 +148,11 @@ const AppointmentDetailView = () => {
                 </div>
               </form>
             </div>
+            {currentUser?.role === "patient" && (
+              <div className="ml-auto flex items-center space-x-2 sm:space-x-3 bg-green-200 hover:bg-green-300 cursor-pointer rounded-lg">
+                <AddAppointmentModal onAppointmentAdded={fetchAppointments} />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -127,70 +161,142 @@ const AppointmentDetailView = () => {
           <ScaleLoader color="#36d7b7" />
         </div>
       )}
-      <div className="flex flex-col m-4">
-        <div className="overflow-x-auto">
-          <div className="inline-block min-w-full align-middle">
-            <div className="overflow-hidden shadow">
-              <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
-                <Table.Head className="bg-gray-100 dark:bg-gray-700 text-center">
-                  <Table.HeadCell>Appointment Date</Table.HeadCell>
-                  <Table.HeadCell>Appointment Time</Table.HeadCell>
-                  <Table.HeadCell>Department Name</Table.HeadCell>
-                  <Table.HeadCell>Patient Name</Table.HeadCell>
-                  <Table.HeadCell>Actions</Table.HeadCell>
-                </Table.Head>
-                {appointments.map((appointment) => (
-                  <Table.Body
-                    key={appointment._id}
-                    className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
-                  >
-                    <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
-                      <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {new Date(
-                          appointment.appointment_date
-                        ).toLocaleDateString()}
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {appointment.appointment_time}
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {appointment.department_id?.department_name || "N/A"}
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {appointment.patient_id
-                          ? `${appointment.patient_id.patient_firstName} ${appointment.patient_id.patient_lastName}`
-                          : "N/A"}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <div className="flex items-center gap-x-4 whitespace-nowrap">
-                          <Button color="blue">
-                            <div className="flex items-center gap-x-2">
-                              <HiEye className="text-lg" />
-                              View
-                            </div>
-                          </Button>
-                          <Button
-                            color="failure"
-                            onClick={() => {
-                              setOpen(true);
-                              setAppointmentIdToDelete(appointment._id);
-                            }}
-                          >
-                            <div className="flex items-center gap-x-2">
-                              <HiTrash className="text-lg" />
-                              Delete
-                            </div>
-                          </Button>
-                        </div>
-                      </Table.Cell>
-                    </Table.Row>
-                  </Table.Body>
-                ))}
-              </Table>
+
+      {currentUser?.role === "admin" && (
+        <div className="flex flex-col m-4">
+          <div className="overflow-x-auto">
+            <div className="inline-block min-w-full align-middle">
+              <div className="overflow-hidden shadow">
+                <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                  <Table.Head className="bg-gray-100 dark:bg-gray-700 text-center">
+                    <Table.HeadCell>Appointment Date</Table.HeadCell>
+                    <Table.HeadCell>Appointment Time</Table.HeadCell>
+                    <Table.HeadCell>Department Name</Table.HeadCell>
+                    <Table.HeadCell>Patient Name</Table.HeadCell>
+                    <Table.HeadCell>Actions</Table.HeadCell>
+                  </Table.Head>
+                  {appointments.map((appointment) => (
+                    <Table.Body
+                      key={appointment._id}
+                      className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
+                    >
+                      <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {new Date(
+                            appointment.appointment_date
+                          ).toLocaleDateString()}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {appointment.appointment_time}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {appointment.department_id?.department_name || "N/A"}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {appointment.patient_id
+                            ? `${appointment.patient_id.patient_firstName} ${appointment.patient_id.patient_lastName}`
+                            : "N/A"}
+                        </Table.Cell>
+                        <Table.Cell>
+                          <div className="flex items-center gap-x-4 whitespace-nowrap">
+                            <Button color="blue">
+                              <div className="flex items-center gap-x-2">
+                                <HiEye className="text-lg" />
+                                View
+                              </div>
+                            </Button>
+                            <Button
+                              color="failure"
+                              onClick={() => {
+                                setOpen(true);
+                                setAppointmentIdToDelete(appointment._id);
+                              }}
+                            >
+                              <div className="flex items-center gap-x-2">
+                                <HiTrash className="text-lg" />
+                                Delete
+                              </div>
+                            </Button>
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    </Table.Body>
+                  ))}
+                </Table>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {currentUser?.role === "patient" && (
+        <div className="flex flex-col m-4">
+          <div className="overflow-x-auto">
+            <div className="inline-block min-w-full align-middle">
+              <div className="overflow-hidden shadow">
+                <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                  <Table.Head className="bg-gray-100 dark:bg-gray-700 text-center">
+                    <Table.HeadCell>Appointment Date</Table.HeadCell>
+                    <Table.HeadCell>Appointment Time</Table.HeadCell>
+                    <Table.HeadCell>Department Name</Table.HeadCell>
+                    <Table.HeadCell>Doctor Name</Table.HeadCell>
+                    <Table.HeadCell>Appointment Type</Table.HeadCell>
+                    <Table.HeadCell>Appointment Status</Table.HeadCell>
+                    <Table.HeadCell>Actions</Table.HeadCell>
+                  </Table.Head>
+                  {appointmentsPatients.map((appointment) => (
+                    <Table.Body
+                      key={appointment._id}
+                      className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
+                    >
+                      <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {new Date(
+                            appointment.appointment_date
+                          ).toLocaleDateString()}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {appointment.appointment_time}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {appointment.department_id?.department_name || "N/A"}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {appointment.doctor_id
+                            ? `${appointment.doctor_id.doctor_firstName} ${appointment.doctor_id.doctor_lastName}`
+                            : "Not Assigned"}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {appointment.appointment_type}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {appointment.appointment_status}
+                        </Table.Cell>
+                        <Table.Cell>
+                          <div className="flex items-center gap-x-4 whitespace-nowrap">
+                            <Button
+                              color="failure"
+                              onClick={() => {
+                                setOpen(true);
+                                setAppointmentIdToDelete();
+                              }}
+                            >
+                              <div className="flex items-center gap-x-2">
+                                <HiTrash className="text-lg" />
+                                Delete
+                              </div>
+                            </Button>
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    </Table.Body>
+                  ))}
+                </Table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       <Pagination />
       <Modal onClose={() => setOpen(false)} show={isOpen} size="md">
         <Modal.Header className="px-6 pb-0 pt-6">

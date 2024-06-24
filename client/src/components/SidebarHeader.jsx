@@ -1,6 +1,11 @@
 import { Sidebar, TextInput } from "flowbite-react";
 import { HiChartPie, HiSearch } from "react-icons/hi";
-import { FaBookMedical, FaUserDoctor, FaUserInjured, FaVideo } from "react-icons/fa6";
+import {
+  FaBookMedical,
+  FaUserDoctor,
+  FaUserInjured,
+  FaVideo,
+} from "react-icons/fa6";
 import { CgProfile } from "react-icons/cg";
 import { MdLogout, MdNotifications, MdPayments } from "react-icons/md";
 import classNames from "classnames";
@@ -8,7 +13,7 @@ import { useSidebarContext } from "../context/SidebarContext";
 import SmallScreen from "../helpers/SmallScreen";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { signoutSuccess } from "../redux/reducers/authenticationSlice";
 import { Link } from "react-router-dom";
 
@@ -17,6 +22,7 @@ export function SidebarHeader() {
     useSidebarContext();
   const [currentPage, setCurrentPage] = useState("");
   const dispatch = useDispatch();
+  const { currentUser } = useSelector((state) => state.authentication);
 
   useEffect(() => {
     const newPage = window.location.pathname;
@@ -60,82 +66,137 @@ export function SidebarHeader() {
             </form>
             <Sidebar.Items>
               <Sidebar.ItemGroup>
-                <Link to={"/admin-dashboard"}>
-                  <Sidebar.Item
-                    icon={HiChartPie}
-                    className={
-                      "/admin-dashboard" === currentPage
-                        ? "bg-gray-100 dark:bg-gray-700"
-                        : ""
-                    }
-                  >
-                    Dashboard
-                  </Sidebar.Item>
-                </Link>
-                <Link to={"/doctors-list"}>
-                  <Sidebar.Item
-                    icon={FaUserDoctor}
-                    className={
-                      "/doctors-list" === currentPage
-                        ? "bg-gray-100 dark:bg-gray-700"
-                        : ""
-                    }
-                  >
-                    Doctors
-                  </Sidebar.Item>
-                </Link>
+                {currentUser?.role === "admin" && (
+                  <>
+                    <Link to={"/admin-dashboard"} as="div">
+                      <Sidebar.Item
+                        icon={HiChartPie}
+                        className={
+                          "/admin-dashboard" === currentPage
+                            ? "bg-gray-100 dark:bg-gray-700"
+                            : ""
+                        }
+                      >
+                        Dashboard
+                      </Sidebar.Item>
+                    </Link>
+                    <Link to={"/doctors-list"} as="div">
+                      <Sidebar.Item
+                        icon={FaUserDoctor}
+                        className={
+                          "/doctors-list" === currentPage
+                            ? "bg-gray-100 dark:bg-gray-700"
+                            : ""
+                        }
+                      >
+                        Doctors
+                      </Sidebar.Item>
+                    </Link>
+                    <Link to={"/patients-list"} as="div">
+                      <Sidebar.Item
+                        icon={FaUserInjured}
+                        className={
+                          "/patients-list" === currentPage
+                            ? "bg-gray-100 dark:bg-gray-700"
+                            : ""
+                        }
+                      >
+                        Patients
+                      </Sidebar.Item>
+                    </Link>
+                    <Link to={"/appointment-list"} as="div">
+                      <Sidebar.Item
+                        icon={FaBookMedical}
+                        className={
+                          "/appointment-list" === currentPage
+                            ? "bg-gray-100 dark:bg-gray-700"
+                            : ""
+                        }
+                      >
+                        Appointments
+                      </Sidebar.Item>
+                    </Link>
+                    <Link to={"/payments-list"} as="div">
+                      <Sidebar.Item
+                        icon={MdPayments}
+                        className={
+                          "/payments-list" === currentPage
+                            ? "bg-gray-100 dark:bg-gray-700"
+                            : ""
+                        }
+                      >
+                        Payments
+                      </Sidebar.Item>
+                    </Link>
+                    <Link to={"/video-consultation"} as="div">
+                      <Sidebar.Item
+                        icon={FaVideo}
+                        className={
+                          "/video-consultation" === currentPage
+                            ? "bg-gray-100 dark:bg-gray-700"
+                            : ""
+                        }
+                      >
+                        Video Consultation
+                      </Sidebar.Item>
+                    </Link>
+                  </>
+                )}
+                {currentUser?.role === "patient" && (
+                  <>
+                    <Link to={"/dashboard"}>
+                      <Sidebar.Item
+                        icon={HiChartPie}
+                        className={
+                          "/dashboard" === currentPage
+                            ? "bg-gray-100 dark:bg-gray-700"
+                            : ""
+                        }
+                      >
+                        Dashboard
+                      </Sidebar.Item>
+                    </Link>
 
-                <Link to={"/patients-list"}>
-                  <Sidebar.Item
-                    icon={FaUserInjured}
-                    className={
-                      "/patients-list" === currentPage
-                        ? "bg-gray-100 dark:bg-gray-700"
-                        : ""
-                    }
-                  >
-                    Patients
-                  </Sidebar.Item>
-                </Link>
+                    <Link to={"//video-consultation"}>
+                      <Sidebar.Item
+                        icon={FaVideo}
+                        className={
+                          "/video-consultation" === currentPage
+                            ? "bg-gray-100 dark:bg-gray-700"
+                            : ""
+                        }
+                      >
+                        Video Consultation
+                      </Sidebar.Item>
+                    </Link>
 
-                <Link to={"/appointment-list"}>
-                  <Sidebar.Item
-                    icon={FaBookMedical}
-                    className={
-                      "/appointment-list" === currentPage
-                        ? "bg-gray-100 dark:bg-gray-700"
-                        : ""
-                    }
-                  >
-                    Appointments
-                  </Sidebar.Item>
-                </Link>
+                    <Link to={"/appointment-list"}>
+                      <Sidebar.Item
+                        icon={FaBookMedical}
+                        className={
+                          "/appointment-list" === currentPage
+                            ? "bg-gray-100 dark:bg-gray-700"
+                            : ""
+                        }
+                      >
+                        My Appointments
+                      </Sidebar.Item>
+                    </Link>
 
-                <Link to={"/payments-list"}>
-                  <Sidebar.Item
-                    icon={MdPayments}
-                    className={
-                      "/payments-list" === currentPage
-                        ? "bg-gray-100 dark:bg-gray-700"
-                        : ""
-                    }
-                  >
-                    Payments
-                  </Sidebar.Item>
-                </Link>
-
-                <Link to={"/video-consultation"}>
-                  <Sidebar.Item
-                    icon={FaVideo}
-                    className={
-                      "/video-consultation" === currentPage
-                        ? "bg-gray-100 dark:bg-gray-700"
-                        : ""
-                    }
-                  >
-                    Video Consultation
-                  </Sidebar.Item>
-                </Link>
+                    <Link to={"/payments"}>
+                      <Sidebar.Item
+                        icon={MdPayments}
+                        className={
+                          "/payments" === currentPage
+                            ? "bg-gray-100 dark:bg-gray-700"
+                            : ""
+                        }
+                      >
+                        My Payments
+                      </Sidebar.Item>
+                    </Link>
+                  </>
+                )}
               </Sidebar.ItemGroup>
               <Sidebar.ItemGroup>
                 <Sidebar.Item href="" icon={MdNotifications}>

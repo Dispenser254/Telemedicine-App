@@ -1,10 +1,9 @@
-import { Button, Label, Modal, Spinner, TextInput } from "flowbite-react";
+import { Button, Label, Spinner, TextInput } from "flowbite-react";
 import FooterPage from "../../components/FooterPage";
 import NavbarPage from "../../components/NavbarPage";
 import backgroundImage from "/images/homepage.jpg";
 import { useState } from "react";
 import patientIcon from "/images/patientIcon.png";
-import { FaExclamation } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -13,19 +12,15 @@ import {
   signInSuccess,
 } from "../../redux/reducers/authenticationSlice";
 import { RingLoader } from "react-spinners";
+import { toast } from "react-toastify";
 
 const PatientLoginPage = () => {
-  const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
   const { loading, error: errorMessage } = useSelector(
     (state) => state.authentication
   );
   const dispatch = useDispatch();
   const [formData, setFormData] = useState({ role: "patient" });
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value.trim() });
@@ -34,6 +29,7 @@ const PatientLoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.username || !formData.password) {
+      toast.error("Please fillout all the fields.");
       return dispatch(signInFailure("Please fillout all the fields."));
     }
     try {
@@ -45,16 +41,15 @@ const PatientLoginPage = () => {
       });
       const data = await response.json();
       if (data.success === false) {
-        dispatch(signInFailure(data.message));
-        setShowModal(true);
+        dispatch(signInFailure(errorMessage));
+        toast.error(data.message);
       }
-      if (response.ok) {
-        dispatch(signInSuccess(data));
-        navigate("/dashboard");
-      }
+      dispatch(signInSuccess(data));
+      toast.success(data.message);
+      navigate("/dashboard");
     } catch (error) {
       dispatch(signInFailure(error.message));
-      setShowModal(true);
+      toast.error(error.message);
     }
   };
   return (
@@ -77,7 +72,7 @@ const PatientLoginPage = () => {
           <div className="flex items-center gap-2">
             <img
               src={patientIcon}
-              alt="Doctor"
+              alt="Patient"
               className="w-20 h-20 mb-4 rounded-full"
             />
             <h2 className="text-2xl font-bold mb-4 uppercase">
@@ -129,15 +124,6 @@ const PatientLoginPage = () => {
             </Link>
           </div>
         </div>
-
-        <Modal
-          showModal={showModal}
-          setShowModal={setShowModal}
-          title="Error"
-          message={errorMessage}
-          onClose={handleCloseModal}
-          icon={FaExclamation}
-        />
       </div>
       <FooterPage />
     </>
