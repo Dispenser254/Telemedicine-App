@@ -21,7 +21,7 @@ import DoctorDetailView from "./pages/DoctorDetailView";
 import PaymentDetailView from "./pages/PaymentDetailView";
 import VideoConsultationView from "./pages/VideoConsultationView";
 import AppointmentDetailView from "./pages/AppointmentDetailView";
-import AddPaymentModal from "./components/AddPaymentModal";
+import PrivateRoute from "./components/PrivateRoute";
 
 const App = () => {
   return (
@@ -31,35 +31,41 @@ const App = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/landing-page" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/admin-login" element={<AdminLoginPage />} />
+        <Route path="/doctor-login" element={<DoctorLoginPage />} />
+        <Route path="/patient-login" element={<PatientLoginPage />} />
+        
         {/* Patient signup  */}
         <Route path="/signup" element={<RegisterPage />} />
         {/* Doctor signup  */}
         <Route path="/signup" element={<DoctorSignupPage />} />
-        <Route path="/appointment-list" element={<AppointmentDetailView />} />
 
-        <Route element={<OnlyAdminPrivateRoute />}>
-          <Route path="/admin-dashboard" element={<AdminDashboard />} />
-          <Route path="/patients-list" element={<PatientDetailView />} />
-          <Route path="/doctors-list" element={<DoctorDetailView />} />
+        {/* Users must signin inorder to access this pages */}
+        <Route element={<PrivateRoute />}>
+          <Route path="/appointment-list" element={<AppointmentDetailView />} />
           <Route path="/payments-list" element={<PaymentDetailView />} />
-
           <Route
             path="/video-consultation"
             element={<VideoConsultationView />}
           />
         </Route>
 
+        {/* Users must be admins inorder to access this page */}
+        <Route element={<OnlyAdminPrivateRoute />}>
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/patients-list" element={<PatientDetailView />} />
+          <Route path="/doctors-list" element={<DoctorDetailView />} />
+        </Route>
+
+        {/* Users must be doctors inorder to access this pages */}
         <Route element={<OnlyDoctorPrivateRoute />}>
           <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
         </Route>
+
+        {/* Users must be patients inorder to access this pages */}
         <Route element={<OnlyPatientPrivateRoute />}>
           <Route path="/dashboard" element={<PatientDashboard />} />
-          <Route path="/payments" element={<AddPaymentModal />} />
         </Route>
-
-        <Route path="/admin-login" element={<AdminLoginPage />} />
-        <Route path="/doctor-login" element={<DoctorLoginPage />} />
-        <Route path="/patient-login" element={<PatientLoginPage />} />
 
         {/* Fallback route for handling undefined routes */}
         <Route path="*" element={<NotFoundPage />} />

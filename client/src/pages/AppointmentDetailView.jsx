@@ -84,6 +84,7 @@ const AppointmentDetailView = () => {
 
   const fetchAppointmentsByPatientsID = async (patientId) => {
     try {
+      setLoading(true)
       const response = await fetch(
         `/mediclinic/appointment/getAppointments/patient/${patientId}`
       );
@@ -101,7 +102,6 @@ const AppointmentDetailView = () => {
       setErrorMessage(error.message);
     }
   };
-  console.log(appointmentsPatients);
 
   useEffect(() => {
     if (currentUser?.role === "admin") {

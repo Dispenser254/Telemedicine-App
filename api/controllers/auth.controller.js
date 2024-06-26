@@ -3,6 +3,7 @@ import User from "../models/user.model.js";
 import { errorHandler } from "../utils/error.js";
 import jwt from "jsonwebtoken";
 import Patient from "../models/patient.model.js";
+import Appointment from "../models/appointment.model.js";
 
 // Create a signup
 export const signup = async (request, response, next) => {
@@ -129,12 +130,22 @@ export const login = async (request, response, next) => {
       return next(errorHandler(401, "Invalid user access"));
     }
 
-    // If the user is a patient, fetch the patient_id
+    // If the user is a patient, fetch the patient_id and appointment_id
     let patientId = null;
+    let appointmentId = null;
     if (validUser.role === "patient") {
       const patient = await Patient.findOne({ user_id: validUser._id });
       if (patient) {
         patientId = patient._id;
+
+        // Fetch the latest appointment for the patient
+        const appointment = await Appointment.findOne({
+          patient_id: patientId,
+        }).sort({ date: -1 }); // Assuming you have a date field and you want the latest appointment
+
+        if (appointment) {
+          appointmentId = appointment._id;
+        }
       } else {
         return next(errorHandler(404, "Patient record not found."));
       }
@@ -148,7 +159,7 @@ export const login = async (request, response, next) => {
     response
       .status(200)
       .cookie("access_token", token, { httpOnly: true })
-      .json({ ...rest, patient_id: patientId });
+      .json({ ...rest, patient_id: patientId, appointment_id: appointmentId });
   } catch (error) {
     next(errorHandler(500, "Error signing in."));
   }

@@ -157,7 +157,7 @@ export function SidebarHeader() {
                       </Sidebar.Item>
                     </Link>
 
-                    <Link to={"//video-consultation"}>
+                    <Link to={"/video-consultation"}>
                       <Sidebar.Item
                         icon={FaVideo}
                         className={
@@ -183,11 +183,11 @@ export function SidebarHeader() {
                       </Sidebar.Item>
                     </Link>
 
-                    <Link to={"/payments"}>
+                    <Link to={"/payments-list"}>
                       <Sidebar.Item
                         icon={MdPayments}
                         className={
-                          "/payments" === currentPage
+                          "/payments-list" === currentPage
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
