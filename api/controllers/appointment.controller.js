@@ -189,8 +189,6 @@ export const updateAppointment = async (request, response, next) => {
     if (!updatedAppointment) {
       return next(errorHandler(404, "Appointment not found"));
     }
-    console.log(updatedAppointment);
-    console.log(isCreateVideoLink);
     // Handle video consultation link creation
     if (isCreateVideoLink) {
       const isSuccess = await createVideoConsultation(

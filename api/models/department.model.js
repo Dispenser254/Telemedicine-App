@@ -8,6 +8,10 @@ const departmentSchema = new mongoose.Schema(
       requred: true,
       unique: true,
     },
+    department_description: {
+      type: String,
+      requred: true,
+    },
   },
   { timestamps: true }
 );

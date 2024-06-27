@@ -16,6 +16,7 @@ import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { signoutSuccess } from "../redux/reducers/authenticationSlice";
 import { Link } from "react-router-dom";
+import { FaHospitalAlt } from "react-icons/fa";
 
 export function SidebarHeader() {
   const { isOpenOnSmallScreens: isSidebarOpenOnSmallScreens } =
@@ -138,6 +139,18 @@ export function SidebarHeader() {
                         }
                       >
                         Video Consultation
+                      </Sidebar.Item>
+                    </Link>
+                    <Link to={"/department-list"} as="div">
+                      <Sidebar.Item
+                        icon={FaHospitalAlt}
+                        className={
+                          "/department-list" === currentPage
+                            ? "bg-gray-100 dark:bg-gray-700"
+                            : ""
+                        }
+                      >
+                        Departments
                       </Sidebar.Item>
                     </Link>
                   </>

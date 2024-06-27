@@ -22,7 +22,7 @@ import PaymentDetailView from "./pages/PaymentDetailView";
 import VideoConsultationView from "./pages/VideoConsultationView";
 import AppointmentDetailView from "./pages/AppointmentDetailView";
 import PrivateRoute from "./components/PrivateRoute";
-import UsersProfile from "./pages/UsersProfile";
+import DepartmentDetailView from "./pages/DepartmentDetailView";
 
 const App = () => {
   return (
@@ -49,7 +49,6 @@ const App = () => {
             path="/video-consultation"
             element={<VideoConsultationView />}
           />
-          <Route path="/users-profile" element={<UsersProfile />} />
         </Route>
 
         {/* Users must be admins inorder to access this page */}
@@ -57,6 +56,7 @@ const App = () => {
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/patients-list" element={<PatientDetailView />} />
           <Route path="/doctors-list" element={<DoctorDetailView />} />
+          <Route path="/department-list" element={<DepartmentDetailView />} />
         </Route>
 
         {/* Users must be doctors inorder to access this pages */}
