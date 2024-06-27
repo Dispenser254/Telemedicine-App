@@ -22,6 +22,12 @@ export const getAllAppointments = async (request, response, next) => {
       .lean();
 
     const totalAppointments = await Appointment.countDocuments();
+    const totalPendingAppointments = await Appointment.countDocuments({
+      appointment_status: "Pending with admin",
+    });
+    const totalConfirmedAppointments = await Appointment.countDocuments({
+      appointment_status: "Scheduled",
+    });
     const now = new Date();
     const oneMonthAgo = new Date(
       now.getFullYear(),
@@ -33,9 +39,13 @@ export const getAllAppointments = async (request, response, next) => {
       createdAt: { $gte: oneMonthAgo },
     });
 
-    response
-      .status(200)
-      .json({ appointments, totalAppointments, lastMonthAppointments });
+    response.status(200).json({
+      appointments,
+      totalAppointments,
+      totalConfirmedAppointments,
+      totalPendingAppointments,
+      lastMonthAppointments,
+    });
   } catch (error) {
     next(errorHandler(500, "Error retrieving appointments from the database"));
   }
@@ -80,6 +90,7 @@ export const getAppointmentByPatientID = async (request, response, next) => {
     const appointment = await Appointment.find({
       patient_id: patientId,
     })
+      .sort({ createdAt: -1 })
       .populate({
         path: "patient_id",
         select: "patient_firstName patient_lastName",
@@ -99,7 +110,12 @@ export const getAppointmentByPatientID = async (request, response, next) => {
     }
     response.status(200).json(appointment);
   } catch (error) {
-    next(errorHandler(500, "Error retrieving patient appointments from the database"));
+    next(
+      errorHandler(
+        500,
+        "Error retrieving patient appointments from the database"
+      )
+    );
   }
 };
 
@@ -153,11 +169,6 @@ export const updateAppointment = async (request, response, next) => {
       return next(errorHandler(404, "Appointment not found"));
     }
 
-    const isCreateVideoLink =
-      appointment_status === APPOINTMENT_STATUS.APPROVED &&
-      appointment_type === appointmentTypeOnline &&
-      previousAppointment.appointment_status !== APPOINTMENT_STATUS.APPROVED;
-
     const updatedAppointment = await Appointment.findByIdAndUpdate(
       appointmentId,
       {
@@ -166,18 +177,33 @@ export const updateAppointment = async (request, response, next) => {
         department_id,
         appointment_date,
         appointment_time,
-        appointment_status,
+        appointment_status: "Scheduled",
         appointment_type,
       },
       { new: true, runValidators: true }
     );
+    const isCreateVideoLink =
+      updatedAppointment.appointment_status === "Scheduled" &&
+      updatedAppointment.appointment_type === "Online";
 
     if (!updatedAppointment) {
       return next(errorHandler(404, "Appointment not found"));
     }
+    console.log(updatedAppointment);
+    console.log(isCreateVideoLink);
     // Handle video consultation link creation
     if (isCreateVideoLink) {
-      const isSuccess = await createVideoConsultation(request.body);
+      const isSuccess = await createVideoConsultation(
+        {
+          body: {
+            patient_id: updatedAppointment.patient_id._id,
+            doctor_id,
+            appointment_id: updatedAppointment._id,
+          },
+        },
+        response,
+        next
+      );
       if (!isSuccess) {
         return next(errorHandler(500, "Error creating video link"));
       }

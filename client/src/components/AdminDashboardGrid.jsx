@@ -4,9 +4,12 @@ import { toast } from "react-toastify";
 
 const AdminDashboardGrid = () => {
   const [totalPatients, setTotalPatients] = useState(0);
-  // const [totalPayments, setTotalPayments] = useState(0);
+  const [totalPayments, setTotalPayments] = useState(0);
   const [totalDoctors, setTotalDoctors] = useState(0);
   const [totalVideoConsultations, setTotalVideoConsultations] = useState(0);
+  const [totalPendingAppointments, setTotalPendingAppointments] = useState(0);
+  const [totalConfirmedAppointments, setTotalConfirmedAppointments] =
+    useState(0);
 
   const fetchPatients = async () => {
     try {
@@ -36,6 +39,20 @@ const AdminDashboardGrid = () => {
     }
   };
 
+  const fetchPayments = async () => {
+    try {
+      const response = await fetch("/mediclinic/payment/getAllPayments");
+      if (!response.ok) {
+        toast.error("Failed to fetch payments data");
+      }
+      const data = await response.json();
+      setTotalPayments(data.totalPayments);
+    } catch (error) {
+      toast.error(error.message);
+      console.log(error.message);
+    }
+  };
+
   const fetchVideoConsultations = async () => {
     try {
       const response = await fetch("/mediclinic/video/getVideoConsultations");
@@ -50,16 +67,33 @@ const AdminDashboardGrid = () => {
     }
   };
 
+  const fetchAppointments = async () => {
+    try {
+      const response = await fetch("/mediclinic/appointment/getAppointments");
+      if (!response.ok) {
+        toast.error("Failed to fetch appointments data");
+        return;
+      }
+      const data = await response.json();
+      setTotalConfirmedAppointments(data.totalConfirmedAppointments);
+      setTotalPendingAppointments(data.totalPendingAppointments);
+    } catch (error) {
+      toast.error(error.message);
+      console.log(error.message);
+    }
+  };
+
   useEffect(() => {
     fetchPatients();
     fetchDoctors();
     fetchVideoConsultations();
+    fetchAppointments();
+    fetchPayments();
   }, []);
 
   return (
     <div className="">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {}
         <Card href="/patients-list" className="">
           <h5 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
             Total Patients
@@ -75,7 +109,9 @@ const AdminDashboardGrid = () => {
             Pending Appointment Requests
           </h5>
           <div className="flex">
-            <p className="font-normal text-gray-700 dark:text-gray-400">6</p>
+            <p className="font-normal text-gray-700 dark:text-gray-400">
+              {totalPendingAppointments}
+            </p>
           </div>
         </Card>
         <Card href="#" className="">
@@ -83,7 +119,9 @@ const AdminDashboardGrid = () => {
             Confirmed Appointments
           </h5>
           <div className="flex">
-            <p className="font-normal text-gray-700 dark:text-gray-400">6</p>
+            <p className="font-normal text-gray-700 dark:text-gray-400">
+              {totalConfirmedAppointments}
+            </p>
           </div>
         </Card>
         <Card href="/doctors-list" className="">
@@ -101,7 +139,9 @@ const AdminDashboardGrid = () => {
             Total Payments
           </h5>
           <div className="flex">
-            <p className="font-normal text-gray-700 dark:text-gray-400">0</p>
+            <p className="font-normal text-gray-700 dark:text-gray-400">
+              {totalPayments}
+            </p>
           </div>
         </Card>
         <Card href="/video-consultation" className="">

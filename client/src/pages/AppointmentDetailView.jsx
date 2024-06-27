@@ -3,6 +3,7 @@
 import {
   HiChevronLeft,
   HiChevronRight,
+  HiDocument,
   HiEye,
   HiHome,
   HiOutlineExclamationCircle,
@@ -13,6 +14,8 @@ import {
   Button,
   Label,
   Modal,
+  Select,
+  Spinner,
   Table,
   TextInput,
 } from "flowbite-react";
@@ -26,12 +29,31 @@ import AddAppointmentModal from "../components/AddAppointmentModal";
 
 const AppointmentDetailView = () => {
   const [appointments, setAppointments] = useState([]);
+  const [doctors, setDoctors] = useState([]);
   const [appointmentsPatients, setAppointmentsPatients] = useState([]);
   const [appointmentIdToDelete, setAppointmentIdToDelete] = useState("");
+  const [appointmentId, setAppointmentId] = useState("");
+  const [selectedAppointment, setSelectedAppointment] = useState([]);
   const [isOpen, setOpen] = useState(false);
+  const [appointmentModal, setAppointmentModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loadingAppointments, setLoadingAppointments] = useState(false);
+  const [loadingDoctors, setLoadingDoctors] = useState(false);
   const { currentUser } = useSelector((state) => state.authentication);
+  const [doctorId, setDoctorId] = useState("");
+
+  useEffect(() => {
+    if (currentUser?.role === "admin") {
+      fetchAppointments();
+    } else if (currentUser?.role === "patient") {
+      fetchAppointmentsByPatientsID(currentUser.patient_id);
+    }
+  }, [currentUser]);
+
+  const handleChange = (e) => {
+    setDoctorId(e.target.value);
+  };
 
   const fetchAppointments = async () => {
     try {
@@ -49,6 +71,51 @@ const AppointmentDetailView = () => {
     } catch (error) {
       toast.error(error.message);
       setErrorMessage(error.message);
+    }
+  };
+
+  const fetchAppointmentsByID = async (appointmentID) => {
+    try {
+      setLoadingAppointments(true);
+      setErrorMessage(null);
+      setSelectedAppointment(null);
+
+      const response = await fetch(
+        `/mediclinic/appointment/getAppointments/${appointmentID}`
+      );
+      if (!response.ok) {
+        setErrorMessage("Failed to fetch selected appointments data.");
+        toast.error(errorMessage);
+        setLoadingAppointments(false);
+      }
+      const data = await response.json();
+      setSelectedAppointment(data);
+      setLoadingAppointments(false);
+    } catch (error) {
+      toast.error(error.message);
+      setErrorMessage(error.message);
+      setLoadingAppointments(false);
+    }
+  };
+
+  const fetchDoctorByID = async (departmentID) => {
+    try {
+      setLoadingDoctors(true);
+      const response = await fetch(
+        `/mediclinic/doctor/getDoctors/department/${departmentID}`
+      );
+      if (!response.ok) {
+        setErrorMessage("Failed to fetch doctors by department data.");
+        toast.error(errorMessage);
+        setLoadingDoctors(false);
+      }
+      const data = await response.json();
+      setDoctors(data.doctors);
+      setLoadingDoctors(false);
+    } catch (error) {
+      toast.error(error.message);
+      setErrorMessage(error.message);
+      setLoadingDoctors(false);
     }
   };
 
@@ -84,7 +151,7 @@ const AppointmentDetailView = () => {
 
   const fetchAppointmentsByPatientsID = async (patientId) => {
     try {
-      setLoading(true)
+      setLoading(true);
       const response = await fetch(
         `/mediclinic/appointment/getAppointments/patient/${patientId}`
       );
@@ -103,13 +170,43 @@ const AppointmentDetailView = () => {
     }
   };
 
-  useEffect(() => {
-    if (currentUser?.role === "admin") {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+
+      const updatedData = {
+        patient_id: selectedAppointment.patient_id, // Ensure to update or keep the patient_id
+        doctor_id: doctorId,
+        department_id: selectedAppointment.department_id,
+        appointment_date: selectedAppointment.appointment_date,
+        appointment_time: selectedAppointment.appointment_time,
+        appointment_status: selectedAppointment.appointment_status,
+        appointment_type: selectedAppointment.appointment_type,
+      };
+      const response = await fetch(
+        `/mediclinic/appointment/getAppointments/${appointmentId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedData),
+        }
+      );
+      if (!response.ok) {
+        toast.error("Failed to update appointment");
+      }
+      const updatedAppointment = await response.json();
+      console.log(updatedAppointment);
       fetchAppointments();
-    } else if (currentUser?.role === "patient") {
-      fetchAppointmentsByPatientsID(currentUser.patient_id);
+      toast.success("Appointment updated successfully");
+      setAppointmentModal(false);
+      setLoading(false);
+    } catch (error) {
+      toast.error(error.message);
     }
-  }, [currentUser]);
+  };
 
   return (
     <NavbarSidebar isFooter={false}>
@@ -172,7 +269,9 @@ const AppointmentDetailView = () => {
                     <Table.HeadCell>Appointment Date</Table.HeadCell>
                     <Table.HeadCell>Appointment Time</Table.HeadCell>
                     <Table.HeadCell>Department Name</Table.HeadCell>
-                    <Table.HeadCell>Patient Name</Table.HeadCell>
+                    <Table.HeadCell>Doctor Name</Table.HeadCell>
+                    <Table.HeadCell>Appointment Type</Table.HeadCell>
+                    <Table.HeadCell>Appointment Status</Table.HeadCell>
                     <Table.HeadCell>Actions</Table.HeadCell>
                   </Table.Head>
                   {appointments.map((appointment) => (
@@ -193,23 +292,52 @@ const AppointmentDetailView = () => {
                           {appointment.department_id?.department_name || "N/A"}
                         </Table.Cell>
                         <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {appointment.patient_id
-                            ? `${appointment.patient_id.patient_firstName} ${appointment.patient_id.patient_lastName}`
-                            : "N/A"}
+                          {appointment.doctor_id
+                            ? `${appointment.doctor_id.doctor_firstName} ${appointment.doctor_id.doctor_lastName}`
+                            : "Not Assigned"}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {appointment.appointment_type}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {appointment.appointment_status}
                         </Table.Cell>
                         <Table.Cell>
                           <div className="flex items-center gap-x-4 whitespace-nowrap">
-                            <Button color="blue">
+                            <Button
+                              color={
+                                appointment.appointment_status ===
+                                "Pending with admin"
+                                  ? "blue"
+                                  : "success"
+                              }
+                              onClick={() => {
+                                setAppointmentModal(true);
+                                setAppointmentId(appointment._id);
+                                fetchAppointmentsByID(appointment._id);
+                                fetchDoctorByID(appointment.department_id._id);
+                              }}
+                            >
                               <div className="flex items-center gap-x-2">
-                                <HiEye className="text-lg" />
-                                View
+                                {appointment.appointment_status ===
+                                "Pending with admin" ? (
+                                  <>
+                                    <HiDocument className="text-lg" />
+                                    Assign Doc
+                                  </>
+                                ) : (
+                                  <>
+                                    <HiEye className="text-lg" />
+                                    View
+                                  </>
+                                )}
                               </div>
                             </Button>
                             <Button
                               color="failure"
                               onClick={() => {
                                 setOpen(true);
-                                setAppointmentIdToDelete(appointment._id);
+                                setAppointmentIdToDelete();
                               }}
                             >
                               <div className="flex items-center gap-x-2">
@@ -322,6 +450,156 @@ const AppointmentDetailView = () => {
                 No, cancel
               </Button>
             </div>
+          </div>
+        </Modal.Body>
+      </Modal>
+
+      <Modal
+        onClose={() => setAppointmentModal(false)}
+        show={appointmentModal}
+        size="md"
+      >
+        <Modal.Header className="px-6 pb-0 pt-6">
+          <span className="sr-only">Assign Doctor</span>
+        </Modal.Header>
+        <Modal.Body className="px-6 pb-6 pt-0">
+          <div className="flex flex-col items-center gap-y-6 text-center">
+            {loadingAppointments && (
+              <>
+                <Spinner size="lg" />
+                <span className="pl-3">Loading...</span>
+              </>
+            )}
+            <div className="flex mt-2 gap-2">
+              <div className="mb-4">
+                <Label htmlFor="appointmentDate" className="mb-2">
+                  Appointment Date
+                </Label>
+                <TextInput
+                  disabled
+                  type="date"
+                  id="appointment_date"
+                  name="appointmentDate"
+                  placeholder="Appointment Date"
+                  value={
+                    selectedAppointment?.appointment_date
+                      ? new Date(selectedAppointment.appointment_date)
+                          .toISOString()
+                          .split("T")[0]
+                      : ""
+                  }
+                />
+              </div>
+              <div className="mb-4">
+                <Label htmlFor="appointmentTime" className="mb-2">
+                  Appointment Time
+                </Label>
+                <TextInput
+                  disabled
+                  type="time"
+                  id="appointment_time"
+                  name="appointmentTime"
+                  placeholder="Appointment Time"
+                  value={selectedAppointment?.appointment_time || "N/A"}
+                />
+              </div>
+            </div>
+            <div className="mb-4">
+              <Label htmlFor="gender" className="mb-2 block text-gray-700">
+                Select Appointment Type
+              </Label>
+              <TextInput
+                disabled
+                type="text"
+                id="appointment_type"
+                name="appointmentType"
+                placeholder="Appointment Type"
+                value={selectedAppointment?.appointment_type || "N/A"}
+              />
+            </div>
+            <div className="mb-4">
+              <Label htmlFor="departmentId" className="mb-2">
+                Department
+              </Label>
+              <TextInput
+                disabled
+                type="text"
+                id="department_id"
+                name="departmentId"
+                placeholder="Department"
+                value={
+                  selectedAppointment?.department_id?.department_name || "N/A"
+                }
+              />
+            </div>
+            {selectedAppointment?.appointment_status ===
+            "Pending with admin" ? (
+              <div className="mb-4">
+                <Label htmlFor="doctorId" className="mb-2">
+                  Doctor
+                </Label>
+                <Select
+                  id="doctor_id"
+                  name="doctorId"
+                  onChange={handleChange}
+                  required
+                  disabled={loadingDoctors}
+                >
+                  {loadingDoctors ? (
+                    <>
+                      <Spinner size="sm" />
+                      <span className="pl-3">Loading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <option value="">Select Doctor</option>
+                      {doctors.map((doc) => (
+                        <option key={doc._id} value={doc._id}>
+                          {doc.doctor_firstName} {doc.doctor_lastName}
+                        </option>
+                      ))}
+                    </>
+                  )}
+                </Select>
+              </div>
+            ) : (
+              <div className="mb-4">
+                <Label htmlFor="doctorId" className="mb-2">
+                  Doctor
+                </Label>
+                <TextInput
+                  disabled
+                  type="text"
+                  id="doctor_id"
+                  name="doctorId"
+                  placeholder="Doctor"
+                  value={
+                    selectedAppointment?.doctor_id?.doctor_firstName || "N/A"
+                  }
+                />
+              </div>
+            )}
+
+            {selectedAppointment?.appointment_status ===
+            "Pending with admin" ? (
+              <div className="flex items-center gap-x-6">
+                <Button
+                  color="blue"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setAppointmentModal(false);
+                    handleSubmit(e);
+                  }}
+                >
+                  Submit
+                </Button>
+                <Button color="gray" onClick={() => setAppointmentModal(false)}>
+                  No, cancel
+                </Button>
+              </div>
+            ) : (
+              ""
+            )}
           </div>
         </Modal.Body>
       </Modal>

@@ -22,6 +22,7 @@ import PaymentDetailView from "./pages/PaymentDetailView";
 import VideoConsultationView from "./pages/VideoConsultationView";
 import AppointmentDetailView from "./pages/AppointmentDetailView";
 import PrivateRoute from "./components/PrivateRoute";
+import UsersProfile from "./pages/UsersProfile";
 
 const App = () => {
   return (
@@ -34,7 +35,7 @@ const App = () => {
         <Route path="/admin-login" element={<AdminLoginPage />} />
         <Route path="/doctor-login" element={<DoctorLoginPage />} />
         <Route path="/patient-login" element={<PatientLoginPage />} />
-        
+
         {/* Patient signup  */}
         <Route path="/signup" element={<RegisterPage />} />
         {/* Doctor signup  */}
@@ -48,6 +49,7 @@ const App = () => {
             path="/video-consultation"
             element={<VideoConsultationView />}
           />
+          <Route path="/users-profile" element={<UsersProfile />} />
         </Route>
 
         {/* Users must be admins inorder to access this page */}

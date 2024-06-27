@@ -126,6 +126,9 @@ export const createVideoConsultation = async (request, response, next) => {
     // Extract data from request body
     const { patient_id, doctor_id, appointment_id } = request.body;
 
+    console.log(patient_id)
+    console.log(doctor_id);
+    console.log(appointment_id);
     // Validate ObjectId for required fields
     const isValidObjectId = mongoose.Types.ObjectId.isValid;
     if (
@@ -142,7 +145,7 @@ export const createVideoConsultation = async (request, response, next) => {
       doctor_id,
       appointment_id,
       video_consultation_link: videoConsultationLink,
-      consultation_status: "PENDING_VIDEO_CONSULTATION",
+      consultation_status: "PENDING VIDEO CONSULTATION",
     });
 
     // Save the new video consultation to the database
