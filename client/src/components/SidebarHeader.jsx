@@ -216,18 +216,21 @@ export function SidebarHeader() {
                   Notification
                 </Sidebar.Item>
 
-                <Link to={"/user-profile"}>
-                  <Sidebar.Item
-                    icon={CgProfile}
-                    className={
-                      "/user-profile" === currentPage
-                        ? "bg-gray-100 dark:bg-gray-700"
-                        : ""
-                    }
-                  >
-                    Profile
-                  </Sidebar.Item>
-                </Link>
+                {(currentUser?.role === "patient" ||
+                  currentUser?.role === "doctor") && (
+                  <Link to={"/user-profile"}>
+                    <Sidebar.Item
+                      icon={CgProfile}
+                      className={
+                        "/user-profile" === currentPage
+                          ? "bg-gray-100 dark:bg-gray-700"
+                          : ""
+                      }
+                    >
+                      Profile
+                    </Sidebar.Item>
+                  </Link>
+                )}
 
                 <Sidebar.Item
                   icon={MdLogout}

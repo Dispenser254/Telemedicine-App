@@ -23,6 +23,7 @@ import VideoConsultationView from "./pages/VideoConsultationView";
 import AppointmentDetailView from "./pages/AppointmentDetailView";
 import PrivateRoute from "./components/PrivateRoute";
 import DepartmentDetailView from "./pages/DepartmentDetailView";
+import UserProfile from "./pages/UserProfile";
 
 const App = () => {
   return (
@@ -48,6 +49,10 @@ const App = () => {
           <Route
             path="/video-consultation"
             element={<VideoConsultationView />}
+          />
+          <Route
+            path="/user-profile"
+            element={<UserProfile />}
           />
         </Route>
 
