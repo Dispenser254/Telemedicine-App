@@ -272,13 +272,13 @@ const DepartmentDetailView = () => {
       <Pagination />
       <Modal onClose={() => setOpen(false)} show={isOpen} size="md">
         <Modal.Header className="px-6 pb-0 pt-6">
-          <span className="sr-only">Delete user</span>
+          <span className="sr-only">Delete Department</span>
         </Modal.Header>
         <Modal.Body className="px-6 pb-6 pt-0">
           <div className="flex flex-col items-center gap-y-6 text-center">
             <HiOutlineExclamationCircle className="text-7xl text-red-500" />
             <p className="text-xl text-gray-500">
-              Are you sure you want to delete this user?
+              Are you sure you want to delete this department?
             </p>
             <div className="flex items-center gap-x-6">
               <Button

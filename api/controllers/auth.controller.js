@@ -4,6 +4,7 @@ import { errorHandler } from "../utils/error.js";
 import jwt from "jsonwebtoken";
 import Patient from "../models/patient.model.js";
 import Appointment from "../models/appointment.model.js";
+import Doctor from "../models/doctor.model.js";
 
 // Create a signup
 export const signup = async (request, response, next) => {
@@ -151,6 +152,16 @@ export const login = async (request, response, next) => {
       }
     }
 
+    let doctorId = null;
+    if (validUser.role === "doctor") {
+      const doctor = await Doctor.findOne({ user_id: validUser._id });
+      if (doctor) {
+        doctorId = doctor._id;
+      } else {
+        return next(errorHandler(404, "Doctor record not found."));
+      }
+    }
+
     const token = !isWalkingPatient
       ? jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: "1h" })
       : null;
@@ -159,7 +170,12 @@ export const login = async (request, response, next) => {
     response
       .status(200)
       .cookie("access_token", token, { httpOnly: true })
-      .json({ ...rest, patient_id: patientId, appointment_id: appointmentId });
+      .json({
+        ...rest,
+        patient_id: patientId,
+        doctor_id: doctorId,
+        appointment_id: appointmentId,
+      });
   } catch (error) {
     next(errorHandler(500, "Error signing in."));
   }
