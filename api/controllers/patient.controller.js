@@ -230,7 +230,7 @@ export const getPatientDetails = async (request, response, next) => {
       .populate({
         path: "doctor_id",
         select:
-          "doctor_firstName doctor_lastName doctor_idNumber doctor_number email department_id",
+          "doctor_firstName doctor_lastName doctor_idNumber doctor_number department_id",
         populate: {
           path: "department_id",
           select: "department_name",
@@ -262,7 +262,6 @@ export const getPatientDetails = async (request, response, next) => {
           doctor_lastName: appt.doctor_id.doctor_lastName,
           doctor_idNumber: appt.doctor_id.doctor_idNumber,
           doctor_number: appt.doctor_id.doctor_number,
-          doctor_email: appt.doctor_id.email,
           department: {
             department_id: appt.doctor_id.department_id._id,
             department_name: appt.doctor_id.department_id.department_name,

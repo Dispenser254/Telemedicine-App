@@ -26,7 +26,6 @@ export const getAllDoctors = async (request, response, next) => {
         doctor_idNumber: doctor.doctor_idNumber,
         doctor_profilePic: doctor.doctor_profilePic,
         doctor_number: doctor.doctor_number,
-        email: doctor.email,
         user_id: doctor.user_id,
         department_id: doctor.department_id._id, // Include the department_id for reference
         department_name: doctor.department_id.department_name, // Include the populated department_name
@@ -63,7 +62,6 @@ export const updateDoctor = async (request, response, next) => {
     doctor_lastName,
     doctor_idNumber,
     doctor_number,
-    email,
     department_id,
     doctor_profilePic,
   } = request.body;
@@ -75,7 +73,6 @@ export const updateDoctor = async (request, response, next) => {
         doctor_lastName,
         doctor_idNumber,
         doctor_number,
-        email,
         department_id,
         doctor_profilePic,
       },
@@ -188,7 +185,6 @@ export const getDoctorDetails = async (request, response, next) => {
         doctor_name: `${doctor.doctor_firstName} ${doctor.doctor_lastName}`,
         department_id: doctor.department_id._id,
         doctor_contact_number: doctor.doctor_number,
-        doctor_email: doctor.email,
         department_name: doctor.department_id.department_name,
       },
       patients: [],
@@ -247,7 +243,6 @@ export const createDoctor = async (request, response, next) => {
     doctor_lastName,
     doctor_idNumber,
     doctor_number,
-    email,
     department_id,
     username, // Username for the new user
     password, // Password for the new user
@@ -260,12 +255,6 @@ export const createDoctor = async (request, response, next) => {
       return next(
         errorHandler(400, "Username, password, and role are required.")
       );
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return next(errorHandler(400, "Invalid email format."));
     }
 
     // Validate if department_id is a valid ObjectId
@@ -283,11 +272,10 @@ export const createDoctor = async (request, response, next) => {
       );
     }
 
-    // Check if doctor number, contact number or email already exists for doctors
+    // Check if doctor number, contact number already exists for doctors
     const existingDoctor = await Doctor.findOne({
       doctor_idNumber,
       doctor_number,
-      email,
     });
     if (existingDoctor) {
       if (existingDoctor.doctor_idNumber === doctor_idNumber) {
@@ -295,9 +283,6 @@ export const createDoctor = async (request, response, next) => {
       }
       if (existingDoctor.doctor_number === doctor_number) {
         return next(errorHandler(409, "Doctor number already exists."));
-      }
-      if (existingDoctor.email === email) {
-        return next(errorHandler(409, "Email already exists."));
       }
     }
     // Check if the user already exists
@@ -325,7 +310,6 @@ export const createDoctor = async (request, response, next) => {
         doctor_lastName,
         doctor_idNumber,
         doctor_number,
-        email,
         department_id,
         user_id: newUser._id,
         doctor_profilePic:

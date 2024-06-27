@@ -43,10 +43,11 @@ const PatientLoginPage = () => {
       if (data.success === false) {
         dispatch(signInFailure(errorMessage));
         toast.error(data.message);
+      } else {
+        dispatch(signInSuccess(data));
+        toast.success("User signed in successfully");
+        navigate("/dashboard");
       }
-      dispatch(signInSuccess(data));
-      toast.success(data.message);
-      navigate("/dashboard");
     } catch (error) {
       dispatch(signInFailure(error.message));
       toast.error(error.message);

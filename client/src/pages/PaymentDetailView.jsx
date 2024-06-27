@@ -125,24 +125,24 @@ const PaymentDetailView = () => {
                   </Table.Head>
                   {payments.map((payment) => (
                     <Table.Body
-                      key={payment._id}
+                      key={payment?._id}
                       className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
                     >
                       <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
                         <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {new Date(payment.payment_date).toLocaleDateString()}
+                          {new Date(payment?.payment_date).toLocaleDateString()}
                         </Table.Cell>
                         <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {payment.appointment_id.appointment_type}
+                          {payment?.appointment_id?.appointment_type}
                         </Table.Cell>
                         <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {payment.appointment_id.appointment_status}
+                          {payment?.appointment_id?.appointment_status}
                         </Table.Cell>
                         <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          Kshs. {payment.payment_amount}
+                          Kshs. {payment?.payment_amount}
                         </Table.Cell>
                         <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {payment.payment_status}
+                          {payment?.payment_status}
                         </Table.Cell>
                       </Table.Row>
                     </Table.Body>

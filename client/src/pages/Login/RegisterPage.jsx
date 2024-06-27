@@ -65,6 +65,9 @@ const RegisterPage = () => {
       if (!formData || !formData.username) {
         errors.username = "Username is required.";
       }
+      if (!formData.email) {
+        errors.email = "Email is required.";
+      }
       if (!formData || !formData.password) {
         errors.password = "Password is required.";
       }
@@ -309,49 +312,68 @@ const RegisterPage = () => {
                 onSubmit={handleSubmit}
               >
                 <div className="md:flex md:flex-col">
-                  <div className="mb-4">
-                    <Label htmlFor="username">Username</Label>
-                    <TextInput
-                      type="text"
-                      id="username"
-                      name="username"
-                      placeholder="Username"
-                      onChange={handleChange}
-                      required
-                    />
-                    {errorMessage?.username && (
-                      <p className="text-red-500">{errorMessage.username}</p>
-                    )}
+                  <div className="md:flex md:gap-4">
+                    <div className="mb-4">
+                      <Label htmlFor="username">Username</Label>
+                      <TextInput
+                        type="text"
+                        id="username"
+                        name="username"
+                        placeholder="Username"
+                        onChange={handleChange}
+                        required
+                      />
+                      {errorMessage?.username && (
+                        <p className="text-red-500">{errorMessage.username}</p>
+                      )}
+                    </div>
+                    <div className="mb-4">
+                      <Label htmlFor="email">Email Address</Label>
+                      <TextInput
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="Enter Email Address"
+                        onChange={handleChange}
+                        required
+                      />
+                      {errorMessage?.email && (
+                        <p className="text-red-500">{errorMessage.email}</p>
+                      )}
+                    </div>
                   </div>
-                  <div className="mb-4">
-                    <Label htmlFor="password">Enter Password</Label>
-                    <TextInput
-                      type="password"
-                      id="password"
-                      name="password"
-                      placeholder="Enter Password"
-                      onChange={handleChange}
-                      required
-                    />
-                    {errorMessage?.password && (
-                      <p className="text-red-500">{errorMessage.password}</p>
-                    )}
-                  </div>
-                  <div className="mb-4">
-                    <Label htmlFor="confirmPassword">Confirm Password</Label>
-                    <TextInput
-                      type="password"
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      placeholder="Confirm Password"
-                      onChange={handleChange}
-                      required
-                    />
-                    {errorMessage?.confirmPassword && (
-                      <p className="text-red-500">
-                        {errorMessage.confirmPassword}
-                      </p>
-                    )}
+
+                  <div className="md:flex md:gap-4">
+                    <div className="mb-4">
+                      <Label htmlFor="password">Enter Password</Label>
+                      <TextInput
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter Password"
+                        onChange={handleChange}
+                        required
+                      />
+                      {errorMessage?.password && (
+                        <p className="text-red-500">{errorMessage.password}</p>
+                      )}
+                    </div>
+                    <div className="mb-4">
+                      <Label htmlFor="confirmPassword">Confirm Password</Label>
+                      <TextInput
+                        type="password"
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        placeholder="Confirm Password"
+                        onChange={handleChange}
+                        required
+                      />
+                      {errorMessage?.confirmPassword && (
+                        <p className="text-red-500">
+                          {errorMessage.confirmPassword}
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   <div className="flex justify-between items-center">

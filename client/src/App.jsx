@@ -5,7 +5,6 @@ import HomePage from "./pages/HomePage";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/Login/LoginPage";
 import RegisterPage from "./pages/Login/RegisterPage";
-import DoctorSignupPage from "./pages/Login/DoctorSignupPage";
 import OnlyAdminPrivateRoute from "./components/OnlyAdminPrivateRoute";
 import AdminDashboard from "./pages/Dashboard/AdminDashboard";
 import OnlyDoctorPrivateRoute from "./components/OnlyDoctorPrivateRoute";
@@ -24,6 +23,7 @@ import AppointmentDetailView from "./pages/AppointmentDetailView";
 import PrivateRoute from "./components/PrivateRoute";
 import DepartmentDetailView from "./pages/DepartmentDetailView";
 import UserProfile from "./pages/UserProfile";
+import UsersListView from "./pages/UsersListView";
 
 const App = () => {
   return (
@@ -39,8 +39,6 @@ const App = () => {
 
         {/* Patient signup  */}
         <Route path="/signup" element={<RegisterPage />} />
-        {/* Doctor signup  */}
-        <Route path="/signup" element={<DoctorSignupPage />} />
 
         {/* Users must signin inorder to access this pages */}
         <Route element={<PrivateRoute />}>
@@ -50,10 +48,7 @@ const App = () => {
             path="/video-consultation"
             element={<VideoConsultationView />}
           />
-          <Route
-            path="/user-profile"
-            element={<UserProfile />}
-          />
+          <Route path="/user-profile" element={<UserProfile />} />
         </Route>
 
         {/* Users must be admins inorder to access this page */}
@@ -61,6 +56,7 @@ const App = () => {
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/patients-list" element={<PatientDetailView />} />
           <Route path="/doctors-list" element={<DoctorDetailView />} />
+          <Route path="/users-list" element={<UsersListView />} />
           <Route path="/department-list" element={<DepartmentDetailView />} />
         </Route>
 

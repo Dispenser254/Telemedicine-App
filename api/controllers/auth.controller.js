@@ -11,6 +11,7 @@ export const signup = async (request, response, next) => {
   try {
     const {
       username,
+      email,
       password,
       role,
       patient_firstName,
@@ -23,10 +24,16 @@ export const signup = async (request, response, next) => {
     } = request.body;
 
     // Check for common required fields
-    if (!username || !password || !role) {
+    if (!username || !email || !password || !role) {
       return next(
-        errorHandler(400, "Username, password, and role are required.")
+        errorHandler(400, "Username, email, password, and role are required.")
       );
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return next(errorHandler(400, "Invalid email format."));
     }
 
     // Role-specific validations
@@ -70,6 +77,7 @@ export const signup = async (request, response, next) => {
     const hashedPassword = bcryptjs.hashSync(password, 10);
     const validUser = await User({
       username,
+      email,
       password: hashedPassword,
       role,
     });
@@ -111,7 +119,7 @@ export const signup = async (request, response, next) => {
 
 export const login = async (request, response, next) => {
   try {
-    const { username, password, role, isWalkingPatient } = request.body;
+    const { username, password, role } = request.body;
     if (!username || !password) {
       return next(errorHandler(404, "All fields are required."));
     }
@@ -125,6 +133,13 @@ export const login = async (request, response, next) => {
     const validPassword = bcryptjs.compareSync(password, validUser.password);
     if (!validPassword) {
       return next(errorHandler(401, "Invalid password"));
+    }
+
+    // Check if the user is active
+    if (!validUser.isactive) {
+      return next(
+        errorHandler(403, "Account is deactivated. Please contact admin.")
+      );
     }
 
     if (validUser?.role !== role) {
@@ -162,9 +177,9 @@ export const login = async (request, response, next) => {
       }
     }
 
-    const token = !isWalkingPatient
-      ? jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: "1h" })
-      : null;
+    const token = jwt.sign({ username }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
 
     const { password: pass, ...rest } = validUser._doc;
     response
@@ -191,29 +206,52 @@ export const signout = (request, response, next) => {
     next(errorHandler(500, "Error signing out."));
   }
 };
-
-export const updateUser = async (request, response, next) => {
+export const updateUserById = async (request, response, next) => {
   const userId = request.params.id;
   try {
-    const { username, password } = request.body;
-    if (password.length < 6) {
-      return next(errorHandler(400, "Password must be at least 6 characters"));
-    }
-    // Check if the user already exists
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
-      return next(errorHandler(400, "Username already exists."));
-    }
-    const hashedPassword = bcryptjs.hashSync(password, 10);
+    const { username, password, email } = request.body;
+    const updates = {};
 
-    const updateUser = await User.findByIdAndUpdate(
-      userId,
-      {
-        username,
-        password: hashedPassword,
-      },
-      { new: true, runValidators: true }
-    );
+    if (username) {
+      // Check if the user already exists
+      const existingUser = await User.findOne({ username });
+      if (existingUser && existingUser._id.toString() !== userId) {
+        return next(errorHandler(400, "Username already exists."));
+      }
+      updates.username = username;
+    }
+
+    if (password) {
+      if (password.length < 6) {
+        return next(
+          errorHandler(400, "Password must be at least 6 characters")
+        );
+      }
+      const hashedPassword = bcryptjs.hashSync(password, 10);
+      updates.password = hashedPassword;
+    }
+
+    if (email) {
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return next(errorHandler(400, "Invalid email format."));
+      }
+      updates.email = email;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return next(errorHandler(400, "No valid fields provided for update."));
+    }
+
+    const updateUser = await User.findByIdAndUpdate(userId, updates, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updateUser) {
+      return next(errorHandler(404, "User not found."));
+    }
 
     response.status(200).json("User updated successfully.");
   } catch (error) {
@@ -261,5 +299,77 @@ export const getAdminUsers = async (request, response, next) => {
     response.status(200).json({ adminUsers, totalAdminUsers });
   } catch (error) {
     next(errorHandler(500, "Error fetching admins from the database."));
+  }
+};
+
+// Get all users
+export const getAllUsers = async (request, response, next) => {
+  try {
+    const users = await User.find();
+    if (!users) {
+      return next(errorHandler(404, "Users not found"));
+    }
+    // Remove the password field from each user object
+    const usersWithoutPassword = users.map((user) => {
+      const { password, ...userWithoutPassword } = user._doc;
+      return userWithoutPassword;
+    });
+    response.status(200).json(usersWithoutPassword);
+  } catch (error) {
+    next(errorHandler(500, "Error retrieving users from the database"));
+  }
+};
+
+export const deactivateUser = async (request, response, next) => {
+  const userId = request.params.id;
+  try {
+    // Find the user by their ID
+    const user = await User.findById(userId);
+    if (!user) {
+      return next(errorHandler(404, "User not found"));
+    }
+
+    user.isactive = false;
+    await user.save();
+
+    response.status(200).json({
+      message: "User account has been deactivated successfully",
+    });
+  } catch (error) {
+    next(errorHandler(500, "Error deactivating user account"));
+  }
+};
+
+export const activateUser = async (request, response, next) => {
+  const userId = request.params.id;
+  try {
+    // Find the user by their ID
+    const user = await User.findById(userId);
+    if (!user) {
+      return next(errorHandler(404, "User not found"));
+    }
+
+    user.isactive = true;
+    await user.save();
+
+    response.status(200).json({
+      message: "User account has been activated successfully",
+    });
+  } catch (error) {
+    next(errorHandler(500, "Error activating user account"));
+  }
+};
+
+export const getUserById = async (request, response, next) => {
+  const userId = request.params.id;
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return next(errorHandler(404, "User not found"));
+    }
+    const { password, ...rest } = user._doc;
+    response.status(200).json(rest);
+  } catch (error) {
+    next(error);
   }
 };

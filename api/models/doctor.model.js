@@ -26,11 +26,6 @@ const doctorSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-    },
     department_id: {
       type: Schema.Types.ObjectId,
       ref: "Department",

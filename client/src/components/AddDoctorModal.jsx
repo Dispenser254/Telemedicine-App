@@ -66,9 +66,7 @@ const AddDoctorModal = ({ onDoctorAdded }) => {
     if (!formData.doctor_number) {
       errors.doctor_number = "Doctor Number is required.";
     }
-    if (!formData.email) {
-      errors.email = "Email is required.";
-    }
+    
     if (!formData.department_id) {
       errors.department_id = "Department is required.";
     }
@@ -208,22 +206,6 @@ const AddDoctorModal = ({ onDoctorAdded }) => {
                     <p className="text-red-500">
                       {errorMessage.doctor_idNumber}
                     </p>
-                  )}
-                </div>
-                <div className="mb-4">
-                  <Label htmlFor="doctorEmail" className="mb-2">
-                    Doctor Email
-                  </Label>
-                  <TextInput
-                    type="email"
-                    id="email"
-                    name="doctorEmail"
-                    placeholder="Doctor's Email"
-                    onChange={handleChange}
-                    required
-                  />
-                  {errorMessage?.email && (
-                    <p className="text-red-500">{errorMessage.email}</p>
                   )}
                 </div>
                 <div className="mb-4">

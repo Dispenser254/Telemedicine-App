@@ -1,14 +1,13 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/no-unescaped-entities */
 import {
+  HiCheck,
   HiChevronLeft,
   HiChevronRight,
-  HiEye,
   HiHome,
   HiOutlineExclamationCircle,
-  HiTrash,
 } from "react-icons/hi";
 import {
+  Badge,
   Breadcrumb,
   Button,
   Label,
@@ -16,31 +15,34 @@ import {
   Table,
   TextInput,
 } from "flowbite-react";
-import AddDoctorModal from "../components/AddDoctorModal";
 import NavbarSidebar from "../components/NavbarSideBar";
 import { useEffect, useState } from "react";
-import { ScaleLoader } from "react-spinners";
 import { toast } from "react-toastify";
+import { ScaleLoader } from "react-spinners";
+import { MdKey, MdKeyOff } from "react-icons/md";
+import { FaXmark } from "react-icons/fa6";
 
-const DoctorDetailView = () => {
-  const [doctors, setDoctors] = useState([]);
-  const [userIdToDelete, setUserIdToDelete] = useState("");
+const UsersListView = () => {
+  const [users, setUsers] = useState([]);
+  const [userIdToDeactivate, setUserIdToDeactivate] = useState("");
+  const [userIdToActivate, setUserIdToActivate] = useState("");
   const [isOpen, setOpen] = useState(false);
+  const [isOpenModal, setOpenModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const fetchDoctors = async () => {
+  const fetchUsers = async () => {
     try {
       setLoading(true);
       setErrorMessage(null);
-      const response = await fetch("/mediclinic/doctor/getDoctors");
+      const response = await fetch("/mediclinic/auth/getUsers");
       if (!response.ok) {
-        setErrorMessage("Failed to fetch doctors data.");
+        setErrorMessage("Failed to fetch patient data.");
         toast.error(errorMessage);
         setLoading(false);
       }
       const data = await response.json();
-      setDoctors(data.doctorsWithDepartment);
+      setUsers(data);
       setLoading(false);
     } catch (error) {
       toast.error(error.message);
@@ -48,26 +50,46 @@ const DoctorDetailView = () => {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeactivate = async () => {
     try {
       setLoading(true);
       setErrorMessage(null);
       const response = await fetch(
-        `/mediclinic/doctor/getDoctors/${userIdToDelete}`,
-        { method: "DELETE" }
+        `/mediclinic/auth/deactivate/${userIdToDeactivate}`,
+        { method: "PUT" }
       );
       if (!response.ok) {
-        setErrorMessage("Failed to delete doctor");
+        setErrorMessage("Failed to deactivate patient");
         toast.error(errorMessage);
         setLoading(false);
         return;
       }
-      // Filter out the deleted doctor from the local state
-      setDoctors(doctors.filter((doctor) => doctor._id !== userIdToDelete));
-      // Fetch the updated list of doctor after deletion
-      fetchDoctors();
+      fetchUsers();
       setLoading(false);
-      toast.success("Doctor deleted successfully");
+      toast.success("User deactivated successfully");
+    } catch (error) {
+      toast.error(error.message);
+      setErrorMessage(error.message);
+    }
+  };
+
+  const handleActivate = async () => {
+    try {
+      setLoading(true);
+      setErrorMessage(null);
+      const response = await fetch(
+        `/mediclinic/auth/activate/${userIdToActivate}`,
+        { method: "PUT" }
+      );
+      if (!response.ok) {
+        setErrorMessage("Failed to activate patient");
+        toast.error(errorMessage);
+        setLoading(false);
+        return;
+      }
+      fetchUsers();
+      setLoading(false);
+      toast.success("User activated successfully");
     } catch (error) {
       toast.error(error.message);
       setErrorMessage(error.message);
@@ -75,7 +97,8 @@ const DoctorDetailView = () => {
   };
 
   useEffect(() => {
-    fetchDoctors();
+    fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -90,11 +113,11 @@ const DoctorDetailView = () => {
                   <span className="dark:text-white">Home</span>
                 </div>
               </Breadcrumb.Item>
-              <Breadcrumb.Item href="/doctors-list">Doctors</Breadcrumb.Item>
+              <Breadcrumb.Item href="/users-list">Users</Breadcrumb.Item>
               <Breadcrumb.Item>List</Breadcrumb.Item>
             </Breadcrumb>
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white sm:text-2xl">
-              All Doctors
+              All Users
             </h1>
           </div>
           <div className="sm:flex">
@@ -112,9 +135,6 @@ const DoctorDetailView = () => {
                 </div>
               </form>
             </div>
-            <div className="ml-auto flex items-center space-x-2 sm:space-x-3 bg-green-200 hover:bg-green-300 cursor-pointer rounded-lg">
-              <AddDoctorModal onDoctorAdded={fetchDoctors} />
-            </div>
           </div>
         </div>
       </div>
@@ -129,62 +149,95 @@ const DoctorDetailView = () => {
             <div className="overflow-hidden shadow">
               <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                 <Table.Head className="bg-gray-100 dark:bg-gray-700 text-center">
-                  <Table.HeadCell>Doctor Name</Table.HeadCell>
-                  <Table.HeadCell>Doctor ID Number</Table.HeadCell>
-                  <Table.HeadCell>Doctor Number</Table.HeadCell>
-                  <Table.HeadCell>Department Name</Table.HeadCell>
+                  <Table.HeadCell>Username</Table.HeadCell>
+                  <Table.HeadCell>Email Address</Table.HeadCell>
+                  <Table.HeadCell>Role</Table.HeadCell>
+                  <Table.HeadCell>Status</Table.HeadCell>
                   <Table.HeadCell>Actions</Table.HeadCell>
                 </Table.Head>
-                {doctors.map((doctor) => (
+                {users.map((user) => (
                   <Table.Body
-                    key={doctor._id}
+                    key={user._id}
                     className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
                   >
                     <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
-                      <Table.Cell className="mr-12 flex items-center space-x-6 whitespace-nowrap p-4 lg:mr-0">
-                        <img
-                          className="h-10 w-10 rounded-full"
-                          src={doctor.doctor_profilePic}
-                          alt="Avatar"
-                        />
-                        <div className="text-sm font-normal text-gray-500 dark:text-gray-400">
-                          <div className="text-base font-semibold text-gray-900 dark:text-white">
-                            {doctor.doctor_firstName} {doctor.doctor_lastName}
-                          </div>
-                          <div className="text-sm font-normal text-gray-500 dark:text-gray-400">
-                            {doctor?.email}
-                          </div>
-                        </div>
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {doctor.doctor_idNumber}
+                      <Table.Cell className="whitespace-nowrap text-center p-4 text-base font-medium text-gray-900 dark:text-white">
+                        {user?.username ? user.username : "N/A"}
                       </Table.Cell>
                       <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {doctor.doctor_number}
+                        {user?.email ? user.email : "N/A"}
                       </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {doctor.department_name}
+                      <Table.Cell className="whitespace-nowrap p-4 text-lg font-medium text-gray-900 dark:text-white">
+                        {user?.role ? (
+                          <>
+                            {user.role === "admin" && (
+                              <div className="flex items-center gap-2">
+                                <Badge size="lg" className="bg-green-300">
+                                  Admin
+                                </Badge>
+                              </div>
+                            )}
+                            {user.role === "doctor" && (
+                              <div className="flex items-center gap-2">
+                                <Badge size="lg" className="bg-blue-300">
+                                  Doctor
+                                </Badge>
+                              </div>
+                            )}
+                            {user.role === "patient" && (
+                              <div className="flex items-center gap-2">
+                                <Badge size="lg" className="bg-purple-300">
+                                  Patient
+                                </Badge>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          "N/A"
+                        )}
+                      </Table.Cell>
+                      <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                        {user?.isactive ? (
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-green-300" icon={HiCheck} />
+                            Active
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-red-400" icon={FaXmark} />
+                            Inactive
+                          </div>
+                        )}
                       </Table.Cell>
                       <Table.Cell>
-                        <div className="flex items-center gap-x-4 whitespace-nowrap">
-                          <Button color="blue">
-                            <div className="flex items-center gap-x-2">
-                              <HiEye className="text-lg" />
-                              View
-                            </div>
-                          </Button>
-                          <Button
-                            color="failure"
-                            onClick={() => {
-                              setOpen(true);
-                              setUserIdToDelete(doctor._id);
-                            }}
-                          >
-                            <div className="flex items-center gap-x-2">
-                              <HiTrash className="text-lg" />
-                              Delete
-                            </div>
-                          </Button>
+                        <div className="flex items-center gap-x-3 whitespace-nowrap">
+                          {user?.isactive ? (
+                            <Button
+                              color="failure"
+                              onClick={() => {
+                                setOpen(true);
+                                setUserIdToDeactivate(user._id);
+                              }}
+                            >
+                              <div className="flex items-center gap-x-2">
+                                <MdKeyOff className="text-lg" />
+                                Deactivate
+                              </div>
+                            </Button>
+                          ) : (
+                            <Button
+                              color="purple"
+                              onClick={() => {
+                                setOpenModal(true);
+                                setUserIdToActivate(user._id);
+                              }}
+                            >
+                              <div className="flex items-center gap-x-2">
+                                <MdKey className="text-lg" />
+                                Activate
+                              </div>
+                            </Button>
+                          )}
                         </div>
                       </Table.Cell>
                     </Table.Row>
@@ -198,25 +251,52 @@ const DoctorDetailView = () => {
       <Pagination />
       <Modal onClose={() => setOpen(false)} show={isOpen} size="md">
         <Modal.Header className="px-6 pb-0 pt-6">
-          <span className="sr-only">Delete user</span>
+          <span className="sr-only">Deactivate user</span>
         </Modal.Header>
         <Modal.Body className="px-6 pb-6 pt-0">
           <div className="flex flex-col items-center gap-y-6 text-center">
             <HiOutlineExclamationCircle className="text-7xl text-red-500" />
             <p className="text-xl text-gray-500">
-              Are you sure you want to delete this user?
+              Are you sure you want to deactivate this user?
             </p>
-            <div className="flex items-center gap-x-6">
+            <div className="flex items-center gap-x-3">
               <Button
                 color="failure"
                 onClick={() => {
                   setOpen(false);
-                  handleDelete();
+                  handleDeactivate();
                 }}
               >
                 Yes, I'm sure
               </Button>
               <Button color="gray" onClick={() => setOpen(false)}>
+                No, cancel
+              </Button>
+            </div>
+          </div>
+        </Modal.Body>
+      </Modal>
+      <Modal onClose={() => setOpenModal(false)} show={isOpenModal} size="md">
+        <Modal.Header className="px-6 pb-0 pt-6">
+          <span className="sr-only">Activate user</span>
+        </Modal.Header>
+        <Modal.Body className="px-6 pb-6 pt-0">
+          <div className="flex flex-col items-center gap-y-6 text-center">
+            <HiOutlineExclamationCircle className="text-7xl text-yellow-500" />
+            <p className="text-xl text-gray-500">
+              Are you sure you want to activate this user?
+            </p>
+            <div className="flex items-center gap-x-3">
+              <Button
+                color="warning"
+                onClick={() => {
+                  setOpenModal(false);
+                  handleActivate();
+                }}
+              >
+                Yes, I'm sure
+              </Button>
+              <Button color="gray" onClick={() => setOpenModal(false)}>
                 No, cancel
               </Button>
             </div>
@@ -276,4 +356,4 @@ const Pagination = () => {
   );
 };
 
-export default DoctorDetailView;
+export default UsersListView;

@@ -22,11 +22,14 @@ import { signoutSuccess } from "../redux/reducers/authenticationSlice";
 const UserProfile = () => {
   const { currentUser } = useSelector((state) => state.authentication);
   const patientId = currentUser?.patient_id;
+  const userId = currentUser?._id;
   const dispatch = useDispatch();
   const [doctor, setDoctor] = useState([]);
   const [patientIdToDelete, setPatientIdToDelete] = useState("");
+  const [userIdToDeactivate, setUserIdToDeactivate] = useState("");
   const [patientModal, setPatientModal] = useState(false);
   const [isOpen, setOpen] = useState(false);
+  const [isOpenModal, setOpenModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [address, setAddress] = useState("");
@@ -36,6 +39,9 @@ const UserProfile = () => {
   const [patientIdNumber, setPatientIdNumber] = useState("");
   const [patientFirstName, setPatientFirstName] = useState("");
   const [patientLastName, setPatientLastName] = useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loadingPatient, setLoadingPatient] = useState(false);
 
   const handleChange = (e) => {
@@ -55,6 +61,17 @@ const UserProfile = () => {
     } else if (name === "address") {
       setAddress(value);
     }
+  };
+
+  const handleUserChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "username") {
+      setUsername(value);
+    } else if (name === "email") {
+      setEmail(value);
+    } else if (name === "password") {
+      setPassword(value);
+    } 
   };
 
   const fetchPatientsByID = async (patientId) => {
@@ -79,6 +96,29 @@ const UserProfile = () => {
       setPatientIdNumber(data.patient_idNumber || "N/A");
       setPatientFirstName(data.patient_firstName || "N/A");
       setPatientLastName(data.patient_lastName || "N/A");
+      setLoading(false);
+      setLoadingPatient(false);
+    } catch (error) {
+      toast.error(error.message);
+      setErrorMessage(error.message);
+      setLoadingPatient(false);
+    }
+  };
+  const fetchUsersByID = async (userId) => {
+    try {
+      setLoading(true);
+      setLoadingPatient(true);
+      setErrorMessage(null);
+      const response = await fetch(`/mediclinic/auth/getUsers/${userId}`);
+      if (!response.ok) {
+        setErrorMessage("Failed to fetch user by id data.");
+        toast.error(errorMessage);
+        setLoading(false);
+        setLoadingPatient(false);
+      }
+      const data = await response.json();
+      setUsername(data.username || "N/A");
+      setEmail(data.email || "N/A");
       setLoading(false);
       setLoadingPatient(false);
     } catch (error) {
@@ -130,6 +170,29 @@ const UserProfile = () => {
     }
   };
 
+  const handleDeactivate = async () => {
+    try {
+      setLoading(true);
+      setErrorMessage(null);
+      const response = await fetch(
+        `/mediclinic/auth/deactivate/${userIdToDeactivate}`,
+        { method: "PUT" }
+      );
+      if (!response.ok) {
+        setErrorMessage("Failed to deactivate user");
+        toast.error(errorMessage);
+        setLoading(false);
+        return;
+      }
+      setLoading(false);
+      dispatch(signoutSuccess());
+      toast.success("User deactivated successfully");
+    } catch (error) {
+      toast.error(error.message);
+      setErrorMessage(error.message);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -174,11 +237,49 @@ const UserProfile = () => {
     }
   };
 
+  const handleUserSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      
+      setLoading(true);
+      const updatedData = {
+        username: username,
+        email: email,
+        password: password 
+      };
+      const response = await fetch(`/mediclinic/auth/update/${userId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedData),
+      });
+      if (!response.ok) {
+        toast.error("Failed to update user details");
+      }
+      // eslint-disable-next-line no-unused-vars
+      const data = await response.json();
+      fetchUsersByID(userId);
+      // Combine data info with the success message and add line breaks
+      const successMessage = `
+            User details updated successfully
+          `;
+
+      // Show the success message as HTML
+      toast.success(successMessage);
+      setLoading(false);
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
   useEffect(() => {
+    fetchUsersByID(userId);
     if (currentUser?.role === "doctor") {
       fetchDoctorsByID(currentUser.doctor_id);
     } else if (currentUser?.role === "patient") {
       fetchPatientsByID(patientId);
+      
     }
   }, [currentUser]);
   console.log(doctor);
@@ -548,40 +649,63 @@ const UserProfile = () => {
                     <div className="mx-10">
                       <div className="mb-4">
                         <Label
-                          htmlFor="departmentName"
+                          htmlFor="username"
                           className="mb-2 block text-gray-700"
                         >
-                          Patient Username
+                          Username
                         </Label>
                         <TextInput
-                          id="departmentName"
-                          name="departmentName"
+                          id="username"
+                          name="username"
                           type="text"
-                          // value={patientUsername}
-                          disabled
-                          placeholder="Enter Patient Name"
+                          value={username}
+                          onChange={handleUserChange}
+                          placeholder="Enter Username"
                           required
                         />
                       </div>
                       <div className="mb-4">
                         <Label
-                          htmlFor="departmentName"
+                          htmlFor="email"
+                          className="mb-2 block text-gray-700"
+                        >
+                          Email Address
+                        </Label>
+                        <TextInput
+                          id="email"
+                          name="email"
+                          type="text"
+                          value={email}
+                          onChange={handleUserChange}
+                          placeholder="Enter User Email"
+                        />
+                      </div>
+                      <div className="mb-4">
+                        <Label
+                          htmlFor="email"
                           className="mb-2 block text-gray-700"
                         >
                           Password
                         </Label>
                         <TextInput
-                          id="departmentName"
-                          name="departmentName"
+                          id="password"
+                          name="password"
                           type="password"
-                          // value={departmentName}
-                          // onChange={handleChange}
-                          placeholder="Enter Patient Name"
-                          required
+                          value={password}
+                          onChange={handleUserChange}
+                          placeholder="password"
                         />
                       </div>
                     </div>
-                    <Button gradientDuoTone="purpleToPink">Update User</Button>
+                    <Button
+                      gradientDuoTone="purpleToPink"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleUserSubmit(e);
+                      }}
+                    >
+                      Update User
+                    </Button>
                   </Card>
                 </div>
               </div>
@@ -600,7 +724,15 @@ const UserProfile = () => {
                         Delete Account
                       </div>
                     </Button>
-                    <Button color="warning">Deactivate Account</Button>
+                    <Button
+                      color="warning"
+                      onClick={() => {
+                        setOpenModal(true);
+                        setUserIdToDeactivate(userId);
+                      }}
+                    >
+                      Deactivate Account
+                    </Button>
                   </div>
                 </Card>
               </div>
@@ -630,6 +762,34 @@ const UserProfile = () => {
                 Yes, I'm sure
               </Button>
               <Button color="gray" onClick={() => setOpen(false)}>
+                No, cancel
+              </Button>
+            </div>
+          </div>
+        </Modal.Body>
+      </Modal>
+
+      <Modal onClose={() => setOpenModal(false)} show={isOpenModal} size="md">
+        <Modal.Header className="px-6 pb-0 pt-6">
+          <span className="sr-only">Deactivate user</span>
+        </Modal.Header>
+        <Modal.Body className="px-6 pb-6 pt-0">
+          <div className="flex flex-col items-center gap-y-6 text-center">
+            <HiOutlineExclamationCircle className="text-7xl text-red-500" />
+            <p className="text-xl text-gray-500">
+              Are you sure you want to deactivate this user?
+            </p>
+            <div className="flex items-center gap-x-6">
+              <Button
+                color="failure"
+                onClick={() => {
+                  setOpenModal(false);
+                  handleDeactivate();
+                }}
+              >
+                Yes, I'm sure
+              </Button>
+              <Button color="gray" onClick={() => setOpenModal(false)}>
                 No, cancel
               </Button>
             </div>
