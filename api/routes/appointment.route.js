@@ -5,6 +5,7 @@ import {
   deleteAppointment,
   getAllAppointments,
   getAllReports,
+  getAppointmentByDoctorID,
   getAppointmentByID,
   getAppointmentByPatientID,
   updateAppointment,
@@ -14,6 +15,11 @@ const router = express.Router();
 
 router.get("/getAppointments", verifyToken, getAllAppointments);
 router.get("/getAppointments/:id", verifyToken, getAppointmentByID);
+router.get(
+  "/getAppointments/doctor/:doctor_id",
+  verifyToken,
+  getAppointmentByDoctorID
+);
 router.get(
   "/getAppointments/patient/:patient_id",
   verifyToken,

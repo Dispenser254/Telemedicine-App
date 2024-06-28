@@ -13,7 +13,7 @@ import {
 const router = express.Router();
 
 router.get("/getDoctors", verifyToken, getAllDoctors);
-router.get("/getDoctors/:id", verifyToken, getDoctorById);
+router.get("/getDoctors/doctor/:id", verifyToken, getDoctorById);
 router.post("/createDoctor", verifyToken, createDoctor);
 router.put("/getDoctors/:id", verifyToken, updateDoctor);
 router.delete("/getDoctors/:id", verifyToken, deleteDoctor);

@@ -168,6 +168,63 @@ export function SidebarHeader() {
                     </Link>
                   </>
                 )}
+
+                {currentUser?.role === "doctor" && (
+                  <>
+                    <Link to={"/doctor-dashboard"}>
+                      <Sidebar.Item
+                        icon={HiChartPie}
+                        className={
+                          "/doctor-dashboard" === currentPage
+                            ? "bg-gray-100 dark:bg-gray-700"
+                            : ""
+                        }
+                      >
+                        Dashboard
+                      </Sidebar.Item>
+                    </Link>
+
+                    <Link to={"/video-consultation"}>
+                      <Sidebar.Item
+                        icon={FaVideo}
+                        className={
+                          "/video-consultation" === currentPage
+                            ? "bg-gray-100 dark:bg-gray-700"
+                            : ""
+                        }
+                      >
+                        Video Consultation
+                      </Sidebar.Item>
+                    </Link>
+
+                    <Link to={"/appointment-list"}>
+                      <Sidebar.Item
+                        icon={FaBookMedical}
+                        className={
+                          "/appointment-list" === currentPage
+                            ? "bg-gray-100 dark:bg-gray-700"
+                            : ""
+                        }
+                      >
+                        My Appointments
+                      </Sidebar.Item>
+                    </Link>
+
+                    <Link to={"/patients-list"}>
+                      <Sidebar.Item
+                        icon={MdPayments}
+                        className={
+                          "/patients-list" === currentPage
+                            ? "bg-gray-100 dark:bg-gray-700"
+                            : ""
+                        }
+                      >
+                        My Patients
+                      </Sidebar.Item>
+                    </Link>
+                  </>
+                )}
+
                 {currentUser?.role === "patient" && (
                   <>
                     <Link to={"/dashboard"}>

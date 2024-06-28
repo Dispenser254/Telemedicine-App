@@ -63,6 +63,7 @@ const App = () => {
         {/* Users must be doctors inorder to access this pages */}
         <Route element={<OnlyDoctorPrivateRoute />}>
           <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
+          <Route path="/patients-list" element={<PatientDetailView />} />
         </Route>
 
         {/* Users must be patients inorder to access this pages */}

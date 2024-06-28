@@ -79,6 +79,80 @@ export const getAppointmentByID = async (request, response, next) => {
   }
 };
 
+// Get an appointment by Doctor ID with department_name, doctor_name, and patient_name
+export const getAppointmentByDoctorID = async (request, response, next) => {
+  const doctorId = request.params.doctor_id;
+
+  try {
+    const appointments = await Appointment.find({ doctor_id: doctorId })
+      .populate({
+        path: "doctor_id",
+        select: "doctor_firstName doctor_lastName",
+      })
+      .populate({
+        path: "department_id",
+        select: "department_name",
+      })
+      .populate({
+        path: "patient_id",
+        select: "patient_firstName patient_lastName",
+      })
+      .lean();
+
+    // Fetch the completed appointment
+    const completeAppointment = await Appointment.findOne({
+      doctor_id: doctorId,
+      appointment_status: "Complete",
+    })
+      .sort({ createdAt: -1 })
+      .limit(1)
+      .populate({
+        path: "patient_id",
+        select: "patient_firstName patient_lastName",
+      })
+      .populate({
+        path: "department_id",
+        select: "department_name",
+      })
+      .populate({
+        path: "doctor_id",
+        select: "doctor_firstName doctor_lastName",
+      })
+      .lean();
+
+    // Fetch the latest "Scheduled" appointment
+    const scheduledAppointment = await Appointment.findOne({
+      doctor_id: doctorId,
+      appointment_status: "Scheduled",
+    })
+      .sort({ createdAt: -1 })
+      .limit(1)
+      .populate({
+        path: "patient_id",
+        select: "patient_firstName patient_lastName",
+      })
+      .populate({
+        path: "department_id",
+        select: "department_name",
+      })
+      .populate({
+        path: "doctor_id",
+        select: "doctor_firstName doctor_lastName",
+      })
+      .lean();
+
+    if (!appointments && !completeAppointment && !scheduledAppointment) {
+      return next(errorHandler(404, "Appointments not found for this doctor"));
+    }
+    response
+      .status(200)
+      .json({ appointments, completeAppointment, scheduledAppointment });
+  } catch (error) {
+    console.log(error)
+    next(errorHandler(500, "Error retrieving appointments from the database"));
+  }
+};
+
 // Get an appointment by Patient ID
 export const getAppointmentByPatientID = async (request, response, next) => {
   const patientId = request.params.patient_id;

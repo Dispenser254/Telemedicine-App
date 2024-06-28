@@ -43,11 +43,16 @@ export const getAllDoctors = async (request, response, next) => {
 // Get a doctor by ID
 export const getDoctorById = async (request, response, next) => {
   const doctorId = request.params.id;
+  
   try {
-    const doctor = await Doctor.findById(doctorId);
+    const doctor = await Doctor.findById(doctorId)
+      .populate('department_id', 'department_name')
+      .populate('user_id', 'username email');
+    
     if (!doctor) {
       return next(errorHandler(404, "Doctor not found"));
     }
+    
     response.status(200).json(doctor);
   } catch (error) {
     next(errorHandler(500, "Error retrieving doctor from the database"));
