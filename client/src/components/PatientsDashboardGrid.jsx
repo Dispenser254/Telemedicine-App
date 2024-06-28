@@ -12,13 +12,14 @@ import { ScaleLoader } from "react-spinners";
 const PatientsDashboardGrid = () => {
   const { currentUser } = useSelector((state) => state.authentication);
   const patientId = currentUser?.patient_id;
-  const appointmentId = currentUser?.appointment_id;
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [patient, setPatient] = useState([]);
-  const [appointment, setAppointment] = useState([]);
+  const [scheduledAppointment, setScheduledAppointment] = useState([]);
+  const [pendingAppointment, setPendingAppointment] = useState([]);
+  const [videoConsultations, setVideoConsultations] = useState([]);
 
-  const fetchPatients = async () => {
+  const fetchPatients = async (patientId) => {
     try {
       setLoading(true);
       setErrorMessage(null);
@@ -40,12 +41,12 @@ const PatientsDashboardGrid = () => {
     }
   };
 
-  const fetchAppointments = async () => {
+  const fetchAppointments = async (patientId) => {
     try {
       setLoading(true);
       setErrorMessage(null);
       const response = await fetch(
-        `/mediclinic/appointment/getAppointments/${appointmentId}`
+        `/mediclinic/appointment/getAppointments/patient/${patientId}`
       );
       if (!response.ok) {
         setErrorMessage("Failed to fetch appointments data.");
@@ -53,7 +54,29 @@ const PatientsDashboardGrid = () => {
         setLoading(false);
       }
       const data = await response.json();
-      setAppointment(data);
+      setScheduledAppointment(data.scheduledAppointment);
+      setPendingAppointment(data.pendingAppointment);
+      setLoading(false);
+    } catch (error) {
+      toast.error(error.message);
+      setErrorMessage(error.message);
+    }
+  };
+
+  const fetchVideoConsultations = async (patientId) => {
+    try {
+      setLoading(true);
+      setErrorMessage(null);
+      const response = await fetch(
+        `/mediclinic/video/getVideoConsultations/patient/${patientId}`
+      );
+      if (!response.ok) {
+        setErrorMessage("Failed to fetch video consultations data.");
+        toast.error(errorMessage);
+        setLoading(false);
+      }
+      const data = await response.json();
+      setVideoConsultations(data.totalVideoConsultations);
       setLoading(false);
     } catch (error) {
       toast.error(error.message);
@@ -62,11 +85,10 @@ const PatientsDashboardGrid = () => {
   };
 
   useEffect(() => {
-    fetchPatients();
-    fetchAppointments();
+    fetchPatients(patientId);
+    fetchAppointments(patientId);
+    fetchVideoConsultations(patientId)
   }, []);
-
-  console.log(appointment);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -120,31 +142,32 @@ const PatientsDashboardGrid = () => {
           Consultaions
         </h6>
 
-        {appointment &&
-        appointment.appointment_status === "Scheduled" ? (
+        {scheduledAppointment ? (
           <div className="flex flex-col">
             <div className="font-normal text-gray-700 dark:text-gray-400">
               Date:{" "}
               <span className="font-semibold ml-2">
-                {new Date(appointment.appointment_date).toLocaleDateString()}
+                {new Date(
+                  scheduledAppointment?.appointment_date
+                ).toLocaleDateString()}
               </span>
             </div>
             <div className="font-normal text-gray-700 dark:text-gray-400">
               Time:{" "}
               <span className="font-semibold ml-2">
-                {appointment.appointment_time}
+                {scheduledAppointment?.appointment_time}
               </span>
             </div>
             <div className="font-normal text-gray-700 dark:text-gray-400">
               Type:{" "}
               <span className="font-semibold ml-2">
-                {appointment.appointment_type}
+                {scheduledAppointment?.appointment_type}
               </span>
             </div>
             <div className="font-normal text-gray-700 dark:text-gray-400">
               Department:{" "}
               <span className="font-semibold ml-2">
-                {appointment.department_id.department_name}
+                {scheduledAppointment?.department_id?.department_name}
               </span>
             </div>
           </div>
@@ -167,37 +190,38 @@ const PatientsDashboardGrid = () => {
           Appointment Requests
         </h6>
 
-        {appointment &&
-        appointment.appointment_status === "Pending with admin" ? (
+        {pendingAppointment ? (
           <div className="flex flex-col">
             <div className="font-normal text-gray-700 dark:text-gray-400">
               Date:{" "}
               <span className="font-semibold ml-2">
-                {new Date(appointment.appointment_date).toLocaleDateString()}
+                {new Date(
+                  pendingAppointment?.appointment_date
+                ).toLocaleDateString()}
               </span>
             </div>
             <div className="font-normal text-gray-700 dark:text-gray-400">
               Time:{" "}
               <span className="font-semibold ml-2">
-                {appointment.appointment_time}
+                {pendingAppointment?.appointment_time}
               </span>
             </div>
             <div className="font-normal text-gray-700 dark:text-gray-400">
               Type:{" "}
               <span className="font-semibold ml-2">
-                {appointment.appointment_type}
+                {pendingAppointment?.appointment_type}
               </span>
             </div>
             <div className="font-normal text-gray-700 dark:text-gray-400">
               Department:{" "}
               <span className="font-semibold ml-2">
-                {appointment.department_id.department_name}
+                {pendingAppointment?.department_id?.department_name}
               </span>
             </div>
           </div>
         ) : (
           <div className="text-gray-700 dark:text-gray-400">
-            No appointments available.
+            No pending appointments available.
           </div>
         )}
         <Link to={"/users-profile"}>
@@ -215,7 +239,7 @@ const PatientsDashboardGrid = () => {
         </h6>
         <div className="flex flex-col">
           <div className="font-normal text-gray-700 dark:text-gray-400">
-            Patient Name
+            {videoConsultations}
           </div>
         </div>
         <Link to={"/users-profile"}>

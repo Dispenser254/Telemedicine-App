@@ -140,7 +140,11 @@ const AppointmentDetailView = () => {
         )
       );
       // Fetch the updated list of doctor after deletion
-      fetchAppointments();
+      if (currentUser?.role === "admin") {
+        fetchAppointments();
+      } else if (currentUser?.role === "patient") {
+        fetchAppointmentsByPatientsID(currentUser.patient_id);
+      }
       setLoading(false);
       toast.success("Appointment deleted successfully");
     } catch (error) {
@@ -162,7 +166,7 @@ const AppointmentDetailView = () => {
         setLoading(false);
       }
       const data = await response.json();
-      setAppointmentsPatients(data);
+      setAppointmentsPatients(data.appointment);
       setLoading(false);
     } catch (error) {
       toast.error(error.message);
@@ -269,6 +273,7 @@ const AppointmentDetailView = () => {
                     <Table.HeadCell>Appointment Date</Table.HeadCell>
                     <Table.HeadCell>Appointment Time</Table.HeadCell>
                     <Table.HeadCell>Department Name</Table.HeadCell>
+                    <Table.HeadCell>Patient Name</Table.HeadCell>
                     <Table.HeadCell>Doctor Name</Table.HeadCell>
                     <Table.HeadCell>Appointment Type</Table.HeadCell>
                     <Table.HeadCell>Appointment Status</Table.HeadCell>
@@ -290,6 +295,11 @@ const AppointmentDetailView = () => {
                         </Table.Cell>
                         <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
                           {appointment.department_id?.department_name || "N/A"}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {appointment.patient_id
+                            ? `${appointment.patient_id.patient_firstName} ${appointment.patient_id.patient_lastName}`
+                            : "Not Assigned"}
                         </Table.Cell>
                         <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
                           {appointment.doctor_id
@@ -337,7 +347,7 @@ const AppointmentDetailView = () => {
                               color="failure"
                               onClick={() => {
                                 setOpen(true);
-                                setAppointmentIdToDelete();
+                                setAppointmentIdToDelete(appointment._id);
                               }}
                             >
                               <div className="flex items-center gap-x-2">
@@ -406,7 +416,7 @@ const AppointmentDetailView = () => {
                               color="failure"
                               onClick={() => {
                                 setOpen(true);
-                                setAppointmentIdToDelete();
+                                setAppointmentIdToDelete(appointment._id);
                               }}
                             >
                               <div className="flex items-center gap-x-2">
@@ -553,9 +563,9 @@ const AppointmentDetailView = () => {
                   ) : (
                     <>
                       <option value="">Select Doctor</option>
-                      {doctors.map((doc) => (
-                        <option key={doc._id} value={doc._id}>
-                          {doc.doctor_firstName} {doc.doctor_lastName}
+                      {doctors?.map((doc) => (
+                        <option key={doc?._id} value={doc?._id}>
+                          {doc?.doctor_firstName} {doc?.doctor_lastName}
                         </option>
                       ))}
                     </>

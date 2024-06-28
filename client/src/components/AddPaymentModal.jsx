@@ -78,7 +78,7 @@ const AddPaymentModal = ({ appointmentId, patientId, onPaymentSuccess }) => {
       setLoading(false);
     } else {
       setLoading(false);
-      toast.success("Payment successfull!");
+      toast.success("Payment successful!");
       if (onPaymentSuccess) {
         onPaymentSuccess();
       }

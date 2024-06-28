@@ -244,16 +244,17 @@ export const createDoctor = async (request, response, next) => {
     doctor_idNumber,
     doctor_number,
     department_id,
-    username, // Username for the new user
-    password, // Password for the new user
-    role = "doctor", // Default role for the new user
+    username,
+    email,
+    password,
+    role = "doctor",
   } = request.body;
 
   try {
     // Check for common required fields
-    if (!username || !password || !role) {
+    if (!username || !email || !password || !role) {
       return next(
-        errorHandler(400, "Username, password, and role are required.")
+        errorHandler(400, "Username, password, email and role are required.")
       );
     }
 
@@ -290,12 +291,19 @@ export const createDoctor = async (request, response, next) => {
     if (existingUser) {
       return next(errorHandler(400, "Username already exists."));
     }
+    // Check if the user already exists by email
+    const existingUserByEmail = await User.findOne({ email });
+    if (existingUserByEmail) {
+      return next(errorHandler(400, "Email already exists."));
+    }
+
     // Hash the password
     const hashedPassword = bcryptjs.hashSync(password, 10);
 
     // Create a new user with hashed password
     const newUser = new User({
       username,
+      email,
       password: hashedPassword,
       role,
     });
@@ -311,7 +319,7 @@ export const createDoctor = async (request, response, next) => {
         doctor_idNumber,
         doctor_number,
         department_id,
-        user_id: newUser._id,
+        user_id: savedUser._id,
         doctor_profilePic:
           "https://imgs.search.brave.com/gV6Xy99WsNTWpgT2KUNxopKhP45u8QMrrL2DGi5HYxg/rs:fit:500:0:0/g:ce/aHR0cHM6Ly90NC5m/dGNkbi5uZXQvanBn/LzAyLzE1Lzg0LzQz/LzM2MF9GXzIxNTg0/NDMyNV90dFg5WWlJ/SXllYVI3TmU2RWFM/TGpNQW15NEd2UEM2/OS5qcGc",
       });

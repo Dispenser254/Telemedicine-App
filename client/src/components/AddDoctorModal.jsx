@@ -66,13 +66,16 @@ const AddDoctorModal = ({ onDoctorAdded }) => {
     if (!formData.doctor_number) {
       errors.doctor_number = "Doctor Number is required.";
     }
-    
+
     if (!formData.department_id) {
       errors.department_id = "Department is required.";
     }
     if (showCredentials) {
       if (!formData || !formData.username) {
         errors.username = "Username is required.";
+      }
+      if (!formData.email) {
+        errors.email = "Email is required.";
       }
       if (!formData || !formData.password) {
         errors.password = "Password is required.";
@@ -272,6 +275,21 @@ const AddDoctorModal = ({ onDoctorAdded }) => {
                     <p className="text-red-500">{errorMessage.username}</p>
                   )}
                 </div>
+                <div className="mb-4">
+                  <Label htmlFor="email">Email Address</Label>
+                  <TextInput
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Enter Email Address"
+                    onChange={handleChange}
+                    required
+                  />
+                  {errorMessage?.email && (
+                    <p className="text-red-500">{errorMessage.email}</p>
+                  )}
+                </div>
+
                 <div className="mb-4">
                   <Label htmlFor="password">Enter Password</Label>
                   <TextInput

@@ -1,3 +1,4 @@
+import Appointment from "../models/appointment.model.js";
 import Payment from "../models/payment.model.js";
 import { errorHandler } from "../utils/error.js";
 import stripe from "../utils/stripe.js";
@@ -28,9 +29,7 @@ export const getAllPayments = async (request, response, next) => {
       createdAt: { $gte: oneMonthAgo },
     });
 
-    response
-      .status(200)
-      .json({ payments, totalPayments, lastMonthPayments });
+    response.status(200).json({ payments, totalPayments, lastMonthPayments });
   } catch (error) {
     next(errorHandler(500, "Error retrieving payments from the database"));
   }
@@ -89,6 +88,10 @@ export const createPayment = async (request, response, next) => {
       payment_method_types: ["card"],
     });
 
+    if (!paymentIntent.client_secret) {
+      throw new Error("Failed to create payment intent");
+    }
+
     // Create a new payment record in the database
     const newPayment = new Payment({
       patient_id,
@@ -109,7 +112,8 @@ export const createPayment = async (request, response, next) => {
       message: "Payment initiated, complete the payment on the client side",
     });
   } catch (error) {
-    console.log("Error creating payment:", error);
+    console.log(error)
+    await Appointment.findByIdAndDelete(appointment_id);
     next(errorHandler(500, "Error creating payment."));
   }
 };

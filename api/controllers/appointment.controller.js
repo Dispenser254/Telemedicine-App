@@ -90,7 +90,6 @@ export const getAppointmentByPatientID = async (request, response, next) => {
     const appointment = await Appointment.find({
       patient_id: patientId,
     })
-      .sort({ createdAt: -1 })
       .populate({
         path: "patient_id",
         select: "patient_firstName patient_lastName",
@@ -105,10 +104,55 @@ export const getAppointmentByPatientID = async (request, response, next) => {
       })
       .lean();
 
-    if (!appointment) {
-      return next(errorHandler(404, "Patient Appointment not found"));
+    // Fetch the latest "Pending with admin" appointment
+    const pendingAppointment = await Appointment.findOne({
+      patient_id: patientId,
+      appointment_status: "Pending with admin",
+    })
+      .sort({ createdAt: -1 })
+      .limit(1)
+      .populate({
+        path: "patient_id",
+        select: "patient_firstName patient_lastName",
+      })
+      .populate({
+        path: "department_id",
+        select: "department_name",
+      })
+      .populate({
+        path: "doctor_id",
+        select: "doctor_firstName doctor_lastName",
+      })
+      .lean();
+
+    // Fetch the latest "Scheduled" appointment
+    const scheduledAppointment = await Appointment.findOne({
+      patient_id: patientId,
+      appointment_status: "Scheduled",
+    })
+      .sort({ createdAt: -1 })
+      .limit(1)
+      .populate({
+        path: "patient_id",
+        select: "patient_firstName patient_lastName",
+      })
+      .populate({
+        path: "department_id",
+        select: "department_name",
+      })
+      .populate({
+        path: "doctor_id",
+        select: "doctor_firstName doctor_lastName",
+      })
+      .lean();
+
+    if (!appointment && !pendingAppointment && !scheduledAppointment) {
+      return next(errorHandler(404, "Patient Appointments not found"));
     }
-    response.status(200).json(appointment);
+
+    response
+      .status(200)
+      .json({ appointment, pendingAppointment, scheduledAppointment });
   } catch (error) {
     next(
       errorHandler(

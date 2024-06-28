@@ -133,16 +133,25 @@ const PaymentDetailView = () => {
                           {new Date(payment?.payment_date).toLocaleDateString()}
                         </Table.Cell>
                         <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {payment?.appointment_id?.appointment_type}
+                          {payment?.appointment_id?.appointment_type
+                            ? payment.appointment_id.appointment_type
+                            : "N/A"}
                         </Table.Cell>
                         <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {payment?.appointment_id?.appointment_status}
+                          {payment?.appointment_id?.appointment_status
+                            ? payment.appointment_id.appointment_status
+                            : "N/A"}
                         </Table.Cell>
                         <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          Kshs. {payment?.payment_amount}
+                          Kshs.
+                          {payment?.payment_amount
+                            ? payment.payment_amount
+                            : "N/A"}
                         </Table.Cell>
                         <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {payment?.payment_status}
+                          {payment?.payment_status
+                            ? payment.payment_status
+                            : "N/A"}
                         </Table.Cell>
                       </Table.Row>
                     </Table.Body>
@@ -174,19 +183,28 @@ const PaymentDetailView = () => {
                     >
                       <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
                         <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {new Date(payment.payment_date).toLocaleDateString()}
+                          {new Date(payment?.payment_date).toLocaleDateString()}
                         </Table.Cell>
                         <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {payment.appointment_id.appointment_type}
+                          {payment?.appointment_id?.appointment_type
+                            ? payment.appointment_id.appointment_type
+                            : "N/A"}
                         </Table.Cell>
                         <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {payment.appointment_id.appointment_status}
+                          {payment?.appointment_id?.appointment_status
+                            ? payment.appointment_id.appointment_status
+                            : "N/A"}
                         </Table.Cell>
                         <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          Kshs. {payment.payment_amount}
+                          Kshs.{" "}
+                          {payment?.payment_amount
+                            ? payment.payment_amount
+                            : "N/A"}
                         </Table.Cell>
                         <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {payment.payment_status}
+                          {payment?.payment_status
+                            ? payment.payment_status
+                            : "N/A"}
                         </Table.Cell>
                       </Table.Row>
                     </Table.Body>
