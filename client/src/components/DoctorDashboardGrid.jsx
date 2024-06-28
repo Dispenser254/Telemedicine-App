@@ -76,7 +76,6 @@ const DoctorDashboardGrid = () => {
         setLoading(false);
       }
       const data = await response.json();
-      console.log(data)
       setVideoConsultations(data.totalVideoConsultations);
       setLoading(false);
     } catch (error) {

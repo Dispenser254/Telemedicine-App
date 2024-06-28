@@ -25,7 +25,7 @@ router.get(
   getVideoConsultationsByPatientId
 );
 router.post("/createVideoConsultation", verifyToken, createVideoConsultation);
-router.put("/getVideoConsultations/:id", verifyToken, updateVideoConsultation);
+router.put("/getVideoConsultations/update/:id", verifyToken, updateVideoConsultation);
 router.delete(
   "/getVideoConsultations/:id",
   verifyToken,

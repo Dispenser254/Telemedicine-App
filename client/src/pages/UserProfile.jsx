@@ -548,18 +548,18 @@ const UserProfile = () => {
                       </div>
                       <div className="mb-4">
                         <Label
-                          htmlFor="doctorEmail"
+                          htmlFor="doctorNumber"
                           className="mb-2 block text-gray-700"
                         >
-                          Doctor Email
+                          Doctor Contact
                         </Label>
                         <TextInput
-                          id="doctorEmail"
-                          name="doctorEmail"
-                          type="email"
-                          value={doctorEmail}
+                          id="doctorNumber"
+                          name="doctorNumber"
+                          type="text"
+                          value={doctorNumber}
                           disabled
-                          placeholder="Enter Doctor Email"
+                          placeholder="Enter Doctor Contact"
                           required
                         />
                       </div>
@@ -579,23 +579,6 @@ const UserProfile = () => {
                           value={doctorDepartment}
                           disabled
                           placeholder="Enter Department Name"
-                          required
-                        />
-                      </div>
-                      <div className="mb-4">
-                        <Label
-                          htmlFor="doctorNumber"
-                          className="mb-2 block text-gray-700"
-                        >
-                          Doctor Contact
-                        </Label>
-                        <TextInput
-                          id="doctorNumber"
-                          name="doctorNumber"
-                          type="text"
-                          value={doctorNumber}
-                          disabled
-                          placeholder="Enter Doctor Contact"
                           required
                         />
                       </div>
@@ -1245,18 +1228,18 @@ const UserProfile = () => {
               </div>
               <div className="mb-4">
                 <Label
-                  htmlFor="doctorEmail"
+                  htmlFor="doctorNumber"
                   className="mb-2 block text-gray-700"
                 >
-                  Doctor Email
+                  Doctor Contact
                 </Label>
                 <TextInput
-                  id="doctorEmail"
-                  name="doctorEmail"
-                  type="email"
-                  value={doctorEmail}
+                  id="doctorNumber"
+                  name="doctorNumber"
+                  type="text"
+                  value={doctorNumber}
                   onChange={handleDoctorUserChange}
-                  placeholder="Enter Doctor Email"
+                  placeholder="Enter Doctor Contact"
                   required
                 />
               </div>
@@ -1280,7 +1263,9 @@ const UserProfile = () => {
                     </>
                   ) : (
                     <>
-                      <option value={doctorDepartment}></option>
+                      <option value={doctorDepartment}>
+                        {doctorDepartment}
+                      </option>
                       {departments?.map((dep) => (
                         <option key={dep?._id} value={dep?._id}>
                           {dep?.department_name}
@@ -1289,23 +1274,6 @@ const UserProfile = () => {
                     </>
                   )}
                 </Select>
-              </div>
-              <div className="mb-4">
-                <Label
-                  htmlFor="doctorNumber"
-                  className="mb-2 block text-gray-700"
-                >
-                  Doctor Contact
-                </Label>
-                <TextInput
-                  id="doctorNumber"
-                  name="doctorNumber"
-                  type="text"
-                  value={doctorNumber}
-                  onChange={handleDoctorUserChange}
-                  placeholder="Enter Doctor Contact"
-                  required
-                />
               </div>
             </div>
 
