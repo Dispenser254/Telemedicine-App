@@ -16,7 +16,7 @@ import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { signoutSuccess } from "../redux/reducers/authenticationSlice";
 import { Link } from "react-router-dom";
-import { FaHospitalAlt, FaUser } from "react-icons/fa";
+import { FaHandHoldingMedical, FaHospitalAlt, FaUser } from "react-icons/fa";
 
 export function SidebarHeader() {
   const { isOpenOnSmallScreens: isSidebarOpenOnSmallScreens } =
@@ -103,6 +103,18 @@ export function SidebarHeader() {
                         }
                       >
                         Patients
+                      </Sidebar.Item>
+                    </Link>
+                    <Link to={"/prescription-list"} as="div">
+                      <Sidebar.Item
+                        icon={FaHandHoldingMedical}
+                        className={
+                          "/prescription-list" === currentPage
+                            ? "bg-gray-100 dark:bg-gray-700"
+                            : ""
+                        }
+                      >
+                        Prescription
                       </Sidebar.Item>
                     </Link>
                     <Link to={"/users-list"} as="div">

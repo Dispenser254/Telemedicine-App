@@ -4,7 +4,20 @@ import { errorHandler } from "../utils/error.js";
 // Get all prescription
 export const getAllPrescriptions = async (request, response, next) => {
   try {
-    const prescriptions = await Prescription.find();
+    const prescriptions = await Prescription.find()
+      .populate({
+        path: "patient_id",
+        select: "patient_firstName patient_lastName",
+      })
+      .populate({
+        path: "doctor_id",
+        select: "doctor_firstName doctor_lastName",
+      })
+      .populate({
+        path: "appointment_id",
+        select: "appointment_time appointment_date appointment_status",
+      })
+      .lean();
 
     const totalPrescriptions = await Prescription.countDocuments();
     response.status(200).json({ prescriptions, totalPrescriptions });
@@ -57,6 +70,30 @@ export const getPrescriptionByPatientID = async (request, response, next) => {
 
     response.status(200).json(prescriptions);
   } catch (error) {
+    next(errorHandler(500, "Error retrieving prescriptions from the database"));
+  }
+};
+
+// Adjusted function to fetch prescription by appointment ID
+export const getPrescriptionByAppointmentID = async (
+  request,
+  response,
+  next
+) => {
+  const appointmentId = request.params.appointment_id;
+
+  try {
+    const prescriptions = await Prescription.find({
+      appointment_id: appointmentId,
+    })
+      .sort({ createdAt: -1 })
+      .limit(1);
+    if (!prescriptions) {
+      return next(errorHandler(404, "No prescriptions found for the patient"));
+    }
+    response.status(200).json(prescriptions);
+  } catch (error) {
+    console.log(error);
     next(errorHandler(500, "Error retrieving prescriptions from the database"));
   }
 };

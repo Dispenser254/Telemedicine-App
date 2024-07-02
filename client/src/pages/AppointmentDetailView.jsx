@@ -18,6 +18,7 @@ import {
   Spinner,
   Table,
   TextInput,
+  Textarea,
 } from "flowbite-react";
 import NavbarSidebar from "../components/NavbarSideBar";
 import { useEffect, useState } from "react";
@@ -26,10 +27,11 @@ import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import AddAppointmentModal from "../components/AddAppointmentModal";
-import { FaEdit } from "react-icons/fa";
+import { FaEdit, FaEye, FaHandHoldingMedical } from "react-icons/fa";
 
 const AppointmentDetailView = () => {
   const [appointments, setAppointments] = useState([]);
+  const [prescriptionDoctor, setPrescriptionDoctor] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [appointmentsPatients, setAppointmentsPatients] = useState([]);
   const [appointmentsDoctors, setAppointmentsDoctors] = useState([]);
@@ -37,12 +39,14 @@ const AppointmentDetailView = () => {
   const [appointmentId, setAppointmentId] = useState("");
   const [isOpen, setOpen] = useState(false);
   const [appointmentModal, setAppointmentModal] = useState(false);
+  const [prescriptionModal, setPrescriptionModal] = useState(false);
+  const [openPrescription, setOpenPrescription] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingAppointments, setLoadingAppointments] = useState(false);
   const [loadingDoctors, setLoadingDoctors] = useState(false);
   const { currentUser } = useSelector((state) => state.authentication);
-  
+
   const [appointmentStatus, setAppointmentStatus] = useState("");
   const [appointmentDate, setAppointmentDate] = useState("");
   const [appointmentTime, setAppointmentTime] = useState("");
@@ -50,12 +54,17 @@ const AppointmentDetailView = () => {
   const [patientId, setPatientId] = useState("");
   const [departmentId, setDepartmentId] = useState("");
   const [doctorId, setDoctorId] = useState("");
+  const [prescriptionDetails, setPrescriptionDetails] = useState("");
+  const [prescriptionDate, setPrescriptionDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
 
   useEffect(() => {
     if (currentUser?.role === "admin") {
       fetchAppointments();
     } else if (currentUser?.role === "doctor") {
       fetchAppointmentsByDoctorsID(currentUser.doctor_id);
+      fetchPrescriptionsByDoctorID(currentUser.doctor_id);
     } else if (currentUser?.role === "patient") {
       fetchAppointmentsByPatientsID(currentUser.patient_id);
     }
@@ -67,6 +76,10 @@ const AppointmentDetailView = () => {
       setDoctorId(value);
     } else if (name === "appointmentStatus") {
       setAppointmentStatus(value);
+    } else if (name === "prescriptionDate") {
+      setPrescriptionDate(value);
+    } else if (name === "prescriptionDetails") {
+      setPrescriptionDetails(value);
     }
   };
 
@@ -198,7 +211,7 @@ const AppointmentDetailView = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `mediclinic/appointment/getAppointments/doctor/${doctorId}`
+        `/mediclinic/appointment/getAppointments/doctor/${doctorId}`
       );
 
       if (!response.ok) {
@@ -210,6 +223,60 @@ const AppointmentDetailView = () => {
       }
       const data = await response.json();
       setAppointmentsDoctors(data.appointments);
+      setLoading(false);
+    } catch (error) {
+      toast.error(error.message);
+      setErrorMessage(error.message);
+    }
+  };
+
+  const fetchPrescriptionsByAppointmentID = async (appointmentID) => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `/mediclinic/prescription/getPrescriptions/appointment/${appointmentID}`
+      );
+
+      if (!response.ok) {
+        const errorMessage = "Failed to fetch patient prescription data.";
+        toast.error(errorMessage);
+        setLoading(false);
+        return;
+      }
+
+      const data = await response.json();
+      if (data.length > 0) {
+        const prescription = data[0];
+        setPrescriptionDetails(prescription.prescription_details);
+        setPrescriptionDate(prescription.prescription_date);
+      } else {
+        setErrorMessage("No prescriptions found for this appointment.");
+        toast.error(errorMessage);
+      }
+
+      setLoading(false);
+    } catch (error) {
+      toast.error(error.message);
+      setLoading(false);
+    }
+  };
+
+  const fetchPrescriptionsByDoctorID = async (doctorId) => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `/mediclinic/prescription/getPrescriptions/doctor/${doctorId}`
+      );
+
+      if (!response.ok) {
+        setErrorMessage(
+          "Failed to fetch patient prescription by doctor id data."
+        );
+        toast.error(errorMessage);
+        setLoading(false);
+      }
+      const data = await response.json();
+      setPrescriptionDoctor(data);
       setLoading(false);
     } catch (error) {
       toast.error(error.message);
@@ -253,6 +320,50 @@ const AppointmentDetailView = () => {
     } catch (error) {
       toast.error(error.message);
     }
+  };
+
+  const handlePrescriptionSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+
+      const updatedData = {
+        patient_id: patientId._id,
+        doctor_id: doctorId._id,
+        appointment_id: appointmentId,
+        prescription_date: prescriptionDate,
+        prescription_details: prescriptionDetails,
+      };
+      console.log(updatedData);
+      const response = await fetch(
+        "/mediclinic/prescription/createPrescription",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedData),
+        }
+      );
+      if (!response.ok) {
+        toast.error("Failed to update prescription");
+      }
+      // eslint-disable-next-line no-unused-vars
+      const updatedPrescription = await response.json();
+      fetchAppointmentsByDoctorsID(currentUser.doctor_id);
+      toast.success("Prescription updated successfully");
+      setPrescriptionModal(false);
+      setLoading(false);
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleViewOrPrescribe = async (appointmentID) => {
+    setAppointmentId(appointmentID);
+    setPrescriptionModal(true);
+    fetchAppointmentsByID(appointmentID);
+    await fetchPrescriptionsByAppointmentID(appointmentID);
   };
 
   return (
@@ -423,9 +534,10 @@ const AppointmentDetailView = () => {
                     <Table.HeadCell>Patient Name</Table.HeadCell>
                     <Table.HeadCell>Appointment Type</Table.HeadCell>
                     <Table.HeadCell>Appointment Status</Table.HeadCell>
+                    <Table.HeadCell>Prescribe</Table.HeadCell>
                     <Table.HeadCell>Actions</Table.HeadCell>
                   </Table.Head>
-                  {appointmentsDoctors.map((appointment) => (
+                  {appointmentsDoctors?.map((appointment) => (
                     <Table.Body
                       key={appointment._id}
                       className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
@@ -453,9 +565,36 @@ const AppointmentDetailView = () => {
                         <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
                           {appointment?.appointment_status}
                         </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {prescriptionDoctor ? (
+                            <Button
+                              color="purple"
+                              onClick={() =>
+                                handleViewOrPrescribe(appointment._id)
+                              }
+                            >
+                              <div className="flex items-center gap-x-2">
+                                <FaEye className="text-lg" />
+                                View
+                              </div>
+                            </Button>
+                          ) : (
+                            <Button
+                              color="success"
+                              onClick={() =>
+                                handleViewOrPrescribe(appointment._id)
+                              }
+                            >
+                              <div className="flex items-center gap-x-2">
+                                <FaHandHoldingMedical className="text-lg" />
+                                Prescribe
+                              </div>
+                            </Button>
+                          )}
+                        </Table.Cell>
                         <Table.Cell>
                           <div className="flex items-center gap-x-4 whitespace-nowrap">
-                            {appointmentStatus === "Scheduled" ? (
+                            {appointment?.appointment_status === "Scheduled" ? (
                               <Button
                                 color="blue"
                                 onClick={() => {
@@ -541,6 +680,22 @@ const AppointmentDetailView = () => {
                         <Table.Cell>
                           <div className="flex items-center gap-x-4 whitespace-nowrap">
                             <Button
+                              color="blue"
+                              onClick={() => {
+                                setOpenPrescription(true);
+                                setAppointmentId(appointment._id);
+                                fetchAppointmentsByID(appointment._id);
+                                fetchPrescriptionsByAppointmentID(
+                                  appointment._id
+                                );
+                              }}
+                            >
+                              <div className="flex items-center gap-x-2">
+                                <HiEye className="text-lg" />
+                                View
+                              </div>
+                            </Button>
+                            <Button
                               color="failure"
                               onClick={() => {
                                 setOpen(true);
@@ -565,8 +720,8 @@ const AppointmentDetailView = () => {
       )}
       <Pagination />
       <Modal onClose={() => setOpen(false)} show={isOpen} size="md">
-        <Modal.Header className="px-6 pb-0 pt-6">
-          <span className="sr-only">Delete appointment</span>
+        <Modal.Header className="px-6 pb-0 pt-6 text-2xl font-bold mb-4 text-center uppercase">
+          Delete <span className="text-yellow-300">Appointment</span>
         </Modal.Header>
         <Modal.Body className="px-6 pb-6 pt-0">
           <div className="flex flex-col items-center gap-y-6 text-center">
@@ -593,12 +748,112 @@ const AppointmentDetailView = () => {
       </Modal>
 
       <Modal
+        onClose={() => setOpenPrescription(false)}
+        show={openPrescription}
+        size="2xl"
+        position="center"
+      >
+        <Modal.Header className="px-6 pb-0 pt-6 text-2xl font-bold mb-4 text-center uppercase">
+          Patient <span className="text-yellow-300">Details</span>
+        </Modal.Header>
+        <Modal.Body className="px-6 pb-6 pt-0">
+          <div className="max-w-xl mx-auto">
+            <h2 className="text-2xl font-bold mb-4">Form View</h2>
+            <div className="border border-gray-300 rounded-md p-4">
+              <Table className="w-full">
+                <Table.Body>
+                  <Table.Row className="border-b border-gray-300">
+                    <Table.Cell className="py-2 font-semibold">
+                      Patient's Name
+                    </Table.Cell>
+                    <Table.Cell className="py-2 whitespace-pre-wrap">
+                      {patientId?.patient_firstName || "N/A"}{" "}
+                      {patientId?.patient_lastName || "N/A"}
+                    </Table.Cell>
+                  </Table.Row>
+                  <Table.Row className="border-b border-gray-300">
+                    <Table.Cell className="py-2 font-semibold">
+                      Prescription Date
+                    </Table.Cell>
+                    <Table.Cell className="py-2 whitespace-pre-wrap">
+                      {prescriptionDate
+                        ? new Date(prescriptionDate).toISOString().split("T")[0]
+                        : ""}
+                    </Table.Cell>
+                  </Table.Row>
+                  <Table.Row className="border-b border-gray-300">
+                    <Table.Cell className="py-2 font-semibold">
+                      Prescription Details
+                    </Table.Cell>
+                    <Table.Cell className="py-2 whitespace-pre-wrap">
+                      {prescriptionDetails}
+                    </Table.Cell>
+                  </Table.Row>
+                  <Table.Row className="border-b border-gray-300">
+                    <Table.Cell className="py-2 font-semibold">
+                      Doctor's Name
+                    </Table.Cell>
+                    <Table.Cell className="py-2 whitespace-pre-wrap">
+                      {doctorId?.doctor_firstName || "N/A"}{" "}
+                      {doctorId?.doctor_lastName || "N/A"}
+                    </Table.Cell>
+                  </Table.Row>
+                  <Table.Row className="border-b border-gray-300">
+                    <Table.Cell className="py-2 font-semibold">
+                      Department Name
+                    </Table.Cell>
+                    <Table.Cell className="py-2 whitespace-pre-wrap">
+                      {departmentId?.department_name || "N/A"}
+                    </Table.Cell>
+                  </Table.Row>
+                  <Table.Row className="border-b border-gray-300">
+                    <Table.Cell className="py-2 font-semibold">
+                      Appointment Date
+                    </Table.Cell>
+                    <Table.Cell className="py-2 whitespace-pre-wrap">
+                      {appointmentDate
+                        ? new Date(appointmentDate).toISOString().split("T")[0]
+                        : ""}
+                    </Table.Cell>
+                  </Table.Row>
+                  <Table.Row className="border-b border-gray-300">
+                    <Table.Cell className="py-2 font-semibold">
+                      Appointment Time
+                    </Table.Cell>
+                    <Table.Cell className="py-2 whitespace-pre-wrap">
+                      {appointmentTime || "N/A"}
+                    </Table.Cell>
+                  </Table.Row>
+                  <Table.Row className="border-b border-gray-300">
+                    <Table.Cell className="py-2 font-semibold">
+                      Appointment Type
+                    </Table.Cell>
+                    <Table.Cell className="py-2 whitespace-pre-wrap">
+                      {appointmentType || "N/A"}
+                    </Table.Cell>
+                  </Table.Row>
+                  <Table.Row className="border-b border-gray-300">
+                    <Table.Cell className="py-2 font-semibold">
+                      Appointment Status
+                    </Table.Cell>
+                    <Table.Cell className="py-2 whitespace-pre-wrap">
+                      {appointmentStatus || "N/A"}
+                    </Table.Cell>
+                  </Table.Row>
+                </Table.Body>
+              </Table>
+            </div>
+          </div>
+        </Modal.Body>
+      </Modal>
+
+      <Modal
         onClose={() => setAppointmentModal(false)}
         show={appointmentModal}
         size="md"
       >
-        <Modal.Header className="px-6 pb-0 pt-6">
-          <span className="sr-only">Assign Doctor</span>
+        <Modal.Header className="px-6 pb-0 pt-6 text-2xl font-bold mb-4 text-center uppercase">
+          Assign <span className="text-yellow-300">Doctor</span>
         </Modal.Header>
         <Modal.Body className="px-6 pb-6 pt-0">
           <div className="flex flex-col items-center gap-y-6 text-center">
@@ -705,34 +960,64 @@ const AppointmentDetailView = () => {
             ) : null}
 
             {currentUser?.role === "admin" &&
-            appointmentStatus === "Pending with admin" ? (
-              <div className="mb-4">
-                <Label htmlFor="doctorId" className="mb-2">
-                  Doctor
-                </Label>
-                <Select
-                  id="doctorId"
-                  name="doctorId"
-                  onChange={handleChange}
-                  required
-                  disabled={loadingDoctors}
-                >
-                  {loadingDoctors ? (
-                    <>
-                      <Spinner size="sm" />
-                      <span className="pl-3">Loading...</span>
-                    </>
-                  ) : (
-                    <>
-                      <option value="">Select Doctor</option>
-                      {doctors?.map((doc) => (
-                        <option key={doc?._id} value={doc?._id}>
-                          {doc?.doctor_firstName} {doc?.doctor_lastName}
+            (appointmentStatus === "Pending with admin" ||
+              appointmentStatus === "Scheduled") ? (
+              <div className="flex mt-2 gap-2">
+                <div className="mb-4">
+                  <Label htmlFor="appointmentStatus" className="mb-2">
+                    Appointment Status
+                  </Label>
+                  <Select
+                    id="appointmentStatus"
+                    name="appointmentStatus"
+                    onChange={handleChange}
+                    required
+                    disabled={loadingDoctors}
+                  >
+                    {loadingDoctors ? (
+                      <>
+                        <Spinner size="sm" />
+                        <span className="pl-3">Loading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <option value={appointmentStatus}>
+                          {appointmentStatus}
                         </option>
-                      ))}
-                    </>
-                  )}
-                </Select>
+                        <option value="Scheduled">SCHEDULE</option>
+                        <option value="Cancel">CANCEL</option>
+                      </>
+                    )}
+                  </Select>
+                </div>
+                <div className="mb-4">
+                  <Label htmlFor="doctorId" className="mb-2">
+                    Doctor
+                  </Label>
+                  <Select
+                    id="doctorId"
+                    name="doctorId"
+                    onChange={handleChange}
+                    required
+                    disabled={loadingDoctors}
+                  >
+                    {loadingDoctors ? (
+                      <>
+                        <Spinner size="sm" />
+                        <span className="pl-3">Loading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <option value="">Select Doctor</option>
+                        {doctors?.map((doc) => (
+                          <option key={doc?._id} value={doc?._id}>
+                            {doc?.doctor_firstName} {doc?.doctor_lastName}
+                          </option>
+                        ))}
+                      </>
+                    )}
+                  </Select>
+                </div>
               </div>
             ) : currentUser?.role === "patient" ? (
               <div className="flex mt-2 gap-2">
@@ -830,6 +1115,109 @@ const AppointmentDetailView = () => {
                 </Button>
               </div>
             )}
+          </div>
+        </Modal.Body>
+      </Modal>
+
+      <Modal
+        onClose={() => setPrescriptionModal(false)}
+        show={prescriptionModal}
+        size="lg"
+      >
+        <Modal.Header className="px-6 pb-0 pt-6 text-2xl font-bold mb-4 text-center uppercase">
+          Prescribe <span className="text-yellow-300">Medicine</span>
+        </Modal.Header>
+        <Modal.Body className="px-10 pb-6 pt-2">
+          <div className="flex flex-col text-center">
+            {loadingAppointments && (
+              <>
+                <Spinner size="lg" />
+                <span className="pl-3">Loading...</span>
+              </>
+            )}
+            <div className="flex mt-2 gap-2">
+              <div className="mb-4">
+                <Label
+                  htmlFor="patientFirstName"
+                  className="mb-2 block text-gray-700"
+                >
+                  Patient First Name
+                </Label>
+                <TextInput
+                  disabled
+                  type="text"
+                  id="patientFirstName"
+                  name="patientFirstName"
+                  placeholder="Patient First Name"
+                  value={patientId?.patient_firstName || "N/A"}
+                />
+              </div>
+              <div className="mb-4">
+                <Label htmlFor="patientLastName" className="mb-2">
+                  Patient Last Name
+                </Label>
+                <TextInput
+                  disabled
+                  type="text"
+                  id="patientLastName"
+                  name="patientLastName"
+                  placeholder="Patient Last Name"
+                  value={patientId?.patient_lastName || "N/A"}
+                />
+              </div>
+            </div>
+            <div className="mb-4">
+              <Label htmlFor="prescriptionDate" className="mb-2">
+                Prescription Date
+              </Label>
+              <TextInput
+                type="date"
+                id="prescriptionDate"
+                name="prescriptionDate"
+                placeholder="Prescription Date"
+                value={
+                  prescriptionDate
+                    ? new Date(prescriptionDate).toISOString().split("T")[0]
+                    : ""
+                }
+                onChange={handleChange}
+                disabled
+              />
+            </div>
+            <div className="mb-4">
+              <Label htmlFor="prescriptionDetails" className="mb-2">
+                Prescription Details
+              </Label>
+              <Textarea
+                type="text"
+                id="prescriptionDetails"
+                name="prescriptionDetails"
+                placeholder="Prescription Details"
+                defaultValue={`Medication:  
+Dosage: : 
+Duration: 
+Frequency: 
+Additional Instructions: `}
+                onChange={handleChange}
+                value={prescriptionDetails}
+                className="w-full h-40 p-4"
+              ></Textarea>
+            </div>
+            <div className="flex justify-center items-center gap-x-6">
+              <Button
+                color="blue"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setPrescriptionModal(false);
+                  handlePrescriptionSubmit(e);
+                }}
+              >
+                Submit
+              </Button>
+              <Button color="gray" onClick={() => setPrescriptionModal(false)}>
+                No, cancel
+              </Button>
+            </div>
           </div>
         </Modal.Body>
       </Modal>

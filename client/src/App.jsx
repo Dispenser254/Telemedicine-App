@@ -25,6 +25,7 @@ import DepartmentDetailView from "./pages/DepartmentDetailView";
 import UserProfile from "./pages/UserProfile";
 import UsersListView from "./pages/UsersListView";
 import DoctorPatientList from "./components/DoctorPatientList";
+import PrescriptionDetailView from "./pages/PrescriptionDetailView";
 
 const App = () => {
   return (
@@ -58,6 +59,7 @@ const App = () => {
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/doctors-list" element={<DoctorDetailView />} />
           <Route path="/patients-list" element={<PatientDetailView />} />
+          <Route path="/prescription-list" element={<PrescriptionDetailView />} />
           <Route path="/users-list" element={<UsersListView />} />
           <Route path="/department-list" element={<DepartmentDetailView />} />
         </Route>

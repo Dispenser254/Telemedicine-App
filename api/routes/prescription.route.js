@@ -4,6 +4,7 @@ import {
   createPrescription,
   deletePrescription,
   getAllPrescriptions,
+  getPrescriptionByAppointmentID,
   getPrescriptionByID,
   getPrescriptionByPatientID,
   getPrescriptionsByDoctorID,
@@ -23,6 +24,11 @@ router.get(
   "/getPrescriptions/doctor/:doctor_id",
   verifyToken,
   getPrescriptionsByDoctorID
+);
+router.get(
+  "/getPrescriptions/appointment/:appointment_id",
+  verifyToken,
+  getPrescriptionByAppointmentID
 );
 router.post("/createPrescription", verifyToken, createPrescription);
 router.put("/updatePrescription/:id", verifyToken, updatePrescription);
