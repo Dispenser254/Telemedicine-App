@@ -26,14 +26,15 @@ import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import AddAppointmentModal from "../components/AddAppointmentModal";
+import { FaEdit } from "react-icons/fa";
 
 const AppointmentDetailView = () => {
   const [appointments, setAppointments] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [appointmentsPatients, setAppointmentsPatients] = useState([]);
+  const [appointmentsDoctors, setAppointmentsDoctors] = useState([]);
   const [appointmentIdToDelete, setAppointmentIdToDelete] = useState("");
   const [appointmentId, setAppointmentId] = useState("");
-  const [selectedAppointment, setSelectedAppointment] = useState([]);
   const [isOpen, setOpen] = useState(false);
   const [appointmentModal, setAppointmentModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -41,18 +42,32 @@ const AppointmentDetailView = () => {
   const [loadingAppointments, setLoadingAppointments] = useState(false);
   const [loadingDoctors, setLoadingDoctors] = useState(false);
   const { currentUser } = useSelector((state) => state.authentication);
+  
+  const [appointmentStatus, setAppointmentStatus] = useState("");
+  const [appointmentDate, setAppointmentDate] = useState("");
+  const [appointmentTime, setAppointmentTime] = useState("");
+  const [appointmentType, setAppointmentType] = useState("");
+  const [patientId, setPatientId] = useState("");
+  const [departmentId, setDepartmentId] = useState("");
   const [doctorId, setDoctorId] = useState("");
 
   useEffect(() => {
     if (currentUser?.role === "admin") {
       fetchAppointments();
+    } else if (currentUser?.role === "doctor") {
+      fetchAppointmentsByDoctorsID(currentUser.doctor_id);
     } else if (currentUser?.role === "patient") {
       fetchAppointmentsByPatientsID(currentUser.patient_id);
     }
   }, [currentUser]);
 
   const handleChange = (e) => {
-    setDoctorId(e.target.value);
+    const { name, value } = e.target;
+    if (name === "doctorId") {
+      setDoctorId(value);
+    } else if (name === "appointmentStatus") {
+      setAppointmentStatus(value);
+    }
   };
 
   const fetchAppointments = async () => {
@@ -78,7 +93,6 @@ const AppointmentDetailView = () => {
     try {
       setLoadingAppointments(true);
       setErrorMessage(null);
-      setSelectedAppointment(null);
 
       const response = await fetch(
         `/mediclinic/appointment/getAppointments/${appointmentID}`
@@ -89,7 +103,13 @@ const AppointmentDetailView = () => {
         setLoadingAppointments(false);
       }
       const data = await response.json();
-      setSelectedAppointment(data);
+      setAppointmentStatus(data.appointment_status || "N/A");
+      setAppointmentType(data.appointment_type || "N/A");
+      setAppointmentTime(data.appointment_time || "N/A");
+      setAppointmentDate(data.appointment_date || "N/A");
+      setDoctorId(data.doctor_id || "N/A");
+      setDepartmentId(data.department_id || "N/A");
+      setPatientId(data.patient_id || "N/A");
       setLoadingAppointments(false);
     } catch (error) {
       toast.error(error.message);
@@ -174,19 +194,42 @@ const AppointmentDetailView = () => {
     }
   };
 
+  const fetchAppointmentsByDoctorsID = async (doctorId) => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `mediclinic/appointment/getAppointments/doctor/${doctorId}`
+      );
+
+      if (!response.ok) {
+        setErrorMessage(
+          "Failed to fetch patient appointments by doctor id data."
+        );
+        toast.error(errorMessage);
+        setLoading(false);
+      }
+      const data = await response.json();
+      setAppointmentsDoctors(data.appointments);
+      setLoading(false);
+    } catch (error) {
+      toast.error(error.message);
+      setErrorMessage(error.message);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
 
       const updatedData = {
-        patient_id: selectedAppointment.patient_id, // Ensure to update or keep the patient_id
+        patient_id: patientId,
         doctor_id: doctorId,
-        department_id: selectedAppointment.department_id,
-        appointment_date: selectedAppointment.appointment_date,
-        appointment_time: selectedAppointment.appointment_time,
-        appointment_status: selectedAppointment.appointment_status,
-        appointment_type: selectedAppointment.appointment_type,
+        department_id: departmentId,
+        appointment_date: appointmentDate,
+        appointment_time: appointmentTime,
+        appointment_status: appointmentStatus,
+        appointment_type: appointmentType,
       };
       const response = await fetch(
         `/mediclinic/appointment/getAppointments/${appointmentId}`,
@@ -201,8 +244,8 @@ const AppointmentDetailView = () => {
       if (!response.ok) {
         toast.error("Failed to update appointment");
       }
+      // eslint-disable-next-line no-unused-vars
       const updatedAppointment = await response.json();
-      console.log(updatedAppointment);
       fetchAppointments();
       toast.success("Appointment updated successfully");
       setAppointmentModal(false);
@@ -367,6 +410,91 @@ const AppointmentDetailView = () => {
         </div>
       )}
 
+      {currentUser?.role === "doctor" && (
+        <div className="flex flex-col m-4">
+          <div className="overflow-x-auto">
+            <div className="inline-block min-w-full align-middle">
+              <div className="overflow-hidden shadow">
+                <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                  <Table.Head className="bg-gray-100 dark:bg-gray-700 text-center">
+                    <Table.HeadCell>Appointment Date</Table.HeadCell>
+                    <Table.HeadCell>Appointment Time</Table.HeadCell>
+                    <Table.HeadCell>Department Name</Table.HeadCell>
+                    <Table.HeadCell>Patient Name</Table.HeadCell>
+                    <Table.HeadCell>Appointment Type</Table.HeadCell>
+                    <Table.HeadCell>Appointment Status</Table.HeadCell>
+                    <Table.HeadCell>Actions</Table.HeadCell>
+                  </Table.Head>
+                  {appointmentsDoctors.map((appointment) => (
+                    <Table.Body
+                      key={appointment._id}
+                      className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
+                    >
+                      <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {new Date(
+                            appointment?.appointment_date
+                          ).toLocaleDateString()}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {appointment?.appointment_time}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {appointment?.department_id?.department_name || "N/A"}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {appointment?.patient_id
+                            ? `${appointment.patient_id.patient_firstName} ${appointment.patient_id.patient_lastName}`
+                            : "Not Assigned"}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {appointment?.appointment_type}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {appointment?.appointment_status}
+                        </Table.Cell>
+                        <Table.Cell>
+                          <div className="flex items-center gap-x-4 whitespace-nowrap">
+                            {appointmentStatus === "Scheduled" ? (
+                              <Button
+                                color="blue"
+                                onClick={() => {
+                                  setAppointmentModal(true);
+                                  setAppointmentId(appointment._id);
+                                  fetchAppointmentsByID(appointment._id);
+                                }}
+                              >
+                                <div className="flex items-center gap-x-2">
+                                  <FaEdit className="text-lg" />
+                                  Edit
+                                </div>
+                              </Button>
+                            ) : null}
+
+                            <Button
+                              color="failure"
+                              onClick={() => {
+                                setOpen(true);
+                                setAppointmentIdToDelete(appointment._id);
+                              }}
+                            >
+                              <div className="flex items-center gap-x-2">
+                                <HiTrash className="text-lg" />
+                                Delete
+                              </div>
+                            </Button>
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    </Table.Body>
+                  ))}
+                </Table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {currentUser?.role === "patient" && (
         <div className="flex flex-col m-4">
           <div className="overflow-x-auto">
@@ -487,14 +615,14 @@ const AppointmentDetailView = () => {
                 </Label>
                 <TextInput
                   disabled
-                  type="date"
-                  id="appointment_date"
+                  type="text"
+                  id="appointmentDate"
                   name="appointmentDate"
                   placeholder="Appointment Date"
                   value={
-                    selectedAppointment?.appointment_date
-                      ? new Date(selectedAppointment.appointment_date)
-                          .toISOString()
+                    appointmentDate
+                      ? new Date(appointmentDate)
+                          .toLocaleDateString()
                           .split("T")[0]
                       : ""
                   }
@@ -507,49 +635,83 @@ const AppointmentDetailView = () => {
                 <TextInput
                   disabled
                   type="time"
-                  id="appointment_time"
+                  id="appointmentTime"
                   name="appointmentTime"
                   placeholder="Appointment Time"
-                  value={selectedAppointment?.appointment_time || "N/A"}
+                  value={appointmentTime || "N/A"}
                 />
               </div>
             </div>
-            <div className="mb-4">
-              <Label htmlFor="gender" className="mb-2 block text-gray-700">
-                Select Appointment Type
-              </Label>
-              <TextInput
-                disabled
-                type="text"
-                id="appointment_type"
-                name="appointmentType"
-                placeholder="Appointment Type"
-                value={selectedAppointment?.appointment_type || "N/A"}
-              />
+            <div className="flex mt-2 gap-2">
+              <div className="mb-4">
+                <Label htmlFor="gender" className="mb-2 block text-gray-700">
+                  Select Appointment Type
+                </Label>
+                <TextInput
+                  disabled
+                  type="text"
+                  id="appointmentType"
+                  name="appointmentType"
+                  placeholder="Appointment Type"
+                  value={appointmentType || "N/A"}
+                />
+              </div>
+              <div className="mb-4">
+                <Label htmlFor="departmentId" className="mb-2">
+                  Department
+                </Label>
+                <TextInput
+                  disabled
+                  type="text"
+                  id="departmentId"
+                  name="departmentId"
+                  placeholder="Department"
+                  value={departmentId?.department_name || "N/A"}
+                />
+              </div>
             </div>
-            <div className="mb-4">
-              <Label htmlFor="departmentId" className="mb-2">
-                Department
-              </Label>
-              <TextInput
-                disabled
-                type="text"
-                id="department_id"
-                name="departmentId"
-                placeholder="Department"
-                value={
-                  selectedAppointment?.department_id?.department_name || "N/A"
-                }
-              />
-            </div>
-            {selectedAppointment?.appointment_status ===
-            "Pending with admin" ? (
+            {currentUser.role === "admin" || currentUser.role === "doctor" ? (
+              <div className="flex mt-2 gap-2">
+                <div className="mb-4">
+                  <Label
+                    htmlFor="patientFirstName"
+                    className="mb-2 block text-gray-700"
+                  >
+                    Patient First Name
+                  </Label>
+                  <TextInput
+                    disabled
+                    type="text"
+                    id="patientFirstName"
+                    name="patientFirstName"
+                    placeholder="Patient First Name"
+                    value={patientId?.patient_firstName || "N/A"}
+                  />
+                </div>
+                <div className="mb-4">
+                  <Label htmlFor="patientLastName" className="mb-2">
+                    Patient Last Name
+                  </Label>
+                  <TextInput
+                    disabled
+                    type="text"
+                    id="patientLastName"
+                    name="patientLastName"
+                    placeholder="Patient Last Name"
+                    value={patientId?.patient_lastName || "N/A"}
+                  />
+                </div>
+              </div>
+            ) : null}
+
+            {currentUser?.role === "admin" &&
+            appointmentStatus === "Pending with admin" ? (
               <div className="mb-4">
                 <Label htmlFor="doctorId" className="mb-2">
                   Doctor
                 </Label>
                 <Select
-                  id="doctor_id"
+                  id="doctorId"
                   name="doctorId"
                   onChange={handleChange}
                   required
@@ -572,26 +734,70 @@ const AppointmentDetailView = () => {
                   )}
                 </Select>
               </div>
-            ) : (
-              <div className="mb-4">
-                <Label htmlFor="doctorId" className="mb-2">
-                  Doctor
-                </Label>
-                <TextInput
-                  disabled
-                  type="text"
-                  id="doctor_id"
-                  name="doctorId"
-                  placeholder="Doctor"
-                  value={
-                    selectedAppointment?.doctor_id?.doctor_firstName || "N/A"
-                  }
-                />
+            ) : currentUser?.role === "patient" ? (
+              <div className="flex mt-2 gap-2">
+                <div className="mb-4">
+                  <Label htmlFor="doctorFirstName" className="mb-2">
+                    Doctor First Name
+                  </Label>
+                  <TextInput
+                    disabled
+                    type="text"
+                    id="doctorFirstName"
+                    name="doctorFirstName"
+                    placeholder="Doctor First Name"
+                    value={doctorId?.doctor_firstName || "N/A"}
+                  />
+                </div>
+                <div className="mb-4">
+                  <Label htmlFor="doctorLastName" className="mb-2">
+                    Doctor Last Name
+                  </Label>
+                  <TextInput
+                    disabled
+                    type="text"
+                    id="doctorLastName"
+                    name="doctorLastName"
+                    placeholder="Doctor Last Name"
+                    value={doctorId?.doctor_lastName || "N/A"}
+                  />
+                </div>
               </div>
-            )}
+            ) : null}
 
-            {selectedAppointment?.appointment_status ===
-            "Pending with admin" ? (
+            {currentUser?.role === "doctor" ? (
+              <div className="mb-4">
+                <Label htmlFor="appointmentStatus" className="mb-2">
+                  Appointment Status
+                </Label>
+                <Select
+                  id="appointmentStatus"
+                  name="appointmentStatus"
+                  onChange={handleChange}
+                  required
+                  disabled={loadingAppointments}
+                >
+                  {loadingAppointments ? (
+                    <>
+                      <Spinner size="sm" />
+                      <span className="pl-3">Loading...</span>
+                    </>
+                  ) : (
+                    <>
+                      <option value={appointmentStatus}>
+                        {appointmentStatus}
+                      </option>
+                      <option value="Follow-up">FOLLOW-UP</option>
+                      <option value="Completed">COMPLETED</option>
+                      <option value="Cancel">CANCEL</option>
+                    </>
+                  )}
+                </Select>
+              </div>
+            ) : null}
+
+            {currentUser.role === "admin" &&
+            appointmentStatus === "Pending with admin" ? (
               <div className="flex items-center gap-x-6">
                 <Button
                   color="blue"
@@ -608,7 +814,21 @@ const AppointmentDetailView = () => {
                 </Button>
               </div>
             ) : (
-              ""
+              <div className="flex items-center gap-x-6">
+                <Button
+                  color="blue"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setAppointmentModal(false);
+                    handleSubmit(e);
+                  }}
+                >
+                  Submit
+                </Button>
+                <Button color="gray" onClick={() => setAppointmentModal(false)}>
+                  No, cancel
+                </Button>
+              </div>
             )}
           </div>
         </Modal.Body>

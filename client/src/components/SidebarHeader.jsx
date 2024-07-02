@@ -210,11 +210,11 @@ export function SidebarHeader() {
                       </Sidebar.Item>
                     </Link>
 
-                    <Link to={"/patients-list"}>
+                    <Link to={"/doctor-patients"}>
                       <Sidebar.Item
                         icon={MdPayments}
                         className={
-                          "/patients-list" === currentPage
+                          "/doctor-patients" === currentPage
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }

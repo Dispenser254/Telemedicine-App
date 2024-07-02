@@ -95,14 +95,15 @@ export const getAppointmentByDoctorID = async (request, response, next) => {
       })
       .populate({
         path: "patient_id",
-        select: "patient_firstName patient_lastName",
+        select: "patient_firstName patient_lastName contact_number user_id",
+        populate: { path: "user_id", select: "email" },
       })
       .lean();
 
     // Fetch the completed appointment
     const completeAppointment = await Appointment.findOne({
       doctor_id: doctorId,
-      appointment_status: "Complete",
+      appointment_status: "Completed",
     })
       .sort({ createdAt: -1 })
       .limit(1)
@@ -148,7 +149,7 @@ export const getAppointmentByDoctorID = async (request, response, next) => {
       .status(200)
       .json({ appointments, completeAppointment, scheduledAppointment });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     next(errorHandler(500, "Error retrieving appointments from the database"));
   }
 };
@@ -295,7 +296,7 @@ export const updateAppointment = async (request, response, next) => {
         department_id,
         appointment_date,
         appointment_time,
-        appointment_status: "Scheduled",
+        appointment_status,
         appointment_type,
       },
       { new: true, runValidators: true }

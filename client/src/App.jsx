@@ -24,6 +24,7 @@ import PrivateRoute from "./components/PrivateRoute";
 import DepartmentDetailView from "./pages/DepartmentDetailView";
 import UserProfile from "./pages/UserProfile";
 import UsersListView from "./pages/UsersListView";
+import DoctorPatientList from "./components/DoctorPatientList";
 
 const App = () => {
   return (
@@ -44,6 +45,7 @@ const App = () => {
         <Route element={<PrivateRoute />}>
           <Route path="/appointment-list" element={<AppointmentDetailView />} />
           <Route path="/payments-list" element={<PaymentDetailView />} />
+
           <Route
             path="/video-consultation"
             element={<VideoConsultationView />}
@@ -54,8 +56,8 @@ const App = () => {
         {/* Users must be admins inorder to access this page */}
         <Route element={<OnlyAdminPrivateRoute />}>
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
-          <Route path="/patients-list" element={<PatientDetailView />} />
           <Route path="/doctors-list" element={<DoctorDetailView />} />
+          <Route path="/patients-list" element={<PatientDetailView />} />
           <Route path="/users-list" element={<UsersListView />} />
           <Route path="/department-list" element={<DepartmentDetailView />} />
         </Route>
@@ -63,7 +65,7 @@ const App = () => {
         {/* Users must be doctors inorder to access this pages */}
         <Route element={<OnlyDoctorPrivateRoute />}>
           <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
-          <Route path="/patients-list" element={<PatientDetailView />} />
+          <Route path="/doctor-patients" element={<DoctorPatientList />} />
         </Route>
 
         {/* Users must be patients inorder to access this pages */}

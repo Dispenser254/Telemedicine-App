@@ -3,69 +3,41 @@ import {
   HiChevronLeft,
   HiChevronRight,
   HiHome,
-  HiOutlineExclamationCircle,
-  HiTrash,
 } from "react-icons/hi";
 import {
   Breadcrumb,
-  Button,
   Label,
-  Modal,
   Table,
   TextInput,
 } from "flowbite-react";
 import NavbarSidebar from "../components/NavbarSideBar";
-import AddPatientModal from "../components/AddPatientModal";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { ScaleLoader } from "react-spinners";
+import { useSelector } from "react-redux";
 
-const PatientDetailView = () => {
+const DoctorPatientList = () => {
   const [patients, setPatients] = useState([]);
-  const [userIdToDelete, setUserIdToDelete] = useState("");
-  const [isOpen, setOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const { currentUser } = useSelector((state) => state.authentication);
+  const doctorId = currentUser.doctor_id
 
-  const fetchPatients = async () => {
+  const fetchPatients = async (doctorId) => {
     try {
       setLoading(true);
       setErrorMessage(null);
-      const response = await fetch("/mediclinic/patient/getPatients");
+      const response = await fetch(
+        `/mediclinic/appointment/getAppointments/doctor/${doctorId}`
+      );
       if (!response.ok) {
         setErrorMessage("Failed to fetch patient data.");
         toast.error(errorMessage);
         setLoading(false);
       }
       const data = await response.json();
-      setPatients(data.patients);
+      setPatients(data.appointments);
       setLoading(false);
-    } catch (error) {
-      toast.error(error.message);
-      setErrorMessage(error.message);
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      setLoading(true);
-      setErrorMessage(null);
-      const response = await fetch(
-        `/mediclinic/patient/getPatients/${userIdToDelete}`,
-        { method: "DELETE" }
-      );
-      if (!response.ok) {
-        setErrorMessage("Failed to delete patient");
-        toast.error(errorMessage);
-        setLoading(false);
-        return;
-      }
-      // Filter out the deleted patient from the local state
-      setPatients(patients.filter((patient) => patient._id !== userIdToDelete));
-      // Fetch the updated list of patients after deletion
-      fetchPatients();
-      setLoading(false);
-      toast.success("Patient deleted successfully");
     } catch (error) {
       toast.error(error.message);
       setErrorMessage(error.message);
@@ -73,7 +45,7 @@ const PatientDetailView = () => {
   };
 
   useEffect(() => {
-    fetchPatients();
+    fetchPatients(doctorId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -111,9 +83,6 @@ const PatientDetailView = () => {
                 </div>
               </form>
             </div>
-            <div className="ml-auto flex items-center space-x-2 sm:space-x-3 bg-green-200 hover:bg-green-300 cursor-pointer rounded-lg">
-              <AddPatientModal onPatientAdded={fetchPatients} />
-            </div>
           </div>
         </div>
       </div>
@@ -128,12 +97,11 @@ const PatientDetailView = () => {
             <div className="overflow-hidden shadow">
               <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                 <Table.Head className="bg-gray-100 dark:bg-gray-700 text-center">
-                  <Table.HeadCell>Patient Name</Table.HeadCell>
-                  <Table.HeadCell>Patient Age</Table.HeadCell>
-                  <Table.HeadCell>Patient Gender</Table.HeadCell>
+                  <Table.HeadCell>Patient's Name</Table.HeadCell>
                   <Table.HeadCell>Contact Number</Table.HeadCell>
-                  <Table.HeadCell>Address</Table.HeadCell>
-                  <Table.HeadCell>Actions</Table.HeadCell>
+                  <Table.HeadCell>Email Address</Table.HeadCell>
+                  <Table.HeadCell>Appointment Type</Table.HeadCell>
+                  <Table.HeadCell>Appointment Status</Table.HeadCell>
                 </Table.Head>
                 {patients.map((patient) => (
                   <Table.Body
@@ -142,35 +110,20 @@ const PatientDetailView = () => {
                   >
                     <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
                       <Table.Cell className="whitespace-nowrap text-center p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {patient.patient_firstName} {patient.patient_lastName}
+                        {patient.patient_id.patient_firstName}{" "}
+                        {patient.patient_id.patient_lastName}
                       </Table.Cell>
                       <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {patient.age}
+                        {patient.patient_id.contact_number}
                       </Table.Cell>
                       <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {patient.patient_gender}
+                        {patient.patient_id.user_id.email}
                       </Table.Cell>
                       <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {patient.contact_number}
+                        {patient.appointment_type}
                       </Table.Cell>
                       <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {patient.address}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <div className="flex items-center gap-x-3 whitespace-nowrap">
-                          <Button
-                            color="failure"
-                            onClick={() => {
-                              setOpen(true);
-                              setUserIdToDelete(patient._id);
-                            }}
-                          >
-                            <div className="flex items-center gap-x-2">
-                              <HiTrash className="text-lg" />
-                              Delete
-                            </div>
-                          </Button>
-                        </div>
+                        {patient.appointment_status}
                       </Table.Cell>
                     </Table.Row>
                   </Table.Body>
@@ -182,33 +135,6 @@ const PatientDetailView = () => {
       </div>
 
       <Pagination />
-      <Modal onClose={() => setOpen(false)} show={isOpen} size="md">
-        <Modal.Header className="px-6 pb-0 pt-6">
-          <span className="sr-only">Delete user</span>
-        </Modal.Header>
-        <Modal.Body className="px-6 pb-6 pt-0">
-          <div className="flex flex-col items-center gap-y-6 text-center">
-            <HiOutlineExclamationCircle className="text-7xl text-red-500" />
-            <p className="text-xl text-gray-500">
-              Are you sure you want to delete this user?
-            </p>
-            <div className="flex items-center gap-x-3">
-              <Button
-                color="failure"
-                onClick={() => {
-                  setOpen(false);
-                  handleDelete();
-                }}
-              >
-                Yes, I'm sure
-              </Button>
-              <Button color="gray" onClick={() => setOpen(false)}>
-                No, cancel
-              </Button>
-            </div>
-          </div>
-        </Modal.Body>
-      </Modal>
     </NavbarSidebar>
   );
 };
@@ -262,4 +188,4 @@ const Pagination = () => {
   );
 };
 
-export default PatientDetailView;
+export default DoctorPatientList;
