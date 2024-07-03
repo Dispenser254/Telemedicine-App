@@ -11,6 +11,7 @@ import appointmentRoutes from "./routes/appointment.route.js";
 import videoRoutes from "./routes/video.route.js";
 import paymentRouter from "./routes/payment.route.js";
 import prescriptionRouter from "./routes/prescription.route.js";
+import notificationRouter from "./routes/notification.route.js";
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ app.use("/mediclinic/appointment", appointmentRoutes);
 app.use("/mediclinic/video", videoRoutes);
 app.use("/mediclinic/payment", paymentRouter)
 app.use("/mediclinic/prescription", prescriptionRouter);
+app.use("/mediclinic/notification", notificationRouter);
 
 const PORT = process.env.PORT || 5000;
 

@@ -1,17 +1,19 @@
 /* eslint-disable react/no-unescaped-entities */
 import { useSidebarContext } from "../context/SidebarContext";
-import { HiBell, HiMenuAlt1, HiSearch, HiX } from "react-icons/hi";
+import { HiMenuAlt1, HiSearch, HiX } from "react-icons/hi";
 import { Dropdown, Label, TextInput, Navbar, Avatar } from "flowbite-react";
 import SmallScreen from "../helpers/SmallScreen";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { signoutSuccess } from "../redux/reducers/authenticationSlice";
+import NotificationBellDropdown from "./NotificationBellDropdown";
+import { Link } from "react-router-dom";
 
 const NavbarHeader = () => {
   const { isOpenOnSmallScreens, isPageWithSidebar, setOpenOnSmallScreens } =
     useSidebarContext();
   const dispatch = useDispatch();
-
+  const { currentUser } = useSelector((state) => state.authentication);
 
   const handleSignout = async () => {
     const response = await fetch("/mediclinic/auth/signout", {
@@ -73,7 +75,7 @@ const NavbarHeader = () => {
                 <span className="sr-only">Search</span>
                 <HiSearch className="h-6 w-6" />
               </button>
-              <HiBell className="text-2xl text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white " />
+              <NotificationBellDropdown />
             </div>
             <div className="block">
               <Dropdown
@@ -87,14 +89,26 @@ const NavbarHeader = () => {
                 }
               >
                 <Dropdown.Header>
-                  <span className="block text-sm">Neil Sims</span>
-                  <span className="block truncate text-sm font-medium">
-                    neil.sims@flowbite.com
+                  <span className="block text-sm">{currentUser.username}</span>
+                  <span className="block truncate italic text-sm font-medium">
+                    {currentUser.email}
                   </span>
                 </Dropdown.Header>
-                <Dropdown.Item>Dashboard</Dropdown.Item>
-                <Dropdown.Item>Settings</Dropdown.Item>
-                <Dropdown.Item>Earnings</Dropdown.Item>
+                {currentUser.role === "admin" && (
+                  <>
+                    <Link to={"/admin-dashboard"} as="div">
+                      <Dropdown.Item>Dashboard</Dropdown.Item>
+                    </Link>
+                    <Link to={"/department-list"} as="div">
+                      <Dropdown.Item>Departments</Dropdown.Item>
+                    </Link>
+                    <Link to={"/doctors-list"} as="div">
+                      <Dropdown.Item>Doctors</Dropdown.Item>
+                    </Link>
+                    <Dropdown.Item>Earnings</Dropdown.Item>
+                  </>
+                )}
+
                 <Dropdown.Divider />
                 <Dropdown.Item onClick={handleSignout}>Sign out</Dropdown.Item>
               </Dropdown>

@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import Patient from "../models/patient.model.js";
 import Appointment from "../models/appointment.model.js";
 import Doctor from "../models/doctor.model.js";
+import { createNotification } from "./notification.controller.js";
 
 // Create a signup
 export const signup = async (request, response, next) => {
@@ -101,6 +102,11 @@ export const signup = async (request, response, next) => {
       }
 
       // User and respective role entity creation successful
+      // Send a notification to the new user
+      await createNotification(
+        validUser._id,
+        "Welcome to the platform! Your account has been created successfully."
+      );
       response.status(201).json("User created successfully");
     } catch (rollError) {
       // Error occurred while creating role-specific data
@@ -182,6 +188,11 @@ export const login = async (request, response, next) => {
     });
 
     const { password: pass, ...rest } = validUser._doc;
+    // Send a notification to the new user
+    await createNotification(
+      validUser._id,
+      "Welcome to mediclinic center! You have signed in successfully."
+    );
     response
       .status(200)
       .cookie("access_token", token, { httpOnly: true })
@@ -253,6 +264,8 @@ export const updateUserById = async (request, response, next) => {
       return next(errorHandler(404, "User not found."));
     }
 
+    // Send notification
+    await createNotification(updateUser._id, "Your profile has been updated.");
     response.status(200).json("User updated successfully.");
   } catch (error) {
     next(errorHandler(500, "Error updating user"));
@@ -352,6 +365,11 @@ export const activateUser = async (request, response, next) => {
     user.isactive = true;
     await user.save();
 
+    // Send notification
+    await createNotification(
+      user._id,
+      "Your account has been activated successfully."
+    );
     response.status(200).json({
       message: "User account has been activated successfully",
     });

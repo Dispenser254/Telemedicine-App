@@ -27,22 +27,25 @@ export function SidebarHeader() {
 
   useEffect(() => {
     const newPage = window.location.pathname;
-
     setCurrentPage(newPage);
-  }, [setCurrentPage]);
+  }, []);
 
   const handleSignout = async () => {
-    const response = await fetch("/mediclinic/auth/signout", {
-      method: "POST",
-    });
-    if (!response.ok) {
+    try {
+      const response = await fetch("/mediclinic/auth/signout", {
+        method: "POST",
+      });
+      if (!response.ok) {
+        throw new Error("Error signing out.");
+      }
+      toast.success("You have signed out successfully.");
+      dispatch(signoutSuccess());
+    } catch (error) {
+      console.error("Signout error:", error);
       toast.error("Error signing out.");
     }
-    // eslint-disable-next-line no-unused-vars
-    const data = response.json();
-    toast.success("You have signed out successfully.");
-    dispatch(signoutSuccess());
   };
+
   return (
     <div
       className={classNames("lg:!block border-t z-50", {
@@ -69,111 +72,119 @@ export function SidebarHeader() {
               <Sidebar.ItemGroup>
                 {currentUser?.role === "admin" && (
                   <>
-                    <Link to={"/admin-dashboard"} as="div">
+                    <Link to="/admin-dashboard">
                       <Sidebar.Item
                         icon={HiChartPie}
                         className={
-                          "/admin-dashboard" === currentPage
+                          currentPage === "/admin-dashboard"
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
+                        as="div"
                       >
                         Dashboard
                       </Sidebar.Item>
                     </Link>
-                    <Link to={"/doctors-list"} as="div">
+                    <Link to="/doctors-list">
                       <Sidebar.Item
                         icon={FaUserDoctor}
                         className={
-                          "/doctors-list" === currentPage
+                          currentPage === "/doctors-list"
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
+                        as="div"
                       >
                         Doctors
                       </Sidebar.Item>
                     </Link>
-                    <Link to={"/patients-list"} as="div">
+                    <Link to="/patients-list">
                       <Sidebar.Item
                         icon={FaUserInjured}
                         className={
-                          "/patients-list" === currentPage
+                          currentPage === "/patients-list"
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
+                        as="div"
                       >
                         Patients
                       </Sidebar.Item>
                     </Link>
-                    <Link to={"/prescription-list"} as="div">
+                    <Link to="/prescription-list">
                       <Sidebar.Item
                         icon={FaHandHoldingMedical}
                         className={
-                          "/prescription-list" === currentPage
+                          currentPage === "/prescription-list"
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
+                        as="div"
                       >
                         Prescription
                       </Sidebar.Item>
                     </Link>
-                    <Link to={"/users-list"} as="div">
+                    <Link to="/users-list">
                       <Sidebar.Item
                         icon={FaUser}
                         className={
-                          "/users-list" === currentPage
+                          currentPage === "/users-list"
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
+                        as="div"
                       >
                         Users
                       </Sidebar.Item>
                     </Link>
-                    <Link to={"/appointment-list"} as="div">
+                    <Link to="/appointment-list">
                       <Sidebar.Item
                         icon={FaBookMedical}
                         className={
-                          "/appointment-list" === currentPage
+                          currentPage === "/appointment-list"
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
+                        as="div"
                       >
                         Appointments
                       </Sidebar.Item>
                     </Link>
-                    <Link to={"/payments-list"} as="div">
+                    <Link to="/payments-list">
                       <Sidebar.Item
                         icon={MdPayments}
                         className={
-                          "/payments-list" === currentPage
+                          currentPage === "/payments-list"
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
+                        as="div"
                       >
                         Payments
                       </Sidebar.Item>
                     </Link>
-
-                    <Link to={"/video-consultation"} as="div">
+                    <Link to="/video-consultation">
                       <Sidebar.Item
                         icon={FaVideo}
                         className={
-                          "/video-consultation" === currentPage
+                          currentPage === "/video-consultation"
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
+                        as="div"
                       >
                         Video Consultation
                       </Sidebar.Item>
                     </Link>
-                    <Link to={"/department-list"} as="div">
+                    <Link to="/department-list">
                       <Sidebar.Item
                         icon={FaHospitalAlt}
                         className={
-                          "/department-list" === currentPage
+                          currentPage === "/department-list"
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
+                        as="div"
                       >
                         Departments
                       </Sidebar.Item>
@@ -183,11 +194,11 @@ export function SidebarHeader() {
 
                 {currentUser?.role === "doctor" && (
                   <>
-                    <Link to={"/doctor-dashboard"}>
+                    <Link to="/doctor-dashboard">
                       <Sidebar.Item
                         icon={HiChartPie}
                         className={
-                          "/doctor-dashboard" === currentPage
+                          currentPage === "/doctor-dashboard"
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
@@ -195,12 +206,11 @@ export function SidebarHeader() {
                         Dashboard
                       </Sidebar.Item>
                     </Link>
-
-                    <Link to={"/video-consultation"}>
+                    <Link to="/video-consultation">
                       <Sidebar.Item
                         icon={FaVideo}
                         className={
-                          "/video-consultation" === currentPage
+                          currentPage === "/video-consultation"
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
@@ -208,12 +218,11 @@ export function SidebarHeader() {
                         Video Consultation
                       </Sidebar.Item>
                     </Link>
-
-                    <Link to={"/appointment-list"}>
+                    <Link to="/appointment-list">
                       <Sidebar.Item
                         icon={FaBookMedical}
                         className={
-                          "/appointment-list" === currentPage
+                          currentPage === "/appointment-list"
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
@@ -221,12 +230,11 @@ export function SidebarHeader() {
                         My Appointments
                       </Sidebar.Item>
                     </Link>
-
-                    <Link to={"/doctor-patients"}>
+                    <Link to="/doctor-patients">
                       <Sidebar.Item
-                        icon={MdPayments}
+                        icon={FaUserDoctor}
                         className={
-                          "/doctor-patients" === currentPage
+                          currentPage === "/doctor-patients"
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
@@ -239,11 +247,11 @@ export function SidebarHeader() {
 
                 {currentUser?.role === "patient" && (
                   <>
-                    <Link to={"/dashboard"}>
+                    <Link to="/dashboard">
                       <Sidebar.Item
                         icon={HiChartPie}
                         className={
-                          "/dashboard" === currentPage
+                          currentPage === "/dashboard"
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
@@ -251,12 +259,11 @@ export function SidebarHeader() {
                         Dashboard
                       </Sidebar.Item>
                     </Link>
-
-                    <Link to={"/video-consultation"}>
+                    <Link to="/video-consultation">
                       <Sidebar.Item
                         icon={FaVideo}
                         className={
-                          "/video-consultation" === currentPage
+                          currentPage === "/video-consultation"
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
@@ -264,12 +271,11 @@ export function SidebarHeader() {
                         Video Consultation
                       </Sidebar.Item>
                     </Link>
-
-                    <Link to={"/appointment-list"}>
+                    <Link to="/appointment-list">
                       <Sidebar.Item
                         icon={FaBookMedical}
                         className={
-                          "/appointment-list" === currentPage
+                          currentPage === "/appointment-list"
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
@@ -277,12 +283,11 @@ export function SidebarHeader() {
                         My Appointments
                       </Sidebar.Item>
                     </Link>
-
-                    <Link to={"/payments-list"}>
+                    <Link to="/payments-list">
                       <Sidebar.Item
                         icon={MdPayments}
                         className={
-                          "/payments-list" === currentPage
+                          currentPage === "/payments-list"
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
@@ -294,17 +299,17 @@ export function SidebarHeader() {
                 )}
               </Sidebar.ItemGroup>
               <Sidebar.ItemGroup>
-                <Sidebar.Item href="" icon={MdNotifications}>
-                  Notification
+                <Sidebar.Item icon={MdNotifications}>
+                  <Link to="/notifications">Notifications</Link>
                 </Sidebar.Item>
 
                 {(currentUser?.role === "patient" ||
                   currentUser?.role === "doctor") && (
-                  <Link to={"/user-profile"}>
+                  <Link to="/user-profile">
                     <Sidebar.Item
                       icon={CgProfile}
                       className={
-                        "/user-profile" === currentPage
+                        currentPage === "/user-profile"
                           ? "bg-gray-100 dark:bg-gray-700"
                           : ""
                       }
