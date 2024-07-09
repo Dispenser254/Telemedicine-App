@@ -17,6 +17,7 @@ import { Link } from "react-router-dom";
 import { ScaleLoader } from "react-spinners";
 import { toast } from "react-toastify";
 import { FaEdit } from "react-icons/fa";
+import moment from "moment";
 
 const VideoConsultationView = () => {
   const [videoConsultation, setVideoConsultation] = useState([]);
@@ -228,68 +229,83 @@ const VideoConsultationView = () => {
                     <Table.HeadCell>Consultation Status</Table.HeadCell>
                     <Table.HeadCell>Join Meeting</Table.HeadCell>
                   </Table.Head>
-                  {videoConsultation.map((video) => (
-                    <Table.Body
-                      key={video._id}
-                      className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
-                    >
-                      <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
-                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {video?.video_consultation_link}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {video?.patient_id
-                            ? `${video.patient_id.patient_firstName || ""} ${
-                                video.patient_id.patient_lastName || ""
-                              }`.trim() || "N/A"
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {video?.appointment_id?.doctor_id
-                            ? `${
-                                video.appointment_id.doctor_id
-                                  .doctor_firstName || ""
-                              } ${
-                                video.appointment_id.doctor_id
-                                  .doctor_lastName || ""
-                              }`.trim() || "N/A"
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {video?.appointment_id?.appointment_date
-                            ? new Date(
-                                video.appointment_id.appointment_date
-                              ).toLocaleDateString()
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {video?.appointment_id?.appointment_time
-                            ? video.appointment_id.appointment_time
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-sm font-semibold text-gray-900 dark:text-white">
-                          {video?.consultation_status
-                            ? video.consultation_status
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-sm font-semibold text-gray-900 dark:text-white">
-                          {video.consultation_status ===
-                          "PENDING VIDEO CONSULTATION" ? (
-                            <Button
-                              href={video.video_consultation_link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              color="success"
-                            >
-                              Join Meeting
-                            </Button>
-                          ) : (
-                            "Action not Applicable"
-                          )}
+                  {videoConsultation.length > 0 ? (
+                    videoConsultation.map((video) => (
+                      <Table.Body
+                        key={video._id}
+                        className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
+                      >
+                        <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
+                          <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {video?.video_consultation_link}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {video?.patient_id
+                              ? `${video.patient_id.patient_firstName || ""} ${
+                                  video.patient_id.patient_lastName || ""
+                                }`.trim() || "N/A"
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {video?.appointment_id?.doctor_id
+                              ? `${
+                                  video.appointment_id.doctor_id
+                                    .doctor_firstName || ""
+                                } ${
+                                  video.appointment_id.doctor_id
+                                    .doctor_lastName || ""
+                                }`.trim() || "N/A"
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {video?.appointment_id?.appointment_date
+                              ? moment(
+                                  video.appointment_id.appointment_date
+                                ).format("LL")
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {video?.appointment_id?.appointment_time
+                              ? moment(
+                                  video.appointment_id.appointment_time
+                                ).format("LT")
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-sm font-semibold text-gray-900 dark:text-white">
+                            {video?.consultation_status
+                              ? video.consultation_status
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-sm font-semibold text-gray-900 dark:text-white">
+                            {video.consultation_status ===
+                            "PENDING VIDEO CONSULTATION" ? (
+                              <Button
+                                href={video.video_consultation_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                color="success"
+                              >
+                                Join Meeting
+                              </Button>
+                            ) : (
+                              "Action not Applicable"
+                            )}
+                          </Table.Cell>
+                        </Table.Row>
+                      </Table.Body>
+                    ))
+                  ) : (
+                    <Table.Body>
+                      <Table.Row>
+                        <Table.Cell
+                          colSpan="7"
+                          className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white text-center"
+                        >
+                          No video consultations found
                         </Table.Cell>
                       </Table.Row>
                     </Table.Body>
-                  ))}
+                  )}
                 </Table>
               </div>
             </div>
@@ -313,84 +329,99 @@ const VideoConsultationView = () => {
                     <Table.HeadCell>Join Meeting</Table.HeadCell>
                     <Table.HeadCell>Action</Table.HeadCell>
                   </Table.Head>
-                  {videoConsultationsDoctor.map((video) => (
-                    <Table.Body
-                      key={video._id}
-                      className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
-                    >
-                      <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
-                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {video?.video_consultation_link}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {video?.patient_id
-                            ? `${video.patient_id.patient_firstName || ""} ${
-                                video.patient_id.patient_lastName || ""
-                              }`.trim() || "N/A"
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {video?.doctor_id
-                            ? `${video.doctor_id.doctor_firstName || ""} ${
-                                video.doctor_id.doctor_lastName || ""
-                              }`.trim() || "N/A"
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {video?.appointment_id?.appointment_date
-                            ? new Date(
-                                video.appointment_id.appointment_date
-                              ).toLocaleDateString()
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {video?.appointment_id?.appointment_time
-                            ? video.appointment_id.appointment_time
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-sm font-semibold text-gray-900 dark:text-white">
-                          {video?.consultation_status
-                            ? video.consultation_status
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-sm font-semibold text-gray-900 dark:text-white">
-                          {video?.consultation_status ===
-                          "PENDING VIDEO CONSULTATION" ? (
-                            <Button
-                              href={video.video_consultation_link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              color="success"
-                            >
-                              Join Meeting
-                            </Button>
-                          ) : (
-                            "Action not Applicable"
-                          )}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-sm font-semibold text-gray-900 dark:text-white">
-                          {video?.consultation_status ===
-                          "PENDING VIDEO CONSULTATION" ? (
-                            <Button
-                              color="blue"
-                              onClick={() => {
-                                setVideoModal(true);
-                                seVideoId(video._id);
-                                fetchVideoConsultationsById(video._id);
-                              }}
-                            >
-                              <div className="flex items-center gap-x-2">
-                                <FaEdit className="text-lg" />
-                                Edit
-                              </div>
-                            </Button>
-                          ) : (
-                            "Action not Applicable"
-                          )}
+                  {videoConsultationsDoctor.length > 0 ? (
+                    videoConsultationsDoctor.map((video) => (
+                      <Table.Body
+                        key={video._id}
+                        className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
+                      >
+                        <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
+                          <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {video?.video_consultation_link}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {video?.patient_id
+                              ? `${video.patient_id.patient_firstName || ""} ${
+                                  video.patient_id.patient_lastName || ""
+                                }`.trim() || "N/A"
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {video?.doctor_id
+                              ? `${video.doctor_id.doctor_firstName || ""} ${
+                                  video.doctor_id.doctor_lastName || ""
+                                }`.trim() || "N/A"
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {video?.appointment_id?.appointment_date
+                              ? moment(
+                                  video.appointment_id.appointment_date
+                                ).format("LL")
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {video?.appointment_id?.appointment_time
+                              ? moment(
+                                  video.appointment_id.appointment_time
+                                ).format("LT")
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-sm font-semibold text-gray-900 dark:text-white">
+                            {video?.consultation_status
+                              ? video.consultation_status
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-sm font-semibold text-gray-900 dark:text-white">
+                            {video?.consultation_status ===
+                            "PENDING VIDEO CONSULTATION" ? (
+                              <Button
+                                href={video.video_consultation_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                color="success"
+                              >
+                                Join Meeting
+                              </Button>
+                            ) : (
+                              "Action not Applicable"
+                            )}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-sm font-semibold text-gray-900 dark:text-white">
+                            {video?.consultation_status ===
+                            "PENDING VIDEO CONSULTATION" ? (
+                              <Button
+                                color="blue"
+                                onClick={() => {
+                                  setVideoModal(true);
+                                  seVideoId(video._id);
+                                  fetchVideoConsultationsById(video._id);
+                                }}
+                              >
+                                <div className="flex items-center gap-x-2">
+                                  <FaEdit className="text-lg" />
+                                  Edit
+                                </div>
+                              </Button>
+                            ) : (
+                              "Action not Applicable"
+                            )}
+                          </Table.Cell>
+                        </Table.Row>
+                      </Table.Body>
+                    ))
+                  ) : (
+                    <Table.Body>
+                      <Table.Row>
+                        <Table.Cell
+                          colSpan="8"
+                          className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white text-center"
+                        >
+                          No video consultations found
                         </Table.Cell>
                       </Table.Row>
                     </Table.Body>
-                  ))}
+                  )}
                 </Table>
               </div>
             </div>
@@ -413,68 +444,83 @@ const VideoConsultationView = () => {
                     <Table.HeadCell>Consultation Status</Table.HeadCell>
                     <Table.HeadCell>Join Meeting</Table.HeadCell>
                   </Table.Head>
-                  {videoConsultationsPatients.map((video) => (
-                    <Table.Body
-                      key={video._id}
-                      className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
-                    >
-                      <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {video?.video_consultation_link}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {video?.patient_id
-                            ? `${video.patient_id.patient_firstName || ""} ${
-                                video.patient_id.patient_lastName || ""
-                              }`.trim() || "N/A"
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {video?.appointment_id?.doctor_id
-                            ? `${
-                                video.appointment_id.doctor_id
-                                  .doctor_firstName || ""
-                              } ${
-                                video.appointment_id.doctor_id
-                                  .doctor_lastName || ""
-                              }`.trim() || "N/A"
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {video?.appointment_id?.appointment_date
-                            ? new Date(
-                                video.appointment_id.appointment_date
-                              ).toLocaleDateString()
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {video?.appointment_id?.appointment_time
-                            ? video.appointment_id.appointment_time
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-sm font-semibold text-gray-900 dark:text-white">
-                          {video?.consultation_status
-                            ? video.consultation_status
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-sm font-semibold text-gray-900 dark:text-white">
-                          {video.consultation_status ===
-                          "PENDING VIDEO CONSULTATION" ? (
-                            <Button
-                              href={video.video_consultation_link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              color="success"
-                            >
-                              Join Meeting
-                            </Button>
-                          ) : (
-                            "Action not Applicable"
-                          )}
+                  {videoConsultationsPatients.length > 0 ? (
+                    videoConsultationsPatients.map((video) => (
+                      <Table.Body
+                        key={video._id}
+                        className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
+                      >
+                        <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {video?.video_consultation_link}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {video?.patient_id
+                              ? `${video.patient_id.patient_firstName || ""} ${
+                                  video.patient_id.patient_lastName || ""
+                                }`.trim() || "N/A"
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {video?.appointment_id?.doctor_id
+                              ? `${
+                                  video.appointment_id.doctor_id
+                                    .doctor_firstName || ""
+                                } ${
+                                  video.appointment_id.doctor_id
+                                    .doctor_lastName || ""
+                                }`.trim() || "N/A"
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {video?.appointment_id?.appointment_date
+                              ? moment(
+                                  video.appointment_id.appointment_date
+                                ).format("LL")
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {video?.appointment_id?.appointment_time
+                              ? moment(
+                                  video.appointment_id.appointment_time
+                                ).format("LT")
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-sm font-semibold text-gray-900 dark:text-white">
+                            {video?.consultation_status
+                              ? video.consultation_status
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-sm font-semibold text-gray-900 dark:text-white">
+                            {video.consultation_status ===
+                            "PENDING VIDEO CONSULTATION" ? (
+                              <Button
+                                href={video.video_consultation_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                color="success"
+                              >
+                                Join Meeting
+                              </Button>
+                            ) : (
+                              "Action not Applicable"
+                            )}
+                          </Table.Cell>
+                        </Table.Row>
+                      </Table.Body>
+                    ))
+                  ) : (
+                    <Table.Body>
+                      <Table.Row>
+                        <Table.Cell
+                          colSpan="7"
+                          className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white text-center"
+                        >
+                          No video consultations found
                         </Table.Cell>
                       </Table.Row>
                     </Table.Body>
-                  ))}
+                  )}
                 </Table>
               </div>
             </div>

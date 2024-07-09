@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { ScaleLoader } from "react-spinners";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
+import moment from "moment";
 
 const PrescriptionDetailView = () => {
   const [prescriptions, setPrescriptions] = useState([]);
@@ -98,45 +99,64 @@ const PrescriptionDetailView = () => {
                   <Table.HeadCell>Appointment Time</Table.HeadCell>
                   <Table.HeadCell>Appointment Status</Table.HeadCell>
                 </Table.Head>
-                {prescriptions?.map((prescription) => (
-                  <Table.Body
-                    key={prescription?._id}
-                    className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
-                  >
-                    <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
-                      <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {prescription?.patient_id?.patient_firstName || "N/A"}{" "}
-                        {prescription?.patient_id?.patient_lastName || "N/A"}
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {prescription?.prescription_date
-                          ? new Date(prescription?.prescription_date)
-                              .toISOString()
-                              .split("T")[0]
-                          : ""}
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-pre-line p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {prescription?.prescription_details || "N/A"}
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {prescription?.doctor_id?.doctor_firstName || "N/A"}{" "}
-                        {prescription?.doctor_id?.doctor_lastName || "N/A"}
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-pre-wrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {prescription?.appointment_id?.appointment_date ||
-                          "N/A"}
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {prescription?.appointment_id?.appointment_time ||
-                          "N/A"}
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {prescription?.appointment_id?.appointment_status ||
-                          "N/A"}
+                {prescriptions.length > 0 ? (
+                  prescriptions?.map((prescription) => (
+                    <Table.Body
+                      key={prescription?._id}
+                      className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
+                    >
+                      <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {prescription?.patient_id?.patient_firstName || "N/A"}{" "}
+                          {prescription?.patient_id?.patient_lastName || "N/A"}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {prescription?.prescription_date
+                            ? moment(prescription.prescription_date).format(
+                                "LL"
+                              )
+                            : "N/A"}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-pre-line p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {prescription?.prescription_details || "N/A"}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {prescription?.doctor_id?.doctor_firstName || "N/A"}{" "}
+                          {prescription?.doctor_id?.doctor_lastName || "N/A"}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-pre-wrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {prescription?.appointment_id?.appointment_date
+                            ? moment(
+                                prescription.appointment_id.appointment_date
+                              ).format("LL")
+                            : "N/A"}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {prescription?.appointment_id?.appointment_time
+                            ? moment(
+                                prescription.appointment_id.appointment_time
+                              ).format("LT")
+                            : "N/A"}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {prescription?.appointment_id?.appointment_status ||
+                            "N/A"}
+                        </Table.Cell>
+                      </Table.Row>
+                    </Table.Body>
+                  ))
+                ) : (
+                  <Table.Body>
+                    <Table.Row>
+                      <Table.Cell
+                        colSpan="7"
+                        className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white text-center"
+                      >
+                        No prescription data found
                       </Table.Cell>
                     </Table.Row>
                   </Table.Body>
-                ))}
+                )}
               </Table>
             </div>
           </div>

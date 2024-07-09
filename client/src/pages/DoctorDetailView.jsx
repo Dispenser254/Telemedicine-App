@@ -135,61 +135,74 @@ const DoctorDetailView = () => {
                   <Table.HeadCell>Department Name</Table.HeadCell>
                   <Table.HeadCell>Actions</Table.HeadCell>
                 </Table.Head>
-                {doctors.map((doctor) => (
-                  <Table.Body
-                    key={doctor._id}
-                    className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
-                  >
-                    <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
-                      <Table.Cell className="mr-12 flex items-center space-x-6 whitespace-nowrap p-4 lg:mr-0">
-                        <img
-                          className="h-10 w-10 rounded-full"
-                          src={doctor.doctor_profilePic}
-                          alt="Avatar"
-                        />
-                        <div className="text-sm font-normal text-gray-500 dark:text-gray-400">
-                          <div className="text-base font-semibold text-gray-900 dark:text-white">
-                            {doctor.doctor_firstName} {doctor.doctor_lastName}
-                          </div>
+                {doctors.length > 0 ? (
+                  doctors.map((doctor) => (
+                    <Table.Body
+                      key={doctor._id}
+                      className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
+                    >
+                      <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
+                        <Table.Cell className="mr-12 flex items-center space-x-6 whitespace-nowrap p-4 lg:mr-0">
+                          <img
+                            className="h-10 w-10 rounded-full"
+                            src={doctor.doctor_profilePic}
+                            alt="Avatar"
+                          />
                           <div className="text-sm font-normal text-gray-500 dark:text-gray-400">
-                            {doctor?.email}
+                            <div className="text-base font-semibold text-gray-900 dark:text-white">
+                              {doctor.doctor_firstName} {doctor.doctor_lastName}
+                            </div>
+                            <div className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                              {doctor?.email}
+                            </div>
                           </div>
-                        </div>
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {doctor.doctor_idNumber}
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {doctor.doctor_number}
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {doctor.department_name}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <div className="flex items-center gap-x-4 whitespace-nowrap">
-                          <Button color="blue">
-                            <div className="flex items-center gap-x-2">
-                              <HiEye className="text-lg" />
-                              View
-                            </div>
-                          </Button>
-                          <Button
-                            color="failure"
-                            onClick={() => {
-                              setOpen(true);
-                              setUserIdToDelete(doctor._id);
-                            }}
-                          >
-                            <div className="flex items-center gap-x-2">
-                              <HiTrash className="text-lg" />
-                              Delete
-                            </div>
-                          </Button>
-                        </div>
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {doctor.doctor_idNumber}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {doctor.doctor_number}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {doctor.department_name}
+                        </Table.Cell>
+                        <Table.Cell>
+                          <div className="flex items-center gap-x-4 whitespace-nowrap">
+                            <Button color="blue">
+                              <div className="flex items-center gap-x-2">
+                                <HiEye className="text-lg" />
+                                View
+                              </div>
+                            </Button>
+                            <Button
+                              color="failure"
+                              onClick={() => {
+                                setOpen(true);
+                                setUserIdToDelete(doctor._id);
+                              }}
+                            >
+                              <div className="flex items-center gap-x-2">
+                                <HiTrash className="text-lg" />
+                                Delete
+                              </div>
+                            </Button>
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    </Table.Body>
+                  ))
+                ) : (
+                  <Table.Body>
+                    <Table.Row>
+                      <Table.Cell
+                        colSpan="5"
+                        className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white text-center"
+                      >
+                        No doctor data found
                       </Table.Cell>
                     </Table.Row>
                   </Table.Body>
-                ))}
+                )}
               </Table>
             </div>
           </div>

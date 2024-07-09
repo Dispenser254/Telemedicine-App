@@ -173,8 +173,8 @@ const DepartmentDetailView = () => {
                   <span className="dark:text-white">Home</span>
                 </div>
               </Breadcrumb.Item>
-              <Breadcrumb.Item href="/doctors-list">
-                Departmnents
+              <Breadcrumb.Item href="/departments-list">
+                Departments
               </Breadcrumb.Item>
               <Breadcrumb.Item>List</Breadcrumb.Item>
             </Breadcrumb>
@@ -215,55 +215,68 @@ const DepartmentDetailView = () => {
               <Table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                 <Table.Head className="bg-gray-100 dark:bg-gray-700 text-center">
                   <Table.HeadCell>Department Name</Table.HeadCell>
-                  <Table.HeadCell>Department Desription</Table.HeadCell>
+                  <Table.HeadCell>Department Description</Table.HeadCell>
                   <Table.HeadCell>Actions</Table.HeadCell>
                 </Table.Head>
-                {department.map((dep) => (
-                  <Table.Body
-                    key={dep._id}
-                    className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
-                  >
-                    <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
-                      <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {dep?.department_name ? dep.department_name : "N/A"}
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {dep?.department_description
-                          ? dep.department_description
-                          : "N/A"}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <div className="flex items-center gap-x-4 whitespace-nowrap">
-                          <Button
-                            color="blue"
-                            onClick={() => {
-                              setDepartmentModal(true);
-                              setDepartmentId(dep._id);
-                              fetchDepartmentByID(dep._id);
-                            }}
-                          >
-                            <div className="flex items-center gap-x-2">
-                              <FaEdit className="text-lg" />
-                              Edit
-                            </div>
-                          </Button>
-                          <Button
-                            color="failure"
-                            onClick={() => {
-                              setOpen(true);
-                              setDepartmentIdToDelete(dep._id);
-                            }}
-                          >
-                            <div className="flex items-center gap-x-2">
-                              <HiTrash className="text-lg" />
-                              Delete
-                            </div>
-                          </Button>
-                        </div>
+                {department.length > 0 ? (
+                  department.map((dep) => (
+                    <Table.Body
+                      key={dep._id}
+                      className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
+                    >
+                      <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {dep?.department_name ? dep.department_name : "N/A"}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {dep?.department_description
+                            ? dep.department_description
+                            : "N/A"}
+                        </Table.Cell>
+                        <Table.Cell>
+                          <div className="flex items-center gap-x-4 whitespace-nowrap">
+                            <Button
+                              color="blue"
+                              onClick={() => {
+                                setDepartmentModal(true);
+                                setDepartmentId(dep._id);
+                                fetchDepartmentByID(dep._id);
+                              }}
+                            >
+                              <div className="flex items-center gap-x-2">
+                                <FaEdit className="text-lg" />
+                                Edit
+                              </div>
+                            </Button>
+                            <Button
+                              color="failure"
+                              onClick={() => {
+                                setOpen(true);
+                                setDepartmentIdToDelete(dep._id);
+                              }}
+                            >
+                              <div className="flex items-center gap-x-2">
+                                <HiTrash className="text-lg" />
+                                Delete
+                              </div>
+                            </Button>
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    </Table.Body>
+                  ))
+                ) : (
+                  <Table.Body>
+                    <Table.Row>
+                      <Table.Cell
+                        colSpan="3"
+                        className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white text-center"
+                      >
+                        No departments found
                       </Table.Cell>
                     </Table.Row>
                   </Table.Body>
-                ))}
+                )}
               </Table>
             </div>
           </div>
@@ -313,7 +326,10 @@ const DepartmentDetailView = () => {
               <span className="pl-3">Loading...</span>
             </>
           )}
-          <form onSubmit={handleSubmit} className="flex flex-col items-center gap-y-6 text-center">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col items-center gap-y-6 text-center"
+          >
             <div className="mb-4">
               <Label
                 htmlFor="departmentName"
@@ -346,11 +362,7 @@ const DepartmentDetailView = () => {
             </div>
 
             <div className="flex items-center gap-x-6">
-              <Button
-                color="blue"
-                type="submit"
-                disabled={loading}
-              >
+              <Button color="blue" type="submit" disabled={loading}>
                 {loading ? (
                   <>
                     <Spinner size="sm" />

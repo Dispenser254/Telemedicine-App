@@ -28,6 +28,7 @@ import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import AddAppointmentModal from "../components/AddAppointmentModal";
 import { FaEdit, FaEye, FaHandHoldingMedical } from "react-icons/fa";
+import moment from "moment";
 
 const AppointmentDetailView = () => {
   const [appointments, setAppointments] = useState([]);
@@ -433,87 +434,109 @@ const AppointmentDetailView = () => {
                     <Table.HeadCell>Appointment Status</Table.HeadCell>
                     <Table.HeadCell>Actions</Table.HeadCell>
                   </Table.Head>
-                  {appointments.map((appointment) => (
-                    <Table.Body
-                      key={appointment._id}
-                      className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
-                    >
-                      <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {new Date(
-                            appointment.appointment_date
-                          ).toLocaleDateString()}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {appointment.appointment_time}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {appointment.department_id?.department_name || "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {appointment.patient_id
-                            ? `${appointment.patient_id.patient_firstName} ${appointment.patient_id.patient_lastName}`
-                            : "Not Assigned"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {appointment.doctor_id
-                            ? `${appointment.doctor_id.doctor_firstName} ${appointment.doctor_id.doctor_lastName}`
-                            : "Not Assigned"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {appointment.appointment_type}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {appointment.appointment_status}
-                        </Table.Cell>
-                        <Table.Cell>
-                          <div className="flex items-center gap-x-4 whitespace-nowrap">
-                            <Button
-                              color={
-                                appointment.appointment_status ===
-                                "Pending with admin"
-                                  ? "blue"
-                                  : "success"
-                              }
-                              onClick={() => {
-                                setAppointmentModal(true);
-                                setAppointmentId(appointment._id);
-                                fetchAppointmentsByID(appointment._id);
-                                fetchDoctorByID(appointment.department_id._id);
-                              }}
-                            >
-                              <div className="flex items-center gap-x-2">
-                                {appointment.appointment_status ===
-                                "Pending with admin" ? (
-                                  <>
-                                    <HiDocument className="text-lg" />
-                                    Assign Doc
-                                  </>
-                                ) : (
-                                  <>
-                                    <HiEye className="text-lg" />
-                                    View
-                                  </>
-                                )}
-                              </div>
-                            </Button>
-                            <Button
-                              color="failure"
-                              onClick={() => {
-                                setOpen(true);
-                                setAppointmentIdToDelete(appointment._id);
-                              }}
-                            >
-                              <div className="flex items-center gap-x-2">
-                                <HiTrash className="text-lg" />
-                                Delete
-                              </div>
-                            </Button>
-                          </div>
+                  {appointments.length > 0 ? (
+                    appointments.map((appointment) => (
+                      <Table.Body
+                        key={appointment._id}
+                        className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
+                      >
+                        <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {appointment?.appointment_date
+                              ? moment(appointment.appointment_date).format(
+                                  "LL"
+                                )
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {appointment?.appointment_time
+                              ? moment(appointment.appointment_time).format(
+                                  "LT"
+                                )
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {appointment.department_id?.department_name ||
+                              "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {appointment.patient_id
+                              ? `${appointment.patient_id.patient_firstName} ${appointment.patient_id.patient_lastName}`
+                              : "Not Assigned"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {appointment.doctor_id
+                              ? `${appointment.doctor_id.doctor_firstName} ${appointment.doctor_id.doctor_lastName}`
+                              : "Not Assigned"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {appointment.appointment_type}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {appointment.appointment_status}
+                          </Table.Cell>
+                          <Table.Cell>
+                            <div className="flex items-center gap-x-4 whitespace-nowrap">
+                              <Button
+                                color={
+                                  appointment.appointment_status ===
+                                  "Pending with admin"
+                                    ? "blue"
+                                    : "success"
+                                }
+                                onClick={() => {
+                                  setAppointmentModal(true);
+                                  setAppointmentId(appointment._id);
+                                  fetchAppointmentsByID(appointment._id);
+                                  fetchDoctorByID(
+                                    appointment.department_id._id
+                                  );
+                                }}
+                              >
+                                <div className="flex items-center gap-x-2">
+                                  {appointment.appointment_status ===
+                                  "Pending with admin" ? (
+                                    <>
+                                      <HiDocument className="text-lg" />
+                                      Assign Doc
+                                    </>
+                                  ) : (
+                                    <>
+                                      <HiEye className="text-lg" />
+                                      View
+                                    </>
+                                  )}
+                                </div>
+                              </Button>
+                              <Button
+                                color="failure"
+                                onClick={() => {
+                                  setOpen(true);
+                                  setAppointmentIdToDelete(appointment._id);
+                                }}
+                              >
+                                <div className="flex items-center gap-x-2">
+                                  <HiTrash className="text-lg" />
+                                  Delete
+                                </div>
+                              </Button>
+                            </div>
+                          </Table.Cell>
+                        </Table.Row>
+                      </Table.Body>
+                    ))
+                  ) : (
+                    <Table.Body>
+                      <Table.Row>
+                        <Table.Cell
+                          colSpan="8"
+                          className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white text-center"
+                        >
+                          No appointment data found
                         </Table.Cell>
                       </Table.Row>
                     </Table.Body>
-                  ))}
+                  )}
                 </Table>
               </div>
             </div>
@@ -537,96 +560,117 @@ const AppointmentDetailView = () => {
                     <Table.HeadCell>Prescribe</Table.HeadCell>
                     <Table.HeadCell>Actions</Table.HeadCell>
                   </Table.Head>
-                  {appointmentsDoctors?.map((appointment) => (
-                    <Table.Body
-                      key={appointment._id}
-                      className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
-                    >
-                      <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {new Date(
-                            appointment?.appointment_date
-                          ).toLocaleDateString()}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {appointment?.appointment_time}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {appointment?.department_id?.department_name || "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {appointment?.patient_id
-                            ? `${appointment.patient_id.patient_firstName} ${appointment.patient_id.patient_lastName}`
-                            : "Not Assigned"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {appointment?.appointment_type}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {appointment?.appointment_status}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {prescriptionDoctor ? (
-                            <Button
-                              color="purple"
-                              onClick={() =>
-                                handleViewOrPrescribe(appointment._id)
-                              }
-                            >
-                              <div className="flex items-center gap-x-2">
-                                <FaEye className="text-lg" />
-                                View
-                              </div>
-                            </Button>
-                          ) : (
-                            <Button
-                              color="success"
-                              onClick={() =>
-                                handleViewOrPrescribe(appointment._id)
-                              }
-                            >
-                              <div className="flex items-center gap-x-2">
-                                <FaHandHoldingMedical className="text-lg" />
-                                Prescribe
-                              </div>
-                            </Button>
-                          )}
-                        </Table.Cell>
-                        <Table.Cell>
-                          <div className="flex items-center gap-x-4 whitespace-nowrap">
-                            {appointment?.appointment_status === "Scheduled" ? (
+                  {appointmentsDoctors.length > 0 ? (
+                    appointmentsDoctors?.map((appointment) => (
+                      <Table.Body
+                        key={appointment._id}
+                        className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
+                      >
+                        <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {appointment?.appointment_date
+                              ? moment(appointment.appointment_date).format(
+                                  "LL"
+                                )
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {appointment?.appointment_time
+                              ? moment(appointment.appointment_time).format(
+                                  "LT"
+                                )
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {appointment?.department_id?.department_name ||
+                              "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {appointment?.patient_id
+                              ? `${appointment.patient_id.patient_firstName} ${appointment.patient_id.patient_lastName}`
+                              : "Not Assigned"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {appointment?.appointment_type}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {appointment?.appointment_status}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {prescriptionDoctor ? (
                               <Button
-                                color="blue"
+                                color="purple"
+                                onClick={() =>
+                                  handleViewOrPrescribe(appointment._id)
+                                }
+                              >
+                                <div className="flex items-center gap-x-2">
+                                  <FaEye className="text-lg" />
+                                  View
+                                </div>
+                              </Button>
+                            ) : (
+                              <Button
+                                color="success"
+                                onClick={() =>
+                                  handleViewOrPrescribe(appointment._id)
+                                }
+                              >
+                                <div className="flex items-center gap-x-2">
+                                  <FaHandHoldingMedical className="text-lg" />
+                                  Prescribe
+                                </div>
+                              </Button>
+                            )}
+                          </Table.Cell>
+                          <Table.Cell>
+                            <div className="flex items-center gap-x-4 whitespace-nowrap">
+                              {appointment?.appointment_status ===
+                              "Scheduled" ? (
+                                <Button
+                                  color="blue"
+                                  onClick={() => {
+                                    setAppointmentModal(true);
+                                    setAppointmentId(appointment._id);
+                                    fetchAppointmentsByID(appointment._id);
+                                  }}
+                                >
+                                  <div className="flex items-center gap-x-2">
+                                    <FaEdit className="text-lg" />
+                                    Edit
+                                  </div>
+                                </Button>
+                              ) : null}
+
+                              <Button
+                                color="failure"
                                 onClick={() => {
-                                  setAppointmentModal(true);
-                                  setAppointmentId(appointment._id);
-                                  fetchAppointmentsByID(appointment._id);
+                                  setOpen(true);
+                                  setAppointmentIdToDelete(appointment._id);
                                 }}
                               >
                                 <div className="flex items-center gap-x-2">
-                                  <FaEdit className="text-lg" />
-                                  Edit
+                                  <HiTrash className="text-lg" />
+                                  Delete
                                 </div>
                               </Button>
-                            ) : null}
-
-                            <Button
-                              color="failure"
-                              onClick={() => {
-                                setOpen(true);
-                                setAppointmentIdToDelete(appointment._id);
-                              }}
-                            >
-                              <div className="flex items-center gap-x-2">
-                                <HiTrash className="text-lg" />
-                                Delete
-                              </div>
-                            </Button>
-                          </div>
+                            </div>
+                          </Table.Cell>
+                        </Table.Row>
+                      </Table.Body>
+                    ))
+                  ) : (
+                    <Table.Body>
+                      <Table.Row>
+                        <Table.Cell
+                          colSpan="8"
+                          className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white text-center"
+                        >
+                          No appointment data found
                         </Table.Cell>
                       </Table.Row>
                     </Table.Body>
-                  ))}
+                  )}
                 </Table>
               </div>
             </div>
@@ -649,69 +693,89 @@ const AppointmentDetailView = () => {
                     <Table.HeadCell>Appointment Status</Table.HeadCell>
                     <Table.HeadCell>Actions</Table.HeadCell>
                   </Table.Head>
-                  {appointmentsPatients.map((appointment) => (
-                    <Table.Body
-                      key={appointment._id}
-                      className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
-                    >
-                      <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {new Date(
-                            appointment.appointment_date
-                          ).toLocaleDateString()}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {appointment.appointment_time}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {appointment.department_id?.department_name || "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {appointment.doctor_id
-                            ? `${appointment.doctor_id.doctor_firstName} ${appointment.doctor_id.doctor_lastName}`
-                            : "Not Assigned"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {appointment.appointment_type}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {appointment.appointment_status}
-                        </Table.Cell>
-                        <Table.Cell>
-                          <div className="flex items-center gap-x-4 whitespace-nowrap">
-                            <Button
-                              color="blue"
-                              onClick={() => {
-                                setOpenPrescription(true);
-                                setAppointmentId(appointment._id);
-                                fetchAppointmentsByID(appointment._id);
-                                fetchPrescriptionsByAppointmentID(
-                                  appointment._id
-                                );
-                              }}
-                            >
-                              <div className="flex items-center gap-x-2">
-                                <HiEye className="text-lg" />
-                                View
-                              </div>
-                            </Button>
-                            <Button
-                              color="failure"
-                              onClick={() => {
-                                setOpen(true);
-                                setAppointmentIdToDelete(appointment._id);
-                              }}
-                            >
-                              <div className="flex items-center gap-x-2">
-                                <HiTrash className="text-lg" />
-                                Delete
-                              </div>
-                            </Button>
-                          </div>
+                  {appointmentsPatients.length > 0 ? (
+                    appointmentsPatients.map((appointment) => (
+                      <Table.Body
+                        key={appointment._id}
+                        className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
+                      >
+                        <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {appointment?.appointment_date
+                              ? moment(appointment.appointment_date).format(
+                                  "LL"
+                                )
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {appointment?.appointment_time
+                              ? moment(appointment.appointment_time).format(
+                                  "LT"
+                                )
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {appointment.department_id?.department_name ||
+                              "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {appointment.doctor_id
+                              ? `${appointment.doctor_id.doctor_firstName} ${appointment.doctor_id.doctor_lastName}`
+                              : "Not Assigned"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {appointment.appointment_type}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {appointment.appointment_status}
+                          </Table.Cell>
+                          <Table.Cell>
+                            <div className="flex items-center gap-x-4 whitespace-nowrap">
+                              <Button
+                                color="blue"
+                                onClick={() => {
+                                  setOpenPrescription(true);
+                                  setAppointmentId(appointment._id);
+                                  fetchAppointmentsByID(appointment._id);
+                                  fetchPrescriptionsByAppointmentID(
+                                    appointment._id
+                                  );
+                                }}
+                              >
+                                <div className="flex items-center gap-x-2">
+                                  <HiEye className="text-lg" />
+                                  View
+                                </div>
+                              </Button>
+                              <Button
+                                color="failure"
+                                onClick={() => {
+                                  setOpen(true);
+                                  setAppointmentIdToDelete(appointment._id);
+                                }}
+                              >
+                                <div className="flex items-center gap-x-2">
+                                  <HiTrash className="text-lg" />
+                                  Delete
+                                </div>
+                              </Button>
+                            </div>
+                          </Table.Cell>
+                        </Table.Row>
+                      </Table.Body>
+                    ))
+                  ) : (
+                    <Table.Body>
+                      <Table.Row>
+                        <Table.Cell
+                          colSpan="8"
+                          className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white text-center"
+                        >
+                          No appointment data found
                         </Table.Cell>
                       </Table.Row>
                     </Table.Body>
-                  ))}
+                  )}
                 </Table>
               </div>
             </div>

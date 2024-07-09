@@ -8,6 +8,7 @@ import { ScaleLoader } from "react-spinners";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
+import moment from "moment";
 
 const PaymentDetailView = () => {
   const [payments, setPayments] = useState([]);
@@ -123,39 +124,54 @@ const PaymentDetailView = () => {
                     <Table.HeadCell>Payment Amount</Table.HeadCell>
                     <Table.HeadCell>Payment Status</Table.HeadCell>
                   </Table.Head>
-                  {payments.map((payment) => (
-                    <Table.Body
-                      key={payment?._id}
-                      className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
-                    >
-                      <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {new Date(payment?.payment_date).toLocaleDateString()}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {payment?.appointment_id?.appointment_type
-                            ? payment.appointment_id.appointment_type
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {payment?.appointment_id?.appointment_status
-                            ? payment.appointment_id.appointment_status
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          Kshs.
-                          {payment?.payment_amount
-                            ? payment.payment_amount
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {payment?.payment_status
-                            ? payment.payment_status
-                            : "N/A"}
+                  {payments.length > 0 ? (
+                    payments.map((payment) => (
+                      <Table.Body
+                        key={payment?._id}
+                        className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
+                      >
+                        <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {payment?.payment_date
+                              ? moment(payment.payment_date).format("LL")
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {payment?.appointment_id?.appointment_type
+                              ? payment.appointment_id.appointment_type
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {payment?.appointment_id?.appointment_status
+                              ? payment.appointment_id.appointment_status
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            Kshs.
+                            {payment?.payment_amount
+                              ? payment.payment_amount
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {payment?.payment_status
+                              ? payment.payment_status
+                              : "N/A"}
+                          </Table.Cell>
+                        </Table.Row>
+                      </Table.Body>
+                    ))
+                  ) : (
+                    <Table.Body>
+                      <Table.Row>
+                        <Table.Cell
+                          colSpan="5"
+                          className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white text-center"
+                        >
+                          No payments data found
                         </Table.Cell>
                       </Table.Row>
                     </Table.Body>
-                  ))}
+                  )}
                 </Table>
               </div>
             </div>
@@ -176,39 +192,54 @@ const PaymentDetailView = () => {
                     <Table.HeadCell>Payment Amount</Table.HeadCell>
                     <Table.HeadCell>Payment Status</Table.HeadCell>
                   </Table.Head>
-                  {paymentsPatients.map((payment) => (
-                    <Table.Body
-                      key={payment._id}
-                      className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
-                    >
-                      <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {new Date(payment?.payment_date).toLocaleDateString()}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {payment?.appointment_id?.appointment_type
-                            ? payment.appointment_id.appointment_type
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {payment?.appointment_id?.appointment_status
-                            ? payment.appointment_id.appointment_status
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          Kshs.{" "}
-                          {payment?.payment_amount
-                            ? payment.payment_amount
-                            : "N/A"}
-                        </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {payment?.payment_status
-                            ? payment.payment_status
-                            : "N/A"}
+                  {paymentsPatients.length > 0 ? (
+                    paymentsPatients.map((payment) => (
+                      <Table.Body
+                        key={payment._id}
+                        className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
+                      >
+                        <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {payment?.payment_date
+                              ? moment(payment.payment_date).format("LL")
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {payment?.appointment_id?.appointment_type
+                              ? payment.appointment_id.appointment_type
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {payment?.appointment_id?.appointment_status
+                              ? payment.appointment_id.appointment_status
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            Kshs.{" "}
+                            {payment?.payment_amount
+                              ? payment.payment_amount
+                              : "N/A"}
+                          </Table.Cell>
+                          <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                            {payment?.payment_status
+                              ? payment.payment_status
+                              : "N/A"}
+                          </Table.Cell>
+                        </Table.Row>
+                      </Table.Body>
+                    ))
+                  ) : (
+                    <Table.Body>
+                      <Table.Row>
+                        <Table.Cell
+                          colSpan="5"
+                          className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white text-center"
+                        >
+                          No payments data found
                         </Table.Cell>
                       </Table.Row>
                     </Table.Body>
-                  ))}
+                  )}
                 </Table>
               </div>
             </div>

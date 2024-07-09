@@ -191,6 +191,7 @@ export const login = async (request, response, next) => {
     // Send a notification to the new user
     await createNotification(
       validUser._id,
+      "Sign in",
       "Welcome to mediclinic center! You have signed in successfully."
     );
     response

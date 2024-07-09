@@ -135,46 +135,59 @@ const PatientDetailView = () => {
                   <Table.HeadCell>Address</Table.HeadCell>
                   <Table.HeadCell>Actions</Table.HeadCell>
                 </Table.Head>
-                {patients.map((patient) => (
-                  <Table.Body
-                    key={patient._id}
-                    className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
-                  >
-                    <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
-                      <Table.Cell className="whitespace-nowrap text-center p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {patient.patient_firstName} {patient.patient_lastName}
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {patient.age}
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {patient.patient_gender}
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {patient.contact_number}
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {patient.address}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <div className="flex items-center gap-x-3 whitespace-nowrap">
-                          <Button
-                            color="failure"
-                            onClick={() => {
-                              setOpen(true);
-                              setUserIdToDelete(patient._id);
-                            }}
-                          >
-                            <div className="flex items-center gap-x-2">
-                              <HiTrash className="text-lg" />
-                              Delete
-                            </div>
-                          </Button>
-                        </div>
+                {patients.length > 0 ? (
+                  patients.map((patient) => (
+                    <Table.Body
+                      key={patient._id}
+                      className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
+                    >
+                      <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
+                        <Table.Cell className="whitespace-nowrap text-center p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {patient.patient_firstName} {patient.patient_lastName}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {patient.age}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {patient.patient_gender}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {patient.contact_number}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {patient.address}
+                        </Table.Cell>
+                        <Table.Cell>
+                          <div className="flex items-center gap-x-3 whitespace-nowrap">
+                            <Button
+                              color="failure"
+                              onClick={() => {
+                                setOpen(true);
+                                setUserIdToDelete(patient._id);
+                              }}
+                            >
+                              <div className="flex items-center gap-x-2">
+                                <HiTrash className="text-lg" />
+                                Delete
+                              </div>
+                            </Button>
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    </Table.Body>
+                  ))
+                ) : (
+                  <Table.Body>
+                    <Table.Row>
+                      <Table.Cell
+                        colSpan="6"
+                        className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white text-center"
+                      >
+                        No patient data found
                       </Table.Cell>
                     </Table.Row>
                   </Table.Body>
-                ))}
+                )}
               </Table>
             </div>
           </div>
