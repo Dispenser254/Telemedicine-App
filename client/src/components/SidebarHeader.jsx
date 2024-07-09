@@ -299,9 +299,19 @@ export function SidebarHeader() {
                 )}
               </Sidebar.ItemGroup>
               <Sidebar.ItemGroup>
-                <Sidebar.Item icon={MdNotifications}>
-                  <Link to="/notifications">Notifications</Link>
-                </Sidebar.Item>
+                <Link to="/notification-list">
+                  <Sidebar.Item
+                    icon={MdNotifications}
+                    className={
+                      currentPage === "/notification-list"
+                        ? "bg-gray-100 dark:bg-gray-700"
+                        : ""
+                    }
+                    as="div"
+                  >
+                    Notifications
+                  </Sidebar.Item>
+                </Link>
 
                 {(currentUser?.role === "patient" ||
                   currentUser?.role === "doctor") && (
@@ -313,6 +323,7 @@ export function SidebarHeader() {
                           ? "bg-gray-100 dark:bg-gray-700"
                           : ""
                       }
+                      as="div"
                     >
                       Profile
                     </Sidebar.Item>

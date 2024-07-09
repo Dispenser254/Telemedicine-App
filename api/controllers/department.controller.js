@@ -76,7 +76,7 @@ export const deleteDepartment = async (request, response, next) => {
       return next(errorHandler(404, "Department not found"));
     }
 
-    // Delete the patient
+    // Delete the department
     await Department.findByIdAndDelete(departmentId);
     response.status(200).json("Department deleted successfully");
   } catch (error) {

@@ -26,6 +26,7 @@ import UserProfile from "./pages/UserProfile";
 import UsersListView from "./pages/UsersListView";
 import DoctorPatientList from "./components/DoctorPatientList";
 import PrescriptionDetailView from "./pages/PrescriptionDetailView";
+import NotificationDetailView from "./pages/NotificationDetailView";
 
 const App = () => {
   return (
@@ -46,11 +47,11 @@ const App = () => {
         <Route element={<PrivateRoute />}>
           <Route path="/appointment-list" element={<AppointmentDetailView />} />
           <Route path="/payments-list" element={<PaymentDetailView />} />
-
           <Route
             path="/video-consultation"
             element={<VideoConsultationView />}
           />
+          <Route path="/notification-list" element={<NotificationDetailView />} />
           <Route path="/user-profile" element={<UserProfile />} />
         </Route>
 
@@ -59,7 +60,10 @@ const App = () => {
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/doctors-list" element={<DoctorDetailView />} />
           <Route path="/patients-list" element={<PatientDetailView />} />
-          <Route path="/prescription-list" element={<PrescriptionDetailView />} />
+          <Route
+            path="/prescription-list"
+            element={<PrescriptionDetailView />}
+          />
           <Route path="/users-list" element={<UsersListView />} />
           <Route path="/department-list" element={<DepartmentDetailView />} />
         </Route>
