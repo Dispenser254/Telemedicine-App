@@ -5,6 +5,7 @@ import {
   deleteNotificationsByUserId,
   getNotificationById,
   getNotificationsByUserId,
+  markAllNotificationsAsViewed,
   markNotificationAsViewed,
 } from "../controllers/notification.controller.js";
 
@@ -17,6 +18,7 @@ router.get(
   getNotificationsByUserId
 );
 router.put("/getNotifications/:id", verifyToken, markNotificationAsViewed);
+router.put("/markAllAsViewed/:user_id", verifyToken, markAllNotificationsAsViewed);
 router.delete("/deleteNotification/:id", verifyToken, deleteNotificationById);
 router.delete(
   "/deleteAllNotifications/:user_id",

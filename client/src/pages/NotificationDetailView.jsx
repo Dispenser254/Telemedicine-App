@@ -22,6 +22,7 @@ import NavbarSidebar from "../components/NavbarSideBar";
 import { useSelector } from "react-redux";
 import { RiDeleteBin6Fill } from "react-icons/ri";
 import moment from "moment";
+import { FaCheckDouble } from "react-icons/fa";
 
 const NotificationDetailView = () => {
   const [notifications, setNotifications] = useState([]);
@@ -169,6 +170,38 @@ const NotificationDetailView = () => {
     }
   };
 
+  const handleAllMarkRead = async () => {
+    try {
+      setLoading(true);
+      setErrorMessage(null);
+      const response = await fetch(
+        `/mediclinic/notification/markAllAsViewed/${userID}`,
+        { method: "PUT" }
+      );
+      if (!response.ok) {
+        const errorText = await response.text();
+        setErrorMessage(`Failed to mark notification as read: ${errorText}`);
+        toast.error(errorMessage);
+        setLoading(false);
+        return;
+      }
+      const updatedNotification = await response.json();
+      setNotifications(
+        notifications.map((notification) =>
+          notification._id === updatedNotification._id
+            ? updatedNotification
+            : notification
+        )
+      );
+      toast.success("Marked all messages as read successfully!")
+      fetchNotificationByUserID(userID);
+      setLoading(false);
+    } catch (error) {
+      toast.error(error.message);
+      setErrorMessage(error.message);
+    }
+  };
+
   useEffect(() => {
     fetchNotificationByUserID(userID);
   }, []);
@@ -210,6 +243,12 @@ const NotificationDetailView = () => {
               </form>
             </div>
             <div className="ml-auto flex items-center space-x-2 sm:space-x-3">
+              <Button color="gray" onClick={handleAllMarkRead}>
+                <div className="flex items-center gap-x-3">
+                  <FaCheckDouble className="text-xl" />
+                  <span>Mark All As Read</span>
+                </div>
+              </Button>
               <Button
                 color="failure"
                 onClick={() => {

@@ -83,6 +83,33 @@ export const markNotificationAsViewed = async (request, response, next) => {
   }
 };
 
+// Function to mark all notifications as viewed
+export const markAllNotificationsAsViewed = async (request, response, next) => {
+  const userId = request.params.user_id;
+
+  try {
+    const notifications = await Notification.updateMany(
+      { user_id: userId, viewed: false },
+      { $set: { viewed: true } }
+    );
+
+    if (notifications.matchedCount === 0) {
+      return next(errorHandler(404, "No new notifications found to update"));
+    }
+
+    response
+      .status(200)
+      .json({ message: "All notifications marked as viewed", notifications });
+  } catch (error) {
+    next(
+      errorHandler(
+        500,
+        "An error occurred while marking all notifications as viewed."
+      )
+    );
+  }
+};
+
 // Function to delete a notification by ID
 export const deleteNotificationById = async (request, response, next) => {
   const notificationId = request.params.id;
