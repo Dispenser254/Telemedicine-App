@@ -5,7 +5,7 @@ import backgroundImage from "/images/homepage.jpg";
 import { useState } from "react";
 import doctorIcon from "/images/doctorIcon.png";
 import { FaExclamation } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   signInFailure,
@@ -84,7 +84,6 @@ const DoctorLoginPage = () => {
               Doctor <span className="text-teal-400">Login</span>
             </h2>
           </div>
-
           <form className="w-full flex flex-col gap-2" onSubmit={handleSubmit}>
             <div className="mb-2">
               <Label>Username</Label>
@@ -119,6 +118,12 @@ const DoctorLoginPage = () => {
               )}
             </Button>
           </form>
+          <div className="text-sm flex justify-center text-gray-500 mt-4">
+            Are you an admin? Click
+            <Link to={"/admin-login"} className="text-blue-500 mr-2">
+              Here to login
+            </Link>{" "}
+          </div>
         </div>
 
         <Modal

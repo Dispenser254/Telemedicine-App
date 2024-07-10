@@ -128,7 +128,7 @@ const PatientsDashboardGrid = () => {
             <span className="font-semibold ml-2">{patient.patient_gender}</span>
           </div>
         </div>
-        <Link to={"/users-profile"}>
+        <Link to={"/user-profile"}>
           <div className="flex gap-4 items-center font-semibold text-blue-500 hover:text-blue-700">
             <FaEye />
             View Details
@@ -176,7 +176,7 @@ const PatientsDashboardGrid = () => {
             No consultations available.
           </div>
         )}
-        <Link to={"/users-profile"}>
+        <Link to={"/appointment-list"}>
           <div className="flex gap-4 items-center font-semibold text-blue-500 hover:text-blue-800">
             <FaEye />
             Show all
@@ -224,7 +224,7 @@ const PatientsDashboardGrid = () => {
             No pending appointments available.
           </div>
         )}
-        <Link to={"/users-profile"}>
+        <Link to={"/appointment-list"}>
           <div className="flex gap-4 items-center font-semibold text-blue-500 hover:text-blue-800">
             <FaEye />
             Show all
@@ -242,7 +242,7 @@ const PatientsDashboardGrid = () => {
             {videoConsultations}
           </div>
         </div>
-        <Link to={"/users-profile"}>
+        <Link to={"/video-consultation"}>
           <div className="flex gap-4 items-center font-semibold text-blue-500 hover:text-blue-800">
             <FaEye />
             View Details

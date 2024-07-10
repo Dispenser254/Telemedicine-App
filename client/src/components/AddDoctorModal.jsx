@@ -260,7 +260,7 @@ const AddDoctorModal = ({ onDoctorAdded }) => {
         ) : (
           <>
             <Modal.Body>
-              <div className="grid grid-cols-1 gap-2 lg:gap-6 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-2 sm:gap-4 sm:grid-cols-2">
                 <div className="mb-4">
                   <Label htmlFor="username">Username</Label>
                   <TextInput

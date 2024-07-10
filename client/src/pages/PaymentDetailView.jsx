@@ -1,10 +1,16 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/no-unescaped-entities */
-import { HiChevronLeft, HiChevronRight, HiHome } from "react-icons/hi";
-import { Breadcrumb, Label, Table, TextInput } from "flowbite-react";
+import { HiHome } from "react-icons/hi";
+import {
+  Breadcrumb,
+  Label,
+  Pagination,
+  Table,
+  TextInput,
+} from "flowbite-react";
 import NavbarSidebar from "../components/NavbarSideBar";
 import { useEffect, useState } from "react";
-import { ScaleLoader } from "react-spinners";
+import { PropagateLoader, ScaleLoader } from "react-spinners";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -16,12 +22,15 @@ const PaymentDetailView = () => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const { currentUser } = useSelector((state) => state.authentication);
+  const paymentsPerPage = 5;
 
-  const fetchPayments = async () => {
+  const fetchPayments = async (page = 1) => {
     try {
       setLoading(true);
       setErrorMessage(null);
-      const response = await fetch("/mediclinic/payment/getAllPayments");
+      const response = await fetch(
+        `/mediclinic/payment/getAllPayments?page=${page}&limit=${paymentsPerPage}`
+      );
       if (!response.ok) {
         setErrorMessage("Failed to fetch payments data.");
         toast.error(errorMessage);
@@ -36,11 +45,11 @@ const PaymentDetailView = () => {
     }
   };
 
-  const fetchPaymentsByPatientsID = async (patientId) => {
+  const fetchPaymentsByPatientsID = async (patientId, page = 1) => {
     try {
       setLoading(true);
       const response = await fetch(
-        `/mediclinic/payment/getPaymentByPatientID/patient/${patientId}`
+        `/mediclinic/payment/getPaymentByPatientID/patient/${patientId}?page=${page}&limit=${paymentsPerPage}`
       );
 
       if (!response.ok) {
@@ -49,7 +58,7 @@ const PaymentDetailView = () => {
         setLoading(false);
       }
       const data = await response.json();
-      setPaymentsPatients(data);
+      setPaymentsPatients(data.payments);
       setLoading(false);
     } catch (error) {
       toast.error(error.message);
@@ -124,7 +133,7 @@ const PaymentDetailView = () => {
                     <Table.HeadCell>Payment Amount</Table.HeadCell>
                     <Table.HeadCell>Payment Status</Table.HeadCell>
                   </Table.Head>
-                  {payments.length > 0 ? (
+                  {payments?.length > 0 ? (
                     payments.map((payment) => (
                       <Table.Body
                         key={payment?._id}
@@ -192,7 +201,7 @@ const PaymentDetailView = () => {
                     <Table.HeadCell>Payment Amount</Table.HeadCell>
                     <Table.HeadCell>Payment Status</Table.HeadCell>
                   </Table.Head>
-                  {paymentsPatients.length > 0 ? (
+                  {paymentsPatients?.length > 0 ? (
                     paymentsPatients.map((payment) => (
                       <Table.Body
                         key={payment._id}
@@ -246,56 +255,111 @@ const PaymentDetailView = () => {
           </div>
         </div>
       )}
-      <Pagination />
+      {(currentUser?.role === "admin" || currentUser?.role === "patient") && (
+        <PaginationButton
+          fetchPayments={fetchPayments}
+          fetchPaymentsByPatientsID={fetchPaymentsByPatientsID}
+        />
+      )}
     </NavbarSidebar>
   );
 };
 
-const Pagination = () => {
+// eslint-disable-next-line react/prop-types
+const PaginationButton = ({ fetchPayments, fetchPaymentsByPatientsID }) => {
+  const [totalPayments, setTotalPayments] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const paymentsPerPage = 5;
+  const [firstPaymentIndex, setFirstPaymentIndex] = useState(0);
+  const [lastPaymentIndex, setLastPaymentIndex] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const { currentUser } = useSelector((state) => state.authentication);
+  const patientID = currentUser.patient_id;
+
+  useEffect(() => {
+    const fetchPaymentsData = async () => {
+      setLoading(true);
+      try {
+        let response;
+        if (currentUser?.role === "admin") {
+          response = await fetch(
+            `/mediclinic/payment/getAllPayments?page=${currentPage}&limit=${paymentsPerPage}`
+          );
+        } else if (currentUser?.role === "patient") {
+          response = await fetch(
+            `/mediclinic/payment/getPaymentByPatientID/patient/${patientID}?page=${currentPage}&limit=${paymentsPerPage}`
+          );
+        }
+
+        if (!response.ok) {
+          toast.error("Failed to fetch departments data.");
+        }
+        const data = await response.json();
+        setTotalPayments(data.totalPayments);
+        // Calculate the range of departments being displayed
+        const firstIndex = (currentPage - 1) * paymentsPerPage + 1;
+        const lastIndex = Math.min(
+          currentPage * paymentsPerPage,
+          data.totalPayments
+        );
+        setFirstPaymentIndex(firstIndex);
+        setLastPaymentIndex(lastIndex);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching departments:", error);
+        toast.error(error.message);
+        setLoading(false);
+      }
+    };
+
+    fetchPaymentsData();
+  }, [currentPage, currentUser]);
+
+  const totalPages = Math.ceil(totalPayments / paymentsPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    if (currentUser?.role === "admin") {
+      fetchPayments(page);
+    } else if (currentUser?.role === "patient") {
+      fetchPaymentsByPatientsID(patientID, page);
+    }
+  };
+
   return (
-    <div className="sticky bottom-0 right-0 w-full items-center border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:flex sm:justify-between">
-      <div className="mb-4 flex items-center sm:mb-0">
-        <a
-          href="#"
-          className="inline-flex cursor-pointer justify-center rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-        >
-          <span className="sr-only">Previous page</span>
-          <HiChevronLeft className="text-2xl" />
-        </a>
-        <a
-          href="#"
-          className="mr-2 inline-flex cursor-pointer justify-center rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-        >
-          <span className="sr-only">Next page</span>
-          <HiChevronRight className="text-2xl" />
-        </a>
-        <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
-          Showing&nbsp;
-          <span className="font-semibold text-gray-900 dark:text-white">
-            1-20
-          </span>
-          &nbsp;of&nbsp;
-          <span className="font-semibold text-gray-900 dark:text-white">
-            2290
-          </span>
-        </span>
-      </div>
-      <div className="flex items-center space-x-3">
-        <a
-          href="#"
-          className="inline-flex flex-1 items-center justify-center rounded-lg bg-primary-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-        >
-          <HiChevronLeft className="mr-1 text-base" />
-          Previous
-        </a>
-        <a
-          href="#"
-          className="inline-flex flex-1 items-center justify-center rounded-lg bg-primary-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-        >
-          Next
-          <HiChevronRight className="ml-1 text-base" />
-        </a>
-      </div>
+    <div className="sm:flex sm:flex-1 sm:items-center sm:justify-between mt-6 mb-8 p-4">
+      {loading ? (
+        <div className="flex flex-col items-center gap-y-6 text-center">
+          <PropagateLoader size={5} color="#000000" />
+        </div>
+      ) : (
+        <>
+          <div>
+            <p className="flex gap-x-1 text-md text-gray-700">
+              Showing
+              <span className="font-semibold text-black">
+                {firstPaymentIndex}
+              </span>
+              to
+              <span className="font-semibold text-black">
+                {lastPaymentIndex}
+              </span>
+              of
+              <span className="font-semibold text-black">{totalPayments}</span>
+              payments
+            </p>
+          </div>
+          <div className="flex justify-center">
+            <Pagination
+              layout="navigation"
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              showIcons
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };

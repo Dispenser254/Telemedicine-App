@@ -16,12 +16,13 @@ const NotificationBellDropdown = () => {
   const userID = currentUser._id;
   const [loadingNotification, setLoadingNotification] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const notificationsPerPage = 5;
 
   const fetchNotifications = async (userID) => {
     try {
       setErrorMessage(null);
       const response = await fetch(
-        `/mediclinic/notification/getNotifications/user/${userID}?limit=5`
+        `/mediclinic/notification/getNotifications/user/${userID}?limit=${notificationsPerPage}`
       );
       if (!response.ok) {
         setErrorMessage("Failed to fetch notifications data.");
@@ -88,7 +89,6 @@ const NotificationBellDropdown = () => {
     }
   };
 
-
   useEffect(() => {
     const interval = setInterval(() => {
       fetchNotifications(userID);
@@ -110,9 +110,12 @@ const NotificationBellDropdown = () => {
         label={
           <span className="relative rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-700">
             <span className="sr-only">Notifications</span>
-            <HiBell className="text-3xl text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white " />
+            <HiBell className="text-2xl text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white " />
             {unreadCount > 0 && (
-              <Badge className="absolute -top-1 -right-1" color="red" size="sm">
+              <Badge
+                className="absolute -top-1 -right-1 rounded-full bg-green-200 text-gray-800"
+                size="sm"
+              >
                 {unreadCount > 9 ? "9+" : unreadCount}
               </Badge>
             )}
@@ -143,7 +146,17 @@ const NotificationBellDropdown = () => {
                     {notification?.title}
                   </div>
                   <div className="text-sm font-normal text-gray-500 dark:text-gray-400">
-                    {notification?.message}
+                    {notification?.message.length > 30 ? (
+                      <>
+                        {notification.message.slice(0, 30)}
+                        ...
+                        <span className="text-blue-500 cursor-pointer">
+                          Read more
+                        </span>
+                      </>
+                    ) : (
+                      notification?.message
+                    )}
                   </div>
                   <div className="flex justify-center text-xs font-medium text-blue-500">
                     {moment(notification?.createdAt).fromNow()}

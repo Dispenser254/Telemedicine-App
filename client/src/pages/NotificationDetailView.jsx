@@ -3,11 +3,10 @@
 import {
   Breadcrumb,
   Button,
-  Label,
   Modal,
+  Pagination,
   Spinner,
   Table,
-  TextInput,
 } from "flowbite-react";
 import { useEffect, useState } from "react";
 import {
@@ -16,7 +15,7 @@ import {
   HiOutlineExclamationCircle,
   HiTrash,
 } from "react-icons/hi";
-import { ScaleLoader } from "react-spinners";
+import { PropagateLoader, ScaleLoader } from "react-spinners";
 import { toast } from "react-toastify";
 import NavbarSidebar from "../components/NavbarSideBar";
 import { useSelector } from "react-redux";
@@ -37,14 +36,15 @@ const NotificationDetailView = () => {
   const [loadingNotification, setLoadingNotification] = useState(false);
   const { currentUser } = useSelector((state) => state.authentication);
   const userID = currentUser._id;
+  const notificationsPerPage = 10;
 
-  const fetchNotificationByUserID = async (userID) => {
+  const fetchNotificationByUserID = async (userID, page = 1) => {
     try {
       setLoading(true);
       setErrorMessage(null);
 
       const response = await fetch(
-        `/mediclinic/notification/getNotifications/user/${userID}`
+        `/mediclinic/notification/getNotifications/user/${userID}?page=${page}&limit=${notificationsPerPage}`
       );
       if (!response.ok) {
         setErrorMessage("Failed to fetch notification for user data.");
@@ -193,7 +193,7 @@ const NotificationDetailView = () => {
             : notification
         )
       );
-      toast.success("Marked all messages as read successfully!")
+      toast.success("Marked all messages as read successfully!");
       fetchNotificationByUserID(userID);
       setLoading(false);
     } catch (error) {
@@ -223,25 +223,11 @@ const NotificationDetailView = () => {
               </Breadcrumb.Item>
               <Breadcrumb.Item>List</Breadcrumb.Item>
             </Breadcrumb>
+          </div>
+          <div className="sm:flex">
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white sm:text-2xl">
               All Notifications
             </h1>
-          </div>
-          <div className="sm:flex">
-            <div className="mb-3 hidden items-center dark:divide-gray-700 sm:mb-0 sm:flex sm:divide-x sm:divide-gray-100">
-              <form className="lg:pr-3">
-                <Label htmlFor="notifications-search" className="sr-only">
-                  Search
-                </Label>
-                <div className="relative mt-1 lg:w-64 xl:w-96">
-                  <TextInput
-                    id="notifications-search"
-                    name="notifications-search"
-                    placeholder="Search for notifications"
-                  />
-                </div>
-              </form>
-            </div>
             <div className="ml-auto flex items-center space-x-2 sm:space-x-3">
               <Button color="gray" onClick={handleAllMarkRead}>
                 <div className="flex items-center gap-x-3">
@@ -299,7 +285,17 @@ const NotificationDetailView = () => {
                             setNotificationModal(true);
                           }}
                         >
-                          {notification?.title || "N/A"}
+                          {notification?.message.length > 30 ? (
+                            <>
+                              {notification.title.slice(0, 30)}
+                              ...
+                              <span className="text-blue-500 cursor-pointer">
+                                Read more
+                              </span>
+                            </>
+                          ) : (
+                            notification?.title
+                          )}
                         </Table.Cell>
                         <Table.Cell
                           className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white"
@@ -309,7 +305,16 @@ const NotificationDetailView = () => {
                             setNotificationModal(true);
                           }}
                         >
-                          {notification?.message || "N/A"}
+                          {notification?.message.length > 50 ? (
+                            <>
+                              {notification.message.slice(0, 50)}...
+                              <span className="text-blue-500 cursor-pointer">
+                                Read more
+                              </span>
+                            </>
+                          ) : (
+                            notification?.message
+                          )}
                         </Table.Cell>
                         <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
                           {moment(notification?.createdAt).fromNow()}
@@ -363,6 +368,8 @@ const NotificationDetailView = () => {
           </div>
         </div>
       </div>
+      <PaginationButton fetchNotificationByUserID={fetchNotificationByUserID} />
+
       <Modal onClose={() => setOpen(false)} show={isOpen} size="md">
         <Modal.Header className="px-6 pb-0 pt-6">
           <span className="sr-only">Delete Notification</span>
@@ -460,6 +467,95 @@ const NotificationDetailView = () => {
         </Modal.Body>
       </Modal>
     </NavbarSidebar>
+  );
+};
+
+// eslint-disable-next-line react/prop-types
+const PaginationButton = ({ fetchNotificationByUserID }) => {
+  const [totalNotifications, setTotalNotifications] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const notificationsPerPage = 10;
+  const [firstNotificationIndex, setFirstNotificationIndex] = useState(0);
+  const [lastNotificationIndex, setLastNotificationIndex] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const { currentUser } = useSelector((state) => state.authentication);
+  const userID = currentUser._id;
+
+  useEffect(() => {
+    const fetchNotificationsData = async (userID) => {
+      setLoading(true);
+      try {
+        const response = await fetch(
+          `/mediclinic/notification/getNotifications/user/${userID}?page=${currentPage}&limit=${notificationsPerPage}`
+        );
+        if (!response.ok) {
+          toast.error("Failed to fetch notifications data.");
+        }
+        const data = await response.json();
+        setTotalNotifications(data.totalNotifications);
+        // Calculate the range of notification being displayed
+        const firstIndex = (currentPage - 1) * notificationsPerPage + 1;
+        const lastIndex = Math.min(
+          currentPage * notificationsPerPage,
+          data.totalNotifications
+        );
+        setFirstNotificationIndex(firstIndex);
+        setLastNotificationIndex(lastIndex);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+        toast.error(error.message);
+        setLoading(false);
+      }
+    };
+
+    fetchNotificationsData(userID);
+  }, [currentPage]);
+
+  const totalPages = Math.ceil(totalNotifications / notificationsPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchNotificationByUserID(userID, page);
+  };
+
+  return (
+    <div className="sm:flex sm:flex-1 sm:items-center sm:justify-between mt-6 mb-8 p-4">
+      {loading ? (
+        <div className="flex flex-col items-center gap-y-6 text-center">
+          <PropagateLoader size={5} color="#000000" />
+        </div>
+      ) : (
+        <>
+          <div>
+            <p className="flex gap-x-1 text-md text-gray-700">
+              Showing
+              <span className="font-semibold text-black">
+                {firstNotificationIndex}
+              </span>
+              to
+              <span className="font-semibold text-black">
+                {lastNotificationIndex}
+              </span>
+              of
+              <span className="font-semibold text-black">
+                {totalNotifications}
+              </span>
+              notifications
+            </p>
+          </div>
+          <div className="flex justify-center">
+            <Pagination
+              layout="navigation"
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              showIcons
+            />
+          </div>
+        </>
+      )}
+    </div>
   );
 };
 

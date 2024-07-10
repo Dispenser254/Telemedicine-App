@@ -108,6 +108,25 @@ const NavbarHeader = () => {
                     <Dropdown.Item>Earnings</Dropdown.Item>
                   </>
                 )}
+                {currentUser.role === "patient" && (
+                  <>
+                    <Link to={"/dashboard"} as="div">
+                      <Dropdown.Item>Dashboard</Dropdown.Item>
+                    </Link>
+                    <Link to={"/appointment-list"} as="div">
+                      <Dropdown.Item>My Appointments</Dropdown.Item>
+                    </Link>
+                    <Link to={"/payments-list"} as="div">
+                      <Dropdown.Item>My Payments</Dropdown.Item>
+                    </Link>
+                    <Link to={"/video-consultation"} as="div">
+                      <Dropdown.Item>My Video Consultation</Dropdown.Item>
+                    </Link>
+                    <Link to={"/user-profile"} as="div">
+                      <Dropdown.Item>My Profile</Dropdown.Item>
+                    </Link>
+                  </>
+                )}
 
                 <Dropdown.Divider />
                 <Dropdown.Item onClick={handleSignout}>Sign out</Dropdown.Item>

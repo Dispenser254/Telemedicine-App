@@ -1,15 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
-import {
-  HiChevronLeft,
-  HiChevronRight,
-  HiHome,
-} from "react-icons/hi";
-import {
-  Breadcrumb,
-  Label,
-  Table,
-  TextInput,
-} from "flowbite-react";
+import { HiChevronLeft, HiChevronRight, HiHome } from "react-icons/hi";
+import { Breadcrumb, Label, Table, TextInput } from "flowbite-react";
 import NavbarSidebar from "../components/NavbarSideBar";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -21,7 +12,7 @@ const DoctorPatientList = () => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const { currentUser } = useSelector((state) => state.authentication);
-  const doctorId = currentUser.doctor_id
+  const doctorId = currentUser.doctor_id;
 
   const fetchPatients = async (doctorId) => {
     try {
@@ -103,31 +94,44 @@ const DoctorPatientList = () => {
                   <Table.HeadCell>Appointment Type</Table.HeadCell>
                   <Table.HeadCell>Appointment Status</Table.HeadCell>
                 </Table.Head>
-                {patients.map((patient) => (
-                  <Table.Body
-                    key={patient._id}
-                    className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
-                  >
-                    <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
-                      <Table.Cell className="whitespace-nowrap text-center p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {patient.patient_id.patient_firstName}{" "}
-                        {patient.patient_id.patient_lastName}
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {patient.patient_id.contact_number}
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {patient.patient_id.user_id.email}
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {patient.appointment_type}
-                      </Table.Cell>
-                      <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                        {patient.appointment_status}
+                {patients.length > 0 ? (
+                  patients.map((patient) => (
+                    <Table.Body
+                      key={patient._id}
+                      className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
+                    >
+                      <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
+                        <Table.Cell className="whitespace-nowrap text-center p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {patient.patient_id.patient_firstName}{" "}
+                          {patient.patient_id.patient_lastName}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {patient.patient_id.contact_number}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {patient.patient_id.user_id.email}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {patient.appointment_type}
+                        </Table.Cell>
+                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
+                          {patient.appointment_status}
+                        </Table.Cell>
+                      </Table.Row>
+                    </Table.Body>
+                  ))
+                ) : (
+                  <Table.Body>
+                    <Table.Row>
+                      <Table.Cell
+                        colSpan="5"
+                        className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white text-center"
+                      >
+                        No patient data found
                       </Table.Cell>
                     </Table.Row>
                   </Table.Body>
-                ))}
+                )}
               </Table>
             </div>
           </div>

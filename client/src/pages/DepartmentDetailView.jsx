@@ -2,8 +2,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/no-unescaped-entities */
 import {
-  HiChevronLeft,
-  HiChevronRight,
   HiHome,
   HiOutlineExclamationCircle,
   HiPlus,
@@ -14,6 +12,7 @@ import {
   Button,
   Label,
   Modal,
+  Pagination,
   Spinner,
   Table,
   TextInput,
@@ -21,7 +20,7 @@ import {
 } from "flowbite-react";
 import NavbarSidebar from "../components/NavbarSideBar";
 import { useEffect, useState } from "react";
-import { ScaleLoader } from "react-spinners";
+import { PropagateLoader, ScaleLoader } from "react-spinners";
 import { toast } from "react-toastify";
 import { FaEdit } from "react-icons/fa";
 
@@ -30,12 +29,15 @@ const DepartmentDetailView = () => {
   const [departmentId, setDepartmentId] = useState("");
   const [departmentIdToDelete, setDepartmentIdToDelete] = useState("");
   const [departmentModal, setDepartmentModal] = useState(false);
+  const [departmentModalView, setDepartmentModalView] = useState(false);
   const [isOpen, setOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingDepartment, setLoadingDepartment] = useState(false);
   const [departmentName, setDepartmentName] = useState("");
   const [departmentDescription, setDepartmentDescription] = useState("");
+  const departmentsPerPage = 5;
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -46,11 +48,15 @@ const DepartmentDetailView = () => {
     }
   };
 
-  const fetchDepartments = async () => {
+  const fetchDepartments = async (page = 1, term = "") => {
     try {
       setLoading(true);
       setErrorMessage(null);
-      const response = await fetch("/mediclinic/department/getDepartments");
+      const response = await fetch(
+        `/mediclinic/department/getDepartments?page=${page}&limit=${departmentsPerPage}&searchTerm=${encodeURIComponent(
+          term
+        )}`
+      );
       if (!response.ok) {
         setErrorMessage("Failed to fetch departments data.");
         toast.error(errorMessage);
@@ -103,11 +109,11 @@ const DepartmentDetailView = () => {
         setLoading(false);
         return;
       }
-      // Filter out the deleted doctor from the local state
+      // Filter out the deleted department from the local state
       setDepartment(
         department.filter((dep) => dep._id !== departmentIdToDelete)
       );
-      // Fetch the updated list of doctor after deletion
+      // Fetch the updated list of department after deletion
       fetchDepartments();
       setLoading(false);
       toast.success("Department deleted successfully");
@@ -157,9 +163,19 @@ const DepartmentDetailView = () => {
     }
   };
 
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    fetchDepartments(1, searchTerm);
+  };
+
   useEffect(() => {
-    fetchDepartments();
-  }, []);
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchTermFromUrl = urlParams.get("searchTerm");
+    if (searchTermFromUrl) {
+      setSearchTerm(searchTermFromUrl);
+    }
+    fetchDepartments(1, searchTermFromUrl || "");
+  }, [searchTerm]);
 
   return (
     <NavbarSidebar isFooter={false}>
@@ -184,7 +200,7 @@ const DepartmentDetailView = () => {
           </div>
           <div className="sm:flex">
             <div className="mb-3 hidden items-center dark:divide-gray-700 sm:mb-0 sm:flex sm:divide-x sm:divide-gray-100">
-              <form className="lg:pr-3">
+              <form className="lg:pr-3" onSubmit={handleSearchSubmit}>
                 <Label htmlFor="users-search" className="sr-only">
                   Search
                 </Label>
@@ -192,7 +208,10 @@ const DepartmentDetailView = () => {
                   <TextInput
                     id="users-search"
                     name="users-search"
-                    placeholder="Search for users"
+                    placeholder="Search for departments"
+                    className="bg-transparent focus:outline-none w-24 sm:w-64"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
               </form>
@@ -228,13 +247,28 @@ const DepartmentDetailView = () => {
                         <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
                           {dep?.department_name ? dep.department_name : "N/A"}
                         </Table.Cell>
-                        <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {dep?.department_description
-                            ? dep.department_description
-                            : "N/A"}
+                        <Table.Cell
+                          className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white"
+                          onClick={() => {
+                            setDepartmentModalView(true);
+                            setDepartmentId(dep._id);
+                            fetchDepartmentByID(dep._id);
+                          }}
+                        >
+                          {dep?.department_description.length > 50 ? (
+                            <>
+                              {dep.department_description.slice(0, 50)}
+                              ...
+                              <span className="text-blue-500 cursor-pointer">
+                                Read more
+                              </span>
+                            </>
+                          ) : (
+                            dep?.department_description
+                          )}
                         </Table.Cell>
                         <Table.Cell>
-                          <div className="flex items-center gap-x-4 whitespace-nowrap">
+                          <div className="flex justify-center gap-x-4 whitespace-nowrap">
                             <Button
                               color="blue"
                               onClick={() => {
@@ -282,7 +316,8 @@ const DepartmentDetailView = () => {
           </div>
         </div>
       </div>
-      <Pagination />
+      <PaginationButton fetchDepartments={fetchDepartments} />
+
       <Modal onClose={() => setOpen(false)} show={isOpen} size="md">
         <Modal.Header className="px-6 pb-0 pt-6">
           <span className="sr-only">Delete Department</span>
@@ -308,6 +343,44 @@ const DepartmentDetailView = () => {
               </Button>
             </div>
           </div>
+        </Modal.Body>
+      </Modal>
+
+      <Modal
+        onClose={() => setDepartmentModalView(false)}
+        show={departmentModalView}
+        size="2xl"
+      >
+        <Modal.Header className="px-6 pb-6 pt-6 text-2xl font-extrabold text-gray-900 dark:text-white text-center uppercase bg-gray-200">
+          View <span className="text-yellow-500 font-bold">Department</span>
+        </Modal.Header>
+        <Modal.Body className="px-6 pb-6 pt-0 bg-gray-200">
+          {loadingDepartment ? (
+            <div className="flex flex-col items-center gap-y-6 text-center">
+              <Spinner size="lg" />
+              <span className="pl-3">Loading...</span>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-y-6 text-center">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mt-4">
+                Department Name: {departmentName}
+              </h2>
+              <p className="text-base text-gray-700 dark:text-gray-300">
+                {departmentDescription}
+              </p>
+              <div className="flex items-center gap-x-6 mt-4">
+                <Button
+                  outline
+                  gradientDuoTone="pinkToOrange"
+                  onClick={() => {
+                    setDepartmentModalView(false);
+                  }}
+                >
+                  Exit
+                </Button>
+              </div>
+            </div>
+          )}
         </Modal.Body>
       </Modal>
 
@@ -383,51 +456,89 @@ const DepartmentDetailView = () => {
   );
 };
 
-const Pagination = () => {
+// eslint-disable-next-line react/prop-types
+const PaginationButton = ({ fetchDepartments }) => {
+  const [totalDepartments, setTotalDepartments] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const departmentsPerPage = 5;
+  const [firstDepartmentIndex, setFirstDepartmentIndex] = useState(0);
+  const [lastDepartmentIndex, setLastDepartmentIndex] = useState(0);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchDepartmentsData = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(
+          `/mediclinic/department/getDepartments?page=${currentPage}&limit=${departmentsPerPage}`
+        );
+        if (!response.ok) {
+          toast.error("Failed to fetch departments data.");
+        }
+        const data = await response.json();
+        setTotalDepartments(data.totalDepartments);
+        // Calculate the range of departments being displayed
+        const firstIndex = (currentPage - 1) * departmentsPerPage + 1;
+        const lastIndex = Math.min(
+          currentPage * departmentsPerPage,
+          data.totalDepartments
+        );
+        setFirstDepartmentIndex(firstIndex);
+        setLastDepartmentIndex(lastIndex);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching departments:", error);
+        toast.error(error.message);
+        setLoading(false);
+      }
+    };
+
+    fetchDepartmentsData();
+  }, [currentPage]);
+
+  const totalPages = Math.ceil(totalDepartments / departmentsPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchDepartments(page);
+  };
+
   return (
-    <div className="sticky bottom-0 right-0 w-full items-center border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:flex sm:justify-between">
-      <div className="mb-4 flex items-center sm:mb-0">
-        <a
-          href="#"
-          className="inline-flex cursor-pointer justify-center rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-        >
-          <span className="sr-only">Previous page</span>
-          <HiChevronLeft className="text-2xl" />
-        </a>
-        <a
-          href="#"
-          className="mr-2 inline-flex cursor-pointer justify-center rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-        >
-          <span className="sr-only">Next page</span>
-          <HiChevronRight className="text-2xl" />
-        </a>
-        <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
-          Showing&nbsp;
-          <span className="font-semibold text-gray-900 dark:text-white">
-            1-20
-          </span>
-          &nbsp;of&nbsp;
-          <span className="font-semibold text-gray-900 dark:text-white">
-            2290
-          </span>
-        </span>
-      </div>
-      <div className="flex items-center space-x-3">
-        <a
-          href="#"
-          className="inline-flex flex-1 items-center justify-center rounded-lg bg-primary-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-        >
-          <HiChevronLeft className="mr-1 text-base" />
-          Previous
-        </a>
-        <a
-          href="#"
-          className="inline-flex flex-1 items-center justify-center rounded-lg bg-primary-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-        >
-          Next
-          <HiChevronRight className="ml-1 text-base" />
-        </a>
-      </div>
+    <div className="sm:flex sm:flex-1 sm:items-center sm:justify-between mt-6 mb-8 p-4">
+      {loading ? (
+        <div className="flex flex-col items-center gap-y-6 text-center">
+          <PropagateLoader size={5} color="#000000" />
+        </div>
+      ) : (
+        <>
+          <div>
+            <p className="flex gap-x-1 text-md text-gray-700">
+              Showing
+              <span className="font-semibold text-black">
+                {firstDepartmentIndex}
+              </span>
+              to
+              <span className="font-semibold text-black">
+                {lastDepartmentIndex}
+              </span>
+              of
+              <span className="font-semibold text-black">
+                {totalDepartments}
+              </span>
+              departments
+            </p>
+          </div>
+          <div className="flex justify-center">
+            <Pagination
+              layout="navigation"
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              showIcons
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };

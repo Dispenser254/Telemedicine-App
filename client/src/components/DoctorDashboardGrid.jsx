@@ -71,7 +71,9 @@ const DoctorDashboardGrid = () => {
         `/mediclinic/video/getVideoConsultations/doctor/${doctorId}`
       );
       if (!response.ok) {
-        setErrorMessage("Failed to fetch video consultations by doctor id data.");
+        setErrorMessage(
+          "Failed to fetch video consultations by doctor id data."
+        );
         toast.error(errorMessage);
         setLoading(false);
       }
@@ -127,8 +129,8 @@ const DoctorDashboardGrid = () => {
               {doctor?.department_id?.department_name}
             </span>
           </div>
-        </div> 
-        <Link to={"/users-profile"}>
+        </div>
+        <Link to={"/user-profile"}>
           <div className="flex gap-4 items-center font-semibold text-blue-500 hover:text-blue-700">
             <FaEye />
             View Details
@@ -176,7 +178,7 @@ const DoctorDashboardGrid = () => {
             No consultations available.
           </div>
         )}
-        <Link to={"/users-profile"}>
+        <Link to={"/appointment-list"}>
           <div className="flex gap-4 items-center font-semibold text-blue-500 hover:text-blue-800">
             <FaEye />
             Show all
@@ -224,7 +226,7 @@ const DoctorDashboardGrid = () => {
             No complete consultations available.
           </div>
         )}
-        <Link to={"/users-profile"}>
+        <Link to={"/appointment-list"}>
           <div className="flex gap-4 items-center font-semibold text-blue-500 hover:text-blue-800">
             <FaEye />
             Show all
@@ -242,7 +244,7 @@ const DoctorDashboardGrid = () => {
             {videoConsultations}
           </div>
         </div>
-        <Link to={"/users-profile"}>
+        <Link to={"/video-consultation"}>
           <div className="flex gap-4 items-center font-semibold text-blue-500 hover:text-blue-800">
             <FaEye />
             View Details

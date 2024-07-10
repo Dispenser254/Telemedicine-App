@@ -1,8 +1,7 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/no-unescaped-entities */
 import {
-  HiChevronLeft,
-  HiChevronRight,
   HiDocument,
   HiEye,
   HiHome,
@@ -14,6 +13,7 @@ import {
   Button,
   Label,
   Modal,
+  Pagination,
   Select,
   Spinner,
   Table,
@@ -22,7 +22,7 @@ import {
 } from "flowbite-react";
 import NavbarSidebar from "../components/NavbarSideBar";
 import { useEffect, useState } from "react";
-import { ScaleLoader } from "react-spinners";
+import { PropagateLoader, ScaleLoader } from "react-spinners";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -47,6 +47,7 @@ const AppointmentDetailView = () => {
   const [loadingAppointments, setLoadingAppointments] = useState(false);
   const [loadingDoctors, setLoadingDoctors] = useState(false);
   const { currentUser } = useSelector((state) => state.authentication);
+  const appointmentsPerPage = 5;
 
   const [appointmentStatus, setAppointmentStatus] = useState("");
   const [appointmentDate, setAppointmentDate] = useState("");
@@ -84,11 +85,13 @@ const AppointmentDetailView = () => {
     }
   };
 
-  const fetchAppointments = async () => {
+  const fetchAppointments = async (page = 1) => {
     try {
       setLoading(true);
       setErrorMessage(null);
-      const response = await fetch("/mediclinic/appointment/getAppointments");
+      const response = await fetch(
+        `/mediclinic/appointment/getAppointments?page=${page}&limit=${appointmentsPerPage}`
+      );
       if (!response.ok) {
         setErrorMessage("Failed to fetch appointments data.");
         toast.error(errorMessage);
@@ -187,11 +190,11 @@ const AppointmentDetailView = () => {
     }
   };
 
-  const fetchAppointmentsByPatientsID = async (patientId) => {
+  const fetchAppointmentsByPatientsID = async (patientId, page = 1) => {
     try {
       setLoading(true);
       const response = await fetch(
-        `/mediclinic/appointment/getAppointments/patient/${patientId}`
+        `/mediclinic/appointment/getAppointments/patient/${patientId}?page=${page}&limit=${appointmentsPerPage}`
       );
 
       if (!response.ok) {
@@ -208,11 +211,11 @@ const AppointmentDetailView = () => {
     }
   };
 
-  const fetchAppointmentsByDoctorsID = async (doctorId) => {
+  const fetchAppointmentsByDoctorsID = async (doctorId, page = 1) => {
     try {
       setLoading(true);
       const response = await fetch(
-        `/mediclinic/appointment/getAppointments/doctor/${doctorId}`
+        `/mediclinic/appointment/getAppointments/doctor/${doctorId}?page=${page}&limit=${appointmentsPerPage}`
       );
 
       if (!response.ok) {
@@ -450,9 +453,10 @@ const AppointmentDetailView = () => {
                           </Table.Cell>
                           <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
                             {appointment?.appointment_time
-                              ? moment(appointment.appointment_time).format(
-                                  "LT"
-                                )
+                              ? moment(
+                                  appointment.appointment_time,
+                                  "h:mm A"
+                                ).format("LT")
                               : "N/A"}
                           </Table.Cell>
                           <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
@@ -576,9 +580,10 @@ const AppointmentDetailView = () => {
                           </Table.Cell>
                           <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
                             {appointment?.appointment_time
-                              ? moment(appointment.appointment_time).format(
-                                  "LT"
-                                )
+                              ? moment(
+                                  appointment.appointment_time,
+                                  "h:mm A"
+                                ).format("LT")
                               : "N/A"}
                           </Table.Cell>
                           <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
@@ -709,9 +714,10 @@ const AppointmentDetailView = () => {
                           </Table.Cell>
                           <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
                             {appointment?.appointment_time
-                              ? moment(appointment.appointment_time).format(
-                                  "LT"
-                                )
+                              ? moment(
+                                  appointment.appointment_time,
+                                  "h:mm A"
+                                ).format("LT")
                               : "N/A"}
                           </Table.Cell>
                           <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
@@ -782,7 +788,15 @@ const AppointmentDetailView = () => {
           </div>
         </div>
       )}
-      <Pagination />
+      {(currentUser?.role === "admin" ||
+        currentUser?.role === "doctor" ||
+        currentUser?.role === "patient") && (
+        <PaginationButton
+          fetchAppointments={fetchAppointments}
+          fetchAppointmentsByDoctorsID={fetchAppointmentsByDoctorsID}
+          fetchAppointmentsByPatientsID={fetchAppointmentsByPatientsID}
+        />
+      )}
       <Modal onClose={() => setOpen(false)} show={isOpen} size="md">
         <Modal.Header className="px-6 pb-0 pt-6 text-2xl font-bold mb-4 text-center uppercase">
           Delete <span className="text-yellow-300">Appointment</span>
@@ -841,8 +855,8 @@ const AppointmentDetailView = () => {
                     </Table.Cell>
                     <Table.Cell className="py-2 whitespace-pre-wrap">
                       {prescriptionDate
-                        ? new Date(prescriptionDate).toISOString().split("T")[0]
-                        : ""}
+                        ? moment(prescriptionDate).format("LL")
+                        : "N/A"}
                     </Table.Cell>
                   </Table.Row>
                   <Table.Row className="border-b border-gray-300">
@@ -850,7 +864,7 @@ const AppointmentDetailView = () => {
                       Prescription Details
                     </Table.Cell>
                     <Table.Cell className="py-2 whitespace-pre-wrap">
-                      {prescriptionDetails}
+                      {prescriptionDetails || "N/A"}
                     </Table.Cell>
                   </Table.Row>
                   <Table.Row className="border-b border-gray-300">
@@ -876,8 +890,8 @@ const AppointmentDetailView = () => {
                     </Table.Cell>
                     <Table.Cell className="py-2 whitespace-pre-wrap">
                       {appointmentDate
-                        ? new Date(appointmentDate).toISOString().split("T")[0]
-                        : ""}
+                        ? moment(appointmentDate).format("LL")
+                        : "N/A"}
                     </Table.Cell>
                   </Table.Row>
                   <Table.Row className="border-b border-gray-300">
@@ -885,7 +899,9 @@ const AppointmentDetailView = () => {
                       Appointment Time
                     </Table.Cell>
                     <Table.Cell className="py-2 whitespace-pre-wrap">
-                      {appointmentTime || "N/A"}
+                      {appointmentTime
+                        ? moment(appointmentTime, "h:mm A").format("LT")
+                        : "N/A"}
                     </Table.Cell>
                   </Table.Row>
                   <Table.Row className="border-b border-gray-300">
@@ -1289,51 +1305,113 @@ Additional Instructions: `}
   );
 };
 
-const Pagination = () => {
+const PaginationButton = ({
+  fetchAppointments,
+  fetchAppointmentsByDoctorsID,
+  fetchAppointmentsByPatientsID,
+}) => {
+  const [totalAppointments, setTotalAppointments] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const appointmentsPerPage = 5;
+  const [firstAppointmentIndex, setFirstAppointmentIndex] = useState(0);
+  const [lastAppointmentIndex, setLastAppointmentIndex] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const { currentUser } = useSelector((state) => state.authentication);
+  const patientID = currentUser.patient_id;
+  const doctorID = currentUser.doctor_id;
+
+  useEffect(() => {
+    const fetchAppointmentsData = async () => {
+      setLoading(true);
+      try {
+        let response;
+        if (currentUser?.role === "admin") {
+          response = await fetch(
+            `/mediclinic/appointment/getAppointments?page=${currentPage}&limit=${appointmentsPerPage}`
+          );
+        } else if (currentUser?.role === "doctor") {
+          response = await fetch(
+            `/mediclinic/appointment/getAppointments/doctor/${doctorID}?page=${currentPage}&limit=${appointmentsPerPage}`
+          );
+        } else if (currentUser?.role === "patient") {
+          response = await fetch(
+            `/mediclinic/appointment/getAppointments/patient/${patientID}?page=${currentPage}&limit=${appointmentsPerPage}`
+          );
+        }
+
+        if (!response.ok) {
+          toast.error("Failed to fetch appointments data.");
+        }
+        const data = await response.json();
+        setTotalAppointments(data.totalAppointments);
+        // Calculate the range of appointments being displayed
+        const firstIndex = (currentPage - 1) * appointmentsPerPage + 1;
+        const lastIndex = Math.min(
+          currentPage * appointmentsPerPage,
+          data.totalAppointments
+        );
+        setFirstAppointmentIndex(firstIndex);
+        setLastAppointmentIndex(lastIndex);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching appointments:", error);
+        toast.error(error.message);
+        setLoading(false);
+      }
+    };
+
+    fetchAppointmentsData();
+  }, [currentPage, currentUser]);
+
+  const totalPages = Math.ceil(totalAppointments / appointmentsPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    if (currentUser?.role === "admin") {
+      fetchAppointments(page);
+    } else if (currentUser?.role === "doctor") {
+      fetchAppointmentsByDoctorsID(doctorID, page);
+    } else if (currentUser?.role === "patient") {
+      fetchAppointmentsByPatientsID(patientID, page);
+    }
+  };
+
   return (
-    <div className="sticky bottom-0 right-0 w-full items-center border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:flex sm:justify-between">
-      <div className="mb-4 flex items-center sm:mb-0">
-        <a
-          href="#"
-          className="inline-flex cursor-pointer justify-center rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-        >
-          <span className="sr-only">Previous page</span>
-          <HiChevronLeft className="text-2xl" />
-        </a>
-        <a
-          href="#"
-          className="mr-2 inline-flex cursor-pointer justify-center rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-        >
-          <span className="sr-only">Next page</span>
-          <HiChevronRight className="text-2xl" />
-        </a>
-        <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
-          Showing&nbsp;
-          <span className="font-semibold text-gray-900 dark:text-white">
-            1-20
-          </span>
-          &nbsp;of&nbsp;
-          <span className="font-semibold text-gray-900 dark:text-white">
-            2290
-          </span>
-        </span>
-      </div>
-      <div className="flex items-center space-x-3">
-        <a
-          href="#"
-          className="inline-flex flex-1 items-center justify-center rounded-lg bg-primary-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-        >
-          <HiChevronLeft className="mr-1 text-base" />
-          Previous
-        </a>
-        <a
-          href="#"
-          className="inline-flex flex-1 items-center justify-center rounded-lg bg-primary-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-        >
-          Next
-          <HiChevronRight className="ml-1 text-base" />
-        </a>
-      </div>
+    <div className="sm:flex sm:flex-1 sm:items-center sm:justify-between mt-6 mb-8 p-4">
+      {loading ? (
+        <div className="flex flex-col items-center gap-y-6 text-center">
+          <PropagateLoader size={5} color="#000000" />
+        </div>
+      ) : (
+        <>
+          <div>
+            <p className="flex gap-x-1 text-md text-gray-700">
+              Showing
+              <span className="font-semibold text-black">
+                {firstAppointmentIndex}
+              </span>
+              to
+              <span className="font-semibold text-black">
+                {lastAppointmentIndex}
+              </span>
+              of
+              <span className="font-semibold text-black">
+                {totalAppointments}
+              </span>
+              appointments
+            </p>
+          </div>
+          <div className="flex justify-center">
+            <Pagination
+              layout="navigation"
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              showIcons
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };
