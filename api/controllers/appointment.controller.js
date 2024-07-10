@@ -1,12 +1,20 @@
-import { APPOINTMENT_STATUS, appointmentTypeOnline } from "../config.js";
 import Appointment from "../models/appointment.model.js";
 import { errorHandler } from "../utils/error.js";
+import { createNotification } from "./notification.controller.js";
 import { createVideoConsultation } from "./video.controller.js";
+import moment from "moment";
 
 // Get all appointments with department_name, doctor_name, and patient_name
 export const getAllAppointments = async (request, response, next) => {
+  const limit = parseInt(request.query.limit, 10) || 0;
+  const { page = 1 } = request.query;
+  const skip = (page - 1) * limit;
+
   try {
     const appointments = await Appointment.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
       .populate({
         path: "patient_id",
         select: "patient_firstName patient_lastName",
@@ -45,6 +53,8 @@ export const getAllAppointments = async (request, response, next) => {
       totalConfirmedAppointments,
       totalPendingAppointments,
       lastMonthAppointments,
+      page,
+      limit,
     });
   } catch (error) {
     next(errorHandler(500, "Error retrieving appointments from the database"));
@@ -82,9 +92,15 @@ export const getAppointmentByID = async (request, response, next) => {
 // Get an appointment by Doctor ID with department_name, doctor_name, and patient_name
 export const getAppointmentByDoctorID = async (request, response, next) => {
   const doctorId = request.params.doctor_id;
+  const limit = parseInt(request.query.limit, 10) || 0;
+  const { page = 1 } = request.query;
+  const skip = (page - 1) * limit;
 
   try {
     const appointments = await Appointment.find({ doctor_id: doctorId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
       .populate({
         path: "doctor_id",
         select: "doctor_firstName doctor_lastName",
@@ -145,9 +161,15 @@ export const getAppointmentByDoctorID = async (request, response, next) => {
     if (!appointments && !completeAppointment && !scheduledAppointment) {
       return next(errorHandler(404, "Appointments not found for this doctor"));
     }
-    response
-      .status(200)
-      .json({ appointments, completeAppointment, scheduledAppointment });
+    const totalAppointments = await Appointment.countDocuments();
+    response.status(200).json({
+      appointments,
+      totalAppointments,
+      completeAppointment,
+      scheduledAppointment,
+      page,
+      limit,
+    });
   } catch (error) {
     console.log(error);
     next(errorHandler(500, "Error retrieving appointments from the database"));
@@ -157,6 +179,9 @@ export const getAppointmentByDoctorID = async (request, response, next) => {
 // Get an appointment by Patient ID
 export const getAppointmentByPatientID = async (request, response, next) => {
   const patientId = request.params.patient_id;
+  const limit = parseInt(request.query.limit, 10) || 0;
+  const { page = 1 } = request.query;
+  const skip = (page - 1) * limit;
 
   if (!patientId) {
     return next(errorHandler(400, "Patient ID is required"));
@@ -165,6 +190,9 @@ export const getAppointmentByPatientID = async (request, response, next) => {
     const appointment = await Appointment.find({
       patient_id: patientId,
     })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
       .populate({
         path: "patient_id",
         select: "patient_firstName patient_lastName",
@@ -225,9 +253,15 @@ export const getAppointmentByPatientID = async (request, response, next) => {
       return next(errorHandler(404, "Patient Appointments not found"));
     }
 
-    response
-      .status(200)
-      .json({ appointment, pendingAppointment, scheduledAppointment });
+    const totalAppointments = await Appointment.countDocuments();
+    response.status(200).json({
+      appointment,
+      totalAppointments,
+      pendingAppointment,
+      scheduledAppointment,
+      page,
+      limit,
+    });
   } catch (error) {
     next(
       errorHandler(
@@ -251,20 +285,36 @@ export const createAppointment = async (request, response, next) => {
   // Set default values for doctor_id and appointment_status
   const doctor_id = null; // Doctor is not assigned initially
   const appointment_status = "Pending with admin"; // Default status
+  // Accessing current patient user ID
+  const currentUserId = request.user._id;
 
   try {
+    // Parse the appointment time correctly and format in AM/PM
+    const parsedAppointmentTime = moment(appointment_time, "HH:mm").format(
+      "h:mm A"
+    );
+
     const newAppointment = new Appointment({
       patient_id,
       doctor_id,
       department_id,
       appointment_date,
-      appointment_time,
+      appointment_time: parsedAppointmentTime,
       appointment_status,
       appointment_type,
     });
     const savedAppointment = await newAppointment.save();
+    // Format appointment date and time using Moment.js
+    const formattedDate = moment(appointment_date).format("LL");
+    const formattedTime = moment(parsedAppointmentTime, "h:mm A").format("LT");
+    await createNotification(
+      currentUserId,
+      "Appointment Booked Successfully",
+      `Appointment booked for ${formattedDate} at ${formattedTime}. Thank you for scheduling your appointment with us.`
+    );
     response.status(201).json(savedAppointment);
   } catch (error) {
+    console.log(error);
     next(errorHandler(500, "Error creating appointment"));
   }
 };
@@ -325,6 +375,11 @@ export const updateAppointment = async (request, response, next) => {
         return next(errorHandler(500, "Error creating video link"));
       }
     }
+    // await createNotification(
+    //   updatedAppointment._id,
+    //   "Appointment Booked Successfully",
+    //   `Appointment booked for ${formattedDate} at ${formattedTime}. Thank you for scheduling your appointment with us.`
+    // );
     response.status(200).json(updatedAppointment);
   } catch (error) {
     next(errorHandler(500, "Error updating appointment"));

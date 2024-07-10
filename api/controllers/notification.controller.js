@@ -37,20 +37,30 @@ export const getNotificationById = async (request, response, next) => {
 // Function to get notifications by user ID
 export const getNotificationsByUserId = async (request, response, next) => {
   const userId = request.params.user_id;
-  const limit = parseInt(request.query.limit, 10);
+  const limit = parseInt(request.query.limit, 10) || 0;
+  const { page = 1 } = request.query;
+  // Calculate the number of documents to skip
+  const skip = (page - 1) * limit;
+  
   try {
     const notifications = await Notification.find({ user_id: userId })
       .sort({ createdAt: -1 })
-      .limit(limit);
+      .skip(skip)
+      .limit(Number(limit));
 
     // Count unread notifications
     const unreadCount = await Notification.countDocuments({
       user_id: userId,
       viewed: false,
     });
+    // Count total notifications
+    const totalNotifications = await Notification.countDocuments({
+      user_id: userId,
+    });
 
     response.status(200).json({
       notifications,
+      totalNotifications,
       unreadCount,
     });
   } catch (error) {

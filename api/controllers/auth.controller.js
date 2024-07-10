@@ -105,7 +105,8 @@ export const signup = async (request, response, next) => {
       // Send a notification to the new user
       await createNotification(
         validUser._id,
-        "Welcome to the platform! Your account has been created successfully."
+        "Welcome to Mediclinic Center!",
+        `Welcome, ${username}!\n\nThank you for signing up with Mediclinic Center. We are delighted to have you join us.\n\nAt Mediclinic Center, we strive to provide top-quality healthcare services to our patients. Should you have any questions or need assistance, please feel free to reach out.\n\nBest regards,\nThe Mediclinic Center Team`
       );
       response.status(201).json("User created successfully");
     } catch (rollError) {
@@ -183,17 +184,12 @@ export const login = async (request, response, next) => {
       }
     }
 
-    const token = jwt.sign({ username }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ _id: validUser._id, username }, process.env.JWT_SECRET, {
       expiresIn: "1h",
     });
 
     const { password: pass, ...rest } = validUser._doc;
-    // Send a notification to the new user
-    await createNotification(
-      validUser._id,
-      "Sign in",
-      "Welcome to mediclinic center! You have signed in successfully."
-    );
+
     response
       .status(200)
       .cookie("access_token", token, { httpOnly: true })
@@ -218,6 +214,7 @@ export const signout = (request, response, next) => {
     next(errorHandler(500, "Error signing out."));
   }
 };
+
 export const updateUserById = async (request, response, next) => {
   const userId = request.params.id;
   try {
@@ -266,7 +263,11 @@ export const updateUserById = async (request, response, next) => {
     }
 
     // Send notification
-    await createNotification(updateUser._id, "Your profile has been updated.");
+    await createNotification(
+      updateUser._id,
+      "Account Update",
+      "Your account information has been successfully updated. Welcome back to Mediclinic—where your health is our priority."
+    );
     response.status(200).json("User updated successfully.");
   } catch (error) {
     next(errorHandler(500, "Error updating user"));
@@ -369,7 +370,8 @@ export const activateUser = async (request, response, next) => {
     // Send notification
     await createNotification(
       user._id,
-      "Your account has been activated successfully."
+      "Account Activation Complete",
+      "Your account has been activated. Start booking appointments and managing your medical records with ease."
     );
     response.status(200).json({
       message: "User account has been activated successfully",

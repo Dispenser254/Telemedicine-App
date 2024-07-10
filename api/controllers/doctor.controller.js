@@ -5,37 +5,46 @@ import User from "../models/user.model.js";
 import { errorHandler } from "../utils/error.js";
 import bcryptjs from "bcryptjs";
 import mongoose from "mongoose";
+import { createNotification } from "./notification.controller.js";
 
 // Get all doctors
 export const getAllDoctors = async (request, response, next) => {
   try {
+    const { page = 1, limit = 5 } = request.query;
+    // Calculate the number of documents to skip
+    const skip = (page - 1) * limit;
+    const searchTerm = request.query.searchTerm || "";
+
+    let query = {};
+
+    if (searchTerm) {
+      query = {
+        $or: [
+          { doctor_firstName: { $regex: searchTerm, $options: "i" } },
+          { doctor_lastName: { $regex: searchTerm, $options: "i" } },
+        ],
+      };
+    }
+
     // Find all doctors and populate the department information
-    const doctors = await Doctor.find()
+    const doctors = await Doctor.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
       .populate({
-        path: "department_id", // Path to the field to populate
-        select: "department_name", // Select only the department_name field
+        path: "department_id",
+        select: "department_name",
+      })
+      .populate({
+        path: "user_id",
+        select: "email username",
       })
       .lean();
 
-    // Transform the data to include department_name directly
-    const doctorsWithDepartment = doctors.map((doctor) => {
-      return {
-        _id: doctor._id,
-        doctor_firstName: doctor.doctor_firstName,
-        doctor_lastName: doctor.doctor_lastName,
-        doctor_idNumber: doctor.doctor_idNumber,
-        doctor_profilePic: doctor.doctor_profilePic,
-        doctor_number: doctor.doctor_number,
-        user_id: doctor.user_id,
-        department_id: doctor.department_id._id, // Include the department_id for reference
-        department_name: doctor.department_id.department_name, // Include the populated department_name
-      };
-    });
-    const totalDoctors = await Doctor.countDocuments();
-
-    // Send the response
-    response.status(200).json({ doctorsWithDepartment, totalDoctors });
+    const totalDoctors = await Doctor.countDocuments(query);
+    response.status(200).json({ doctors, totalDoctors, page, limit });
   } catch (error) {
+    console.log(error);
     next(errorHandler(500, "Error retrieving doctors from the database"));
   }
 };
@@ -43,16 +52,16 @@ export const getAllDoctors = async (request, response, next) => {
 // Get a doctor by ID
 export const getDoctorById = async (request, response, next) => {
   const doctorId = request.params.id;
-  
+
   try {
     const doctor = await Doctor.findById(doctorId)
-      .populate('department_id', 'department_name')
-      .populate('user_id', 'username email');
-    
+      .populate("department_id", "department_name")
+      .populate("user_id", "username email");
+
     if (!doctor) {
       return next(errorHandler(404, "Doctor not found"));
     }
-    
+
     response.status(200).json(doctor);
   } catch (error) {
     next(errorHandler(500, "Error retrieving doctor from the database"));
@@ -255,6 +264,9 @@ export const createDoctor = async (request, response, next) => {
     role = "doctor",
   } = request.body;
 
+  // Accessing current admin user ID
+  const currentAdminUserId = request.user._id;
+
   try {
     // Check for common required fields
     if (!username || !email || !password || !role) {
@@ -268,11 +280,9 @@ export const createDoctor = async (request, response, next) => {
       return next(errorHandler(400, "Invalid department ID format."));
     }
 
-    // Validate if the department exists
-    const departmentExists = await Department.exists({
-      _id: department_id,
-    });
-    if (!departmentExists) {
+    // Validate if the department exists and fetch department details
+    const department = await Department.findById(department_id);
+    if (!department) {
       return next(
         errorHandler(400, "The specified department does not exist.")
       );
@@ -331,7 +341,17 @@ export const createDoctor = async (request, response, next) => {
 
       // Save the new doctor
       const savedDoctor = await newDoctor.save();
-
+      // Create notifications for admin and doctor
+      await createNotification(
+        savedUser._id,
+        "Welcome to Our Clinic!",
+        "You have successfully registered as a doctor. Welcome to our clinic!"
+      );
+      await createNotification(
+        currentAdminUserId,
+        "New Doctor Registration",
+        `A new doctor, ${doctor_firstName} ${doctor_lastName}, has been registered in ${department.department_name} department.`
+      );
       // Respond with the new doctor data
       response.status(201).json(savedDoctor);
     } catch (rollError) {
