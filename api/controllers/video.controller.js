@@ -2,6 +2,9 @@ import VideoConsultation from "../models/videoconsultation.model.js";
 import { errorHandler } from "../utils/error.js";
 import { generateJitsiMeetLink } from "../utils/generateJitsiMeetLink.js";
 import mongoose from "mongoose";
+import { createNotification } from "./notification.controller.js";
+import Doctor from "../models/doctor.model.js";
+import Patient from "../models/patient.model.js";
 
 // Get Video consultation by Doctor Id
 export const getVideoConsultationsByDoctorId = async (
@@ -105,26 +108,26 @@ export const getVideoConsultationsByPatientId = async (
       createdAt: { $gte: oneMonthAgo },
     });
 
-    response
-      .status(200)
-      .json({
-        videoConsultations,
-        totalVideoConsultations,
-        lastMonthVideoConsultations,
-      });
+    response.status(200).json({
+      videoConsultations,
+      totalVideoConsultations,
+      lastMonthVideoConsultations,
+    });
   } catch (error) {
     next(errorHandler(500, "Error retrieving video consultations"));
   }
 };
 
 // Create Video Consultation
-export const createVideoConsultation = async (request, response, next) => {
+export const createVideoConsultation = async (request, next) => {
   try {
     // Generate Jitsi Meet link
     const videoConsultationLink = generateJitsiMeetLink();
 
     // Extract data from request body
     const { patient_id, doctor_id, appointment_id } = request.body;
+    // Accessing current patient user ID
+    const currentUserId = request.user._id;
 
     // Validate ObjectId for required fields
     const isValidObjectId = mongoose.Types.ObjectId.isValid;
@@ -147,9 +150,36 @@ export const createVideoConsultation = async (request, response, next) => {
 
     // Save the new video consultation to the database
     const savedConsultation = await newVideoConsultation.save();
+    // Fetch the patient information
+    const patient = await Patient.findById(patient_id).populate("user_id");
+    const patientUserId = patient.user_id._id;
 
-    response.status(201).json(savedConsultation);
+    // Fetch the doctor information
+    const doctor = await Doctor.findById(doctor_id).populate("user_id");
+    const doctorUserId = doctor.user_id._id;
+
+    // Create notifications for both the admin,doctor and the patient
+    await createNotification(
+      currentUserId,
+      "Video Consultation Scheduled",
+      `A video consultation has been scheduled for ${patient.patient_firstName} ${patient.patient_lastName} with Dr. ${doctor.doctor_firstName} ${doctor.doctor_lastName}. Click here ${videoConsultationLink} to join the consultation.`
+    );
+
+    await createNotification(
+      doctorUserId,
+      "Upcoming Video Consultation",
+      `You have a scheduled video consultation with ${patient.patient_firstName} ${patient.patient_lastName}. Click here ${videoConsultationLink} to join the consultation.`
+    );
+
+    await createNotification(
+      patientUserId,
+      "Your Appointment is Scheduled",
+      `Your video consultation with Dr. ${doctor.doctor_firstName} ${doctor.doctor_lastName} is scheduled successfully. Click here ${videoConsultationLink} to join the consultation.`
+    );
+
+    return savedConsultation;
   } catch (error) {
+    console.log(error);
     next(errorHandler(500, "Error creating video consultation"));
   }
 };

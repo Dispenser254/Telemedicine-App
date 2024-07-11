@@ -1,4 +1,6 @@
 import Appointment from "../models/appointment.model.js";
+import Doctor from "../models/doctor.model.js";
+import Patient from "../models/patient.model.js";
 import { errorHandler } from "../utils/error.js";
 import { createNotification } from "./notification.controller.js";
 import { createVideoConsultation } from "./video.controller.js";
@@ -195,7 +197,7 @@ export const getAppointmentByPatientID = async (request, response, next) => {
       .limit(Number(limit))
       .populate({
         path: "patient_id",
-        select: "patient_firstName patient_lastName",
+        select: "patient_firstName patient_lastName user_id",
       })
       .populate({
         path: "department_id",
@@ -203,7 +205,7 @@ export const getAppointmentByPatientID = async (request, response, next) => {
       })
       .populate({
         path: "doctor_id",
-        select: "doctor_firstName doctor_lastName",
+        select: "doctor_firstName doctor_lastName user_id",
       })
       .lean();
 
@@ -332,6 +334,8 @@ export const updateAppointment = async (request, response, next) => {
     appointment_type,
   } = request.body;
   try {
+    // Accessing current patient user ID
+    const currentUserId = request.user._id;
     // Fetch the current appointment
     const previousAppointment = await Appointment.findById(appointmentId);
     if (!previousAppointment) {
@@ -367,21 +371,46 @@ export const updateAppointment = async (request, response, next) => {
             doctor_id,
             appointment_id: updatedAppointment._id,
           },
+          user: request.user,
         },
-        response,
         next
       );
       if (!isSuccess) {
         return next(errorHandler(500, "Error creating video link"));
       }
     }
-    // await createNotification(
-    //   updatedAppointment._id,
-    //   "Appointment Booked Successfully",
-    //   `Appointment booked for ${formattedDate} at ${formattedTime}. Thank you for scheduling your appointment with us.`
-    // );
+    // Format appointment date and time using Moment.js
+    const formattedDate = moment(appointment_date).format("LL");
+    const formattedTime = moment(appointment_time, "h:mm A").format("LT");
+    // Fetch the patient information
+    const patient = await Patient.findById(patient_id).populate("user_id");
+    const patientUserId = patient.user_id._id;
+
+    // Fetch the doctor information
+    const doctor = await Doctor.findById(doctor_id).populate("user_id");
+    const doctorUserId = doctor.user_id._id;
+
+    // Create notifications for both the admin,doctor and the patient
+    await createNotification(
+      currentUserId,
+      "Appointment Scheduled Successfully",
+      `You have scheduled an appointment for patient ${patient.patient_firstName} ${patient.patient_lastName} with Dr. ${doctor.doctor_firstName} ${doctor.doctor_lastName} on ${formattedDate} at ${formattedTime}.`
+    );
+
+    await createNotification(
+      doctorUserId,
+      "New Appointment Scheduled",
+      `You have a new appointment with patient ${patient.patient_firstName} ${patient.patient_lastName} on ${formattedDate} at ${formattedTime}.`
+    );
+
+    await createNotification(
+      patientUserId,
+      "Your Appointment is Scheduled",
+      `Your appointment with Dr. ${doctor.doctor_firstName} ${doctor.doctor_lastName} has been scheduled on ${formattedDate} at ${formattedTime}.`
+    );
     response.status(200).json(updatedAppointment);
   } catch (error) {
+    console.log(error);
     next(errorHandler(500, "Error updating appointment"));
   }
 };

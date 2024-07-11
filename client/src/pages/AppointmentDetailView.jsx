@@ -105,7 +105,7 @@ const AppointmentDetailView = () => {
       setErrorMessage(error.message);
     }
   };
-
+  
   const fetchAppointmentsByID = async (appointmentID) => {
     try {
       setLoadingAppointments(true);
@@ -956,10 +956,8 @@ const AppointmentDetailView = () => {
                   placeholder="Appointment Date"
                   value={
                     appointmentDate
-                      ? new Date(appointmentDate)
-                          .toLocaleDateString()
-                          .split("T")[0]
-                      : ""
+                      ? moment(appointmentDate).format("LL")
+                      : "N/A"
                   }
                 />
               </div>
@@ -969,11 +967,15 @@ const AppointmentDetailView = () => {
                 </Label>
                 <TextInput
                   disabled
-                  type="time"
+                  type="text"
                   id="appointmentTime"
                   name="appointmentTime"
                   placeholder="Appointment Time"
-                  value={appointmentTime || "N/A"}
+                  value={
+                    appointmentTime
+                      ? moment(appointmentTime, "h:mm A").format("LT")
+                      : "N/A"
+                  }
                 />
               </div>
             </div>

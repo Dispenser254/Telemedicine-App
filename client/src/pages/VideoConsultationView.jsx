@@ -337,7 +337,14 @@ const VideoConsultationView = () => {
                       >
                         <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
                           <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                            {video?.video_consultation_link}
+                            {video?.video_consultation_link.length > 30 ? (
+                              <>
+                                {video?.video_consultation_link.slice(0, 30)}
+                                ...
+                              </>
+                            ) : (
+                              video?.video_consultation_link
+                            )}
                           </Table.Cell>
                           <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
                             {video?.patient_id
@@ -363,7 +370,8 @@ const VideoConsultationView = () => {
                           <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
                             {video?.appointment_id?.appointment_time
                               ? moment(
-                                  video.appointment_id.appointment_time
+                                  video.appointment_id.appointment_time,
+                                  "h:mm A"
                                 ).format("LT")
                               : "N/A"}
                           </Table.Cell>
@@ -452,7 +460,14 @@ const VideoConsultationView = () => {
                       >
                         <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
                           <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                            {video?.video_consultation_link}
+                            {video?.video_consultation_link.length > 30 ? (
+                              <>
+                                {video?.video_consultation_link.slice(0, 30)}
+                                ...
+                              </>
+                            ) : (
+                              video?.video_consultation_link
+                            )}
                           </Table.Cell>
                           <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
                             {video?.patient_id
@@ -462,13 +477,9 @@ const VideoConsultationView = () => {
                               : "N/A"}
                           </Table.Cell>
                           <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
-                            {video?.appointment_id?.doctor_id
-                              ? `${
-                                  video.appointment_id.doctor_id
-                                    .doctor_firstName || ""
-                                } ${
-                                  video.appointment_id.doctor_id
-                                    .doctor_lastName || ""
+                            {video?.doctor_id
+                              ? `${video.doctor_id.doctor_firstName || ""} ${
+                                  video.doctor_id.doctor_lastName || ""
                                 }`.trim() || "N/A"
                               : "N/A"}
                           </Table.Cell>
@@ -482,7 +493,8 @@ const VideoConsultationView = () => {
                           <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
                             {video?.appointment_id?.appointment_time
                               ? moment(
-                                  video.appointment_id.appointment_time
+                                  video.appointment_id.appointment_time,
+                                  "h:mm A"
                                 ).format("LT")
                               : "N/A"}
                           </Table.Cell>
