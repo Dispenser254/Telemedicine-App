@@ -10,7 +10,8 @@ import { createNotification } from "./notification.controller.js";
 // Get all doctors
 export const getAllDoctors = async (request, response, next) => {
   try {
-    const { page = 1, limit = 5 } = request.query;
+    const limit = parseInt(request.query.limit, 10) || 0;
+    const { page = 1 } = request.query;
     // Calculate the number of documents to skip
     const skip = (page - 1) * limit;
     const searchTerm = request.query.searchTerm || "";

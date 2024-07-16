@@ -99,6 +99,16 @@ const UserProfile = () => {
       setDoctorEmail(value);
     } else if (name === "doctorPassword") {
       setDoctorPassword(value);
+    } else if (name === "doctorNumber") {
+      setDoctorNumber(value);
+    } else if (name === "doctorDepartment") {
+      setDoctorDepartment(value);
+    } else if (name === "doctorIdNumber") {
+      setDoctorIdNumber(value);
+    } else if (name === "doctorLastName") {
+      setDoctorLastName(value);
+    } else if (name === "doctorFirstName") {
+      setDoctorFirstName(value);
     }
   };
 

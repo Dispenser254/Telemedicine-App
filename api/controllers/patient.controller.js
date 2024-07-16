@@ -3,12 +3,46 @@ import Patient from "../models/patient.model.js";
 import User from "../models/user.model.js";
 import { errorHandler } from "../utils/error.js";
 import bcryptjs from "bcryptjs";
+import { createNotification } from "./notification.controller.js";
 
 // Get all patients
 export const getAllPatients = async (request, response, next) => {
+  const limit = parseInt(request.query.limit, 10) || 0;
+  const { page = 1 } = request.query;
+  const skip = (page - 1) * limit;
+  const searchTerm = request.query.searchTerm || "";
+
+  let patient_gender = request.query.patient_gender;
+  // If no specific patient_gender is requested or 'all' is specified, fetch all patient_genders
+  if (patient_gender === undefined || patient_gender === "All") {
+    patient_gender = { $in: ["Male", "Female", "Other"] };
+  }
+
+  // Create a filter for searching patients
+  const searchFilter = {
+    $or: [
+      { patient_firstName: { $regex: searchTerm, $options: "i" } },
+      { patient_lastName: { $regex: searchTerm, $options: "i" } },
+    ],
+    patient_gender,
+  };
+
   try {
-    const patients = await Patient.find();
-    const totalPatients = await Patient.countDocuments();
+    const patients = await Patient.find(searchFilter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit));
+
+    if (!patients.length) {
+      return next(
+        errorHandler(
+          404,
+          `Patients not found for the specified search term, ${searchTerm}`
+        )
+      );
+    }
+
+    const totalPatients = await Patient.countDocuments(searchFilter);
     const now = new Date();
     const oneMonthAgo = new Date(
       now.getFullYear(),
@@ -29,10 +63,15 @@ export const getAllPatients = async (request, response, next) => {
         age: Math.abs(ageDate.getUTCFullYear() - 1970),
       };
     });
-    response
-      .status(200)
-      .json({ patients: patientsWithAge, totalPatients, lastMonthPatients });
+    response.status(200).json({
+      patients: patientsWithAge,
+      totalPatients,
+      lastMonthPatients,
+      page,
+      limit,
+    });
   } catch (error) {
+    console.log(error);
     next(errorHandler(500, "Error retrieving patients from the database"));
   }
 };
@@ -67,6 +106,8 @@ export const createPatient = async (request, response, next) => {
   } = request.body;
 
   try {
+    // Accessing current patient user ID
+    const currentUserId = request.user._id;
     // Check for common required fields
     if (!username || !password || !role) {
       return next(
@@ -121,6 +162,17 @@ export const createPatient = async (request, response, next) => {
       // Save the new patient
       const savedPatient = await newPatient.save();
 
+      await createNotification(
+        currentUserId,
+        "New Patient Registered",
+        `A new patient has been added to the system by the admin. Please review the patient's details for any necessary actions`
+      );
+      // Send a notification to the new user
+      await createNotification(
+        savedUser._id,
+        "Welcome to Mediclinic Center!",
+        `Welcome, ${username}!\n\nThank you for signing up with Mediclinic Center. We are delighted to have you join us.\n\nAt Mediclinic Center, we strive to provide top-quality healthcare services to our patients. Should you have any questions or need assistance, please feel free to reach out.\n\nBest regards,\nThe Mediclinic Center Team`
+      );
       // Respond with the new patient data
       response.status(201).json(savedPatient);
     } catch (rollError) {
@@ -151,6 +203,8 @@ export const updatePatient = async (request, response, next) => {
     address,
   } = request.body;
   try {
+    // Accessing current patient user ID
+    const currentUserId = request.user._id;
     const updatedPatient = await Patient.findByIdAndUpdate(
       patientId,
       {
@@ -167,6 +221,13 @@ export const updatePatient = async (request, response, next) => {
     if (!updatedPatient) {
       return next(errorHandler(404, "Patient not found"));
     }
+
+    // Send a notification to the new user
+    await createNotification(
+      currentUserId,
+      "Profile Update Confirmation",
+      `Dear ${patient_firstName} ${patient_lastName}, your profile has been successfully updated. Please review your updated profile information to ensure everything is correct. If you have any questions or notice any discrepancies, please contact our support team. Thank you for keeping your information current.`
+    );
     response.status(200).json(updatedPatient);
   } catch (error) {
     next(errorHandler(500, "Error updating patient"));
@@ -178,6 +239,12 @@ export const deletePatient = async (request, response, next) => {
   const patientId = request.params.id;
 
   try {
+    // Access all admin user IDs
+    const adminUsers = await User.find({ role: "admin" });
+
+    if (!adminUsers || adminUsers.length === 0) {
+      return next(errorHandler(404, "Admin users not found"));
+    }
     // Find the patient by ID to get the user_id
     const patient = await Patient.findById(patientId);
 
@@ -202,6 +269,17 @@ export const deletePatient = async (request, response, next) => {
     if (!deletedUser) {
       return next(errorHandler(404, "Associated user with ID not found."));
     }
+
+    // Send notifications to all admin users
+    await Promise.all(
+      adminUsers.map((adminUser) =>
+        createNotification(
+          adminUser._id,
+          "Patient Account Deleted",
+          `Patient ${patient.patient_firstName} ${patient.patient_lastName}'s account has been successfully deleted from our system. If you have any questions or need further assistance, please contact our support team. Thank you for being a part of our clinic.`
+        )
+      )
+    );
 
     response.status(200).json({
       message:

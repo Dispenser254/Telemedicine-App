@@ -1,16 +1,13 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable react/no-unescaped-entities */
-import {
-  HiChevronLeft,
-  HiChevronRight,
-  HiHome,
-  HiOutlineExclamationCircle,
-  HiTrash,
-} from "react-icons/hi";
+import { HiHome, HiOutlineExclamationCircle, HiTrash } from "react-icons/hi";
 import {
   Breadcrumb,
   Button,
+  Checkbox,
   Label,
   Modal,
+  Pagination,
   Table,
   TextInput,
 } from "flowbite-react";
@@ -18,7 +15,7 @@ import NavbarSidebar from "../components/NavbarSideBar";
 import AddPatientModal from "../components/AddPatientModal";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { ScaleLoader } from "react-spinners";
+import { PropagateLoader, ScaleLoader } from "react-spinners";
 
 const PatientDetailView = () => {
   const [patients, setPatients] = useState([]);
@@ -26,24 +23,74 @@ const PatientDetailView = () => {
   const [isOpen, setOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const patientsPerPage = 10;
+  const [searchData, setSearchData] = useState({
+    searchTerm: "",
+    patient_gender: "All",
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPatients, setTotalPatients] = useState(0);
+  const urlParams = new URLSearchParams(location.search);
 
-  const fetchPatients = async () => {
+  useEffect(() => {
+    const searchTermFromUrl = urlParams.get("searchTerm");
+    const genderFromUrl = urlParams.get("role");
+
+    if (searchTermFromUrl || genderFromUrl) {
+      setSearchData({
+        searchTerm: searchTermFromUrl || "",
+        patient_gender: genderFromUrl || "All",
+      });
+    }
+
+    fetchPatients(currentPage); // Fetch users on initial load
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, searchData]);
+
+  const fetchPatients = async (page = 1) => {
     try {
       setLoading(true);
       setErrorMessage(null);
-      const response = await fetch("/mediclinic/patient/getPatients");
+      const searchQuery = new URLSearchParams(searchData).toString();
+      const response = await fetch(
+        `/mediclinic/patient/getPatients?${searchQuery}&page=${page}&limit=${patientsPerPage}`
+      );
       if (!response.ok) {
-        setErrorMessage("Failed to fetch patient data.");
-        toast.error(errorMessage);
+        const errorData = await response.json();
+        setErrorMessage(errorData.message || "Failed to fetch patient data.");
+        toast.error(errorData.message || "Failed to fetch patient data.");
         setLoading(false);
+        return;
       }
       const data = await response.json();
       setPatients(data.patients);
+      setTotalPatients(data.totalPatients);
       setLoading(false);
     } catch (error) {
       toast.error(error.message);
       setErrorMessage(error.message);
     }
+  };
+
+  const handleChange = (e) => {
+    if (
+      e.target.id === "All" ||
+      e.target.id === "Male" ||
+      e.target.id === "Female" ||
+      e.target.id === "Other"
+    ) {
+      setSearchData({ ...searchData, patient_gender: e.target.id });
+    }
+
+    if (e.target.id === "users-search") {
+      setSearchData({ ...searchData, searchTerm: e.target.value });
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setCurrentPage(1); // Reset to first page on new search
+    fetchPatients(1); // Fetch users with the current search query
   };
 
   const handleDelete = async () => {
@@ -63,7 +110,7 @@ const PatientDetailView = () => {
       // Filter out the deleted patient from the local state
       setPatients(patients.filter((patient) => patient._id !== userIdToDelete));
       // Fetch the updated list of patients after deletion
-      fetchPatients();
+      await fetchPatients(currentPage);
       setLoading(false);
       toast.success("Patient deleted successfully");
     } catch (error) {
@@ -71,11 +118,6 @@ const PatientDetailView = () => {
       setErrorMessage(error.message);
     }
   };
-
-  useEffect(() => {
-    fetchPatients();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return (
     <NavbarSidebar isFooter={false}>
@@ -97,17 +139,59 @@ const PatientDetailView = () => {
             </h1>
           </div>
           <div className="sm:flex">
-            <div className="mb-3 hidden items-center dark:divide-gray-700 sm:mb-0 sm:flex sm:divide-x sm:divide-gray-100">
-              <form className="lg:pr-3">
-                <Label htmlFor="users-search" className="sr-only">
-                  Search
-                </Label>
-                <div className="relative mt-1 lg:w-64 xl:w-96">
-                  <TextInput
-                    id="users-search"
-                    name="users-search"
-                    placeholder="Search for users"
-                  />
+            <div className="mb-3 items-center dark:divide-gray-700 sm:mb-0 sm:flex sm:divide-x sm:divide-gray-100">
+              <form
+                className="lg:pr-3 flex flex-col sm:flex-row justify-between"
+                onSubmit={handleSubmit}
+              >
+                <div className="flex flex-col sm:flex-row">
+                  <Label htmlFor="users-search" className="sr-only">
+                    Search
+                  </Label>
+                  <div className="relative mt-1 sm:mt-0 lg:w-64 xl:w-96">
+                    <TextInput
+                      id="users-search"
+                      name="users-search"
+                      placeholder="Search for patients"
+                      value={searchData.searchTerm}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 flex-wrap items-center mt-2 sm:mt-0 sm:ml-6">
+                  <Label className="font-semibold">Gender:</Label>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="All"
+                      onChange={handleChange}
+                      checked={searchData.patient_gender === "All"}
+                    />
+                    <span>All Genders</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="Male"
+                      onChange={handleChange}
+                      checked={searchData.patient_gender === "Male"}
+                    />
+                    <span>Male</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="Female"
+                      onChange={handleChange}
+                      checked={searchData.patient_gender === "Female"}
+                    />
+                    <span>Female</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="Other"
+                      onChange={handleChange}
+                      checked={searchData.patient_gender === "Other"}
+                    />
+                    <span>Other</span>
+                  </div>
                 </div>
               </form>
             </div>
@@ -135,7 +219,18 @@ const PatientDetailView = () => {
                   <Table.HeadCell>Address</Table.HeadCell>
                   <Table.HeadCell>Actions</Table.HeadCell>
                 </Table.Head>
-                {patients.length > 0 ? (
+                {errorMessage ? (
+                  <Table.Body>
+                    <Table.Row>
+                      <Table.Cell
+                        colSpan="5"
+                        className="whitespace-nowrap text-center p-4 text-lg font-medium bg-red-200 text-red-500"
+                      >
+                        {errorMessage}
+                      </Table.Cell>
+                    </Table.Row>
+                  </Table.Body>
+                ) : patients.length > 0 ? (
                   patients.map((patient) => (
                     <Table.Body
                       key={patient._id}
@@ -193,8 +288,13 @@ const PatientDetailView = () => {
           </div>
         </div>
       </div>
-
-      <Pagination />
+      <PaginationButton
+        fetchPatients={fetchPatients}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        totalPatients={totalPatients}
+        loading={loading}
+      />
       <Modal onClose={() => setOpen(false)} show={isOpen} size="md">
         <Modal.Header className="px-6 pb-0 pt-6">
           <span className="sr-only">Delete user</span>
@@ -226,51 +326,68 @@ const PatientDetailView = () => {
   );
 };
 
-const Pagination = () => {
+const PaginationButton = ({
+  fetchPatients,
+  currentPage,
+  setCurrentPage,
+  totalPatients,
+  loading,
+}) => {
+  const patientsPerPage = 10;
+  const [firstPatientIndex, setFirstPatientIndex] = useState(0);
+  const [lastPatientIndex, setLastPatientIndex] = useState(0);
+
+  useEffect(() => {
+    const calculateUserIndexes = () => {
+      const firstIndex = (currentPage - 1) * patientsPerPage + 1;
+      const lastIndex = Math.min(currentPage * patientsPerPage, totalPatients);
+      setFirstPatientIndex(firstIndex);
+      setLastPatientIndex(lastIndex);
+    };
+
+    calculateUserIndexes();
+  }, [currentPage, totalPatients]);
+
+  const totalPages = Math.ceil(totalPatients / patientsPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchPatients(page);
+  };
   return (
-    <div className="sticky bottom-0 right-0 w-full items-center border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:flex sm:justify-between">
-      <div className="mb-4 flex items-center sm:mb-0">
-        <a
-          href="#"
-          className="inline-flex cursor-pointer justify-center rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-        >
-          <span className="sr-only">Previous page</span>
-          <HiChevronLeft className="text-2xl" />
-        </a>
-        <a
-          href="#"
-          className="mr-2 inline-flex cursor-pointer justify-center rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-        >
-          <span className="sr-only">Next page</span>
-          <HiChevronRight className="text-2xl" />
-        </a>
-        <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
-          Showing&nbsp;
-          <span className="font-semibold text-gray-900 dark:text-white">
-            1-20
-          </span>
-          &nbsp;of&nbsp;
-          <span className="font-semibold text-gray-900 dark:text-white">
-            2290
-          </span>
-        </span>
-      </div>
-      <div className="flex items-center space-x-3">
-        <a
-          href="#"
-          className="inline-flex flex-1 items-center justify-center rounded-lg bg-primary-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-        >
-          <HiChevronLeft className="mr-1 text-base" />
-          Previous
-        </a>
-        <a
-          href="#"
-          className="inline-flex flex-1 items-center justify-center rounded-lg bg-primary-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-        >
-          Next
-          <HiChevronRight className="ml-1 text-base" />
-        </a>
-      </div>
+    <div className="sm:flex sm:flex-1 sm:items-center sm:justify-between mt-6 mb-8 p-4">
+      {loading ? (
+        <div className="flex flex-col items-center gap-y-6 text-center">
+          <PropagateLoader size={5} color="#000000" />
+        </div>
+      ) : (
+        <>
+          <div>
+            <p className="flex gap-x-1 text-md text-gray-700">
+              Showing
+              <span className="font-semibold text-black">
+                {firstPatientIndex}
+              </span>
+              to
+              <span className="font-semibold text-black">
+                {lastPatientIndex}
+              </span>
+              of
+              <span className="font-semibold text-black">{totalPatients}</span>
+              patients
+            </p>
+          </div>
+          <div className="flex justify-center">
+            <Pagination
+              layout="navigation"
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              showIcons
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };

@@ -202,6 +202,7 @@ export function SidebarHeader() {
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
+                        as="div"
                       >
                         Dashboard
                       </Sidebar.Item>
@@ -214,6 +215,7 @@ export function SidebarHeader() {
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
+                        as="div"
                       >
                         Video Consultation
                       </Sidebar.Item>
@@ -226,6 +228,7 @@ export function SidebarHeader() {
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
+                        as="div"
                       >
                         My Appointments
                       </Sidebar.Item>
@@ -238,6 +241,7 @@ export function SidebarHeader() {
                             ? "bg-gray-100 dark:bg-gray-700"
                             : ""
                         }
+                        as="div"
                       >
                         My Patients
                       </Sidebar.Item>
