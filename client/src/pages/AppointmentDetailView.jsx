@@ -27,12 +27,11 @@ import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import AddAppointmentModal from "../components/AddAppointmentModal";
-import { FaEdit, FaEye, FaHandHoldingMedical } from "react-icons/fa";
+import { FaEdit, FaHandHoldingMedical } from "react-icons/fa";
 import moment from "moment";
 
 const AppointmentDetailView = () => {
   const [appointments, setAppointments] = useState([]);
-  const [prescriptionDoctor, setPrescriptionDoctor] = useState([]);
   const [doctors, setDoctors] = useState([]);
   const [appointmentsPatients, setAppointmentsPatients] = useState([]);
   const [appointmentsDoctors, setAppointmentsDoctors] = useState([]);
@@ -56,17 +55,15 @@ const AppointmentDetailView = () => {
   const [patientId, setPatientId] = useState("");
   const [departmentId, setDepartmentId] = useState("");
   const [doctorId, setDoctorId] = useState("");
+  const [prescriptionId, setPrescriptionId] = useState("");
   const [prescriptionDetails, setPrescriptionDetails] = useState("");
-  const [prescriptionDate, setPrescriptionDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  const [prescriptionDate, setPrescriptionDate] = useState("");
 
   useEffect(() => {
     if (currentUser?.role === "admin") {
       fetchAppointments();
     } else if (currentUser?.role === "doctor") {
       fetchAppointmentsByDoctorsID(currentUser.doctor_id);
-      fetchPrescriptionsByDoctorID(currentUser.doctor_id);
     } else if (currentUser?.role === "patient") {
       fetchAppointmentsByPatientsID(currentUser.patient_id);
     }
@@ -93,9 +90,13 @@ const AppointmentDetailView = () => {
         `/mediclinic/appointment/getAppointments?page=${page}&limit=${appointmentsPerPage}`
       );
       if (!response.ok) {
-        setErrorMessage("Failed to fetch appointments data.");
-        toast.error(errorMessage);
+        const errorData = await response.json();
+        setErrorMessage(
+          errorData.message || "Failed to fetch appointments data."
+        );
+        toast.error(errorData.message || "Failed to fetch appointments data.");
         setLoading(false);
+        return;
       }
       const data = await response.json();
       setAppointments(data.appointments);
@@ -105,7 +106,7 @@ const AppointmentDetailView = () => {
       setErrorMessage(error.message);
     }
   };
-  
+
   const fetchAppointmentsByID = async (appointmentID) => {
     try {
       setLoadingAppointments(true);
@@ -115,9 +116,15 @@ const AppointmentDetailView = () => {
         `/mediclinic/appointment/getAppointments/${appointmentID}`
       );
       if (!response.ok) {
-        setErrorMessage("Failed to fetch selected appointments data.");
-        toast.error(errorMessage);
-        setLoadingAppointments(false);
+        const errorData = await response.json();
+        setErrorMessage(
+          errorData.message || "Failed to fetch selected appointments data."
+        );
+        toast.error(
+          errorData.message || "Failed to fetch selected appointments data."
+        );
+        setLoading(false);
+        return;
       }
       const data = await response.json();
       setAppointmentStatus(data.appointment_status || "N/A");
@@ -199,8 +206,17 @@ const AppointmentDetailView = () => {
 
       if (!response.ok) {
         setErrorMessage("Failed to fetch patient appointments data.");
-        toast.error(errorMessage);
+        const errorData = await response.json();
+        setErrorMessage(
+          errorData.message ||
+            "Failed to fetch patient appointments by patient id data."
+        );
+        toast.error(
+          errorData.message ||
+            "Failed to fetch patient appointments by patient id data."
+        );
         setLoading(false);
+        return;
       }
       const data = await response.json();
       setAppointmentsPatients(data.appointment);
@@ -219,11 +235,17 @@ const AppointmentDetailView = () => {
       );
 
       if (!response.ok) {
+        const errorData = await response.json();
         setErrorMessage(
-          "Failed to fetch patient appointments by doctor id data."
+          errorData.message ||
+            "Failed to fetch patient appointments by doctor id data."
         );
-        toast.error(errorMessage);
+        toast.error(
+          errorData.message ||
+            "Failed to fetch patient appointments by doctor id data."
+        );
         setLoading(false);
+        return;
       }
       const data = await response.json();
       setAppointmentsDoctors(data.appointments);
@@ -237,6 +259,9 @@ const AppointmentDetailView = () => {
   const fetchPrescriptionsByAppointmentID = async (appointmentID) => {
     try {
       setLoading(true);
+      setPrescriptionId("");
+      setPrescriptionDate("");
+      setPrescriptionDetails("");
       const response = await fetch(
         `/mediclinic/prescription/getPrescriptions/appointment/${appointmentID}`
       );
@@ -251,6 +276,7 @@ const AppointmentDetailView = () => {
       const data = await response.json();
       if (data.length > 0) {
         const prescription = data[0];
+        setPrescriptionId(prescription._id);
         setPrescriptionDetails(prescription.prescription_details);
         setPrescriptionDate(prescription.prescription_date);
       } else {
@@ -262,29 +288,6 @@ const AppointmentDetailView = () => {
     } catch (error) {
       toast.error(error.message);
       setLoading(false);
-    }
-  };
-
-  const fetchPrescriptionsByDoctorID = async (doctorId) => {
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `/mediclinic/prescription/getPrescriptions/doctor/${doctorId}`
-      );
-
-      if (!response.ok) {
-        setErrorMessage(
-          "Failed to fetch patient prescription by doctor id data."
-        );
-        toast.error(errorMessage);
-        setLoading(false);
-      }
-      const data = await response.json();
-      setPrescriptionDoctor(data);
-      setLoading(false);
-    } catch (error) {
-      toast.error(error.message);
-      setErrorMessage(error.message);
     }
   };
 
@@ -314,6 +317,8 @@ const AppointmentDetailView = () => {
       );
       if (!response.ok) {
         toast.error("Failed to update appointment");
+        setLoading(false);
+        return;
       }
       // eslint-disable-next-line no-unused-vars
       const updatedAppointment = await response.json();
@@ -338,36 +343,50 @@ const AppointmentDetailView = () => {
         prescription_date: prescriptionDate,
         prescription_details: prescriptionDetails,
       };
-      console.log(updatedData);
-      const response = await fetch(
-        "/mediclinic/prescription/createPrescription",
-        {
+
+      let response;
+
+      // Check if a prescription already exists for the appointment
+      if (prescriptionId) {
+        response = await fetch(
+          `/mediclinic/prescription/updatePrescription/${prescriptionId}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updatedData),
+          }
+        );
+      } else {
+        response = await fetch("/mediclinic/prescription/createPrescription", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(updatedData),
-        }
-      );
-      if (!response.ok) {
-        toast.error("Failed to update prescription");
+        });
       }
+
+      if (!response.ok) {
+        toast.error("Failed to submit prescription");
+        setLoading(false);
+        return;
+      }
+
       // eslint-disable-next-line no-unused-vars
-      const updatedPrescription = await response.json();
+      const prescription = await response.json();
       fetchAppointmentsByDoctorsID(currentUser.doctor_id);
-      toast.success("Prescription updated successfully");
+      toast.success(
+        prescriptionId
+          ? "Prescription updated successfully"
+          : "Prescription created successfully"
+      );
       setPrescriptionModal(false);
       setLoading(false);
     } catch (error) {
       toast.error(error.message);
     }
-  };
-
-  const handleViewOrPrescribe = async (appointmentID) => {
-    setAppointmentId(appointmentID);
-    setPrescriptionModal(true);
-    fetchAppointmentsByID(appointmentID);
-    await fetchPrescriptionsByAppointmentID(appointmentID);
   };
 
   return (
@@ -602,38 +621,28 @@ const AppointmentDetailView = () => {
                             {appointment?.appointment_status}
                           </Table.Cell>
                           <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
-                            {prescriptionDoctor ? (
-                              <Button
-                                color="purple"
-                                onClick={() =>
-                                  handleViewOrPrescribe(appointment._id)
-                                }
-                              >
-                                <div className="flex items-center gap-x-2">
-                                  <FaEye className="text-lg" />
-                                  View
-                                </div>
-                              </Button>
-                            ) : (
-                              <Button
-                                color="success"
-                                onClick={() =>
-                                  handleViewOrPrescribe(appointment._id)
-                                }
-                              >
-                                <div className="flex items-center gap-x-2">
-                                  <FaHandHoldingMedical className="text-lg" />
-                                  Prescribe
-                                </div>
-                              </Button>
-                            )}
+                            <Button
+                              color="blue"
+                              onClick={() => {
+                                setPrescriptionModal(true);
+                                fetchAppointmentsByID(appointment._id);
+                                fetchPrescriptionsByAppointmentID(
+                                  appointment._id
+                                );
+                              }}
+                            >
+                              <div className="flex items-center gap-x-2">
+                                <FaHandHoldingMedical className="text-lg" />
+                                Prescribe
+                              </div>
+                            </Button>
                           </Table.Cell>
                           <Table.Cell>
                             <div className="flex items-center gap-x-4 whitespace-nowrap">
                               {appointment?.appointment_status ===
                               "Scheduled" ? (
                                 <Button
-                                  color="blue"
+                                  color="success"
                                   onClick={() => {
                                     setAppointmentModal(true);
                                     setAppointmentId(appointment._id);
@@ -698,8 +707,8 @@ const AppointmentDetailView = () => {
                     <Table.HeadCell>Appointment Status</Table.HeadCell>
                     <Table.HeadCell>Actions</Table.HeadCell>
                   </Table.Head>
-                  {appointmentsPatients.length > 0 ? (
-                    appointmentsPatients.map((appointment) => (
+                  {appointmentsPatients?.length > 0 ? (
+                    appointmentsPatients?.map((appointment) => (
                       <Table.Body
                         key={appointment._id}
                         className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
@@ -788,9 +797,10 @@ const AppointmentDetailView = () => {
           </div>
         </div>
       )}
-      {(currentUser?.role === "admin" ||
-        currentUser?.role === "doctor" ||
-        currentUser?.role === "patient") && (
+      {((currentUser?.role === "admin" && appointments.length > 0) ||
+        (currentUser?.role === "doctor" && appointmentsDoctors.length > 0) ||
+        (currentUser?.role === "patient" &&
+          appointmentsPatients.length > 0)) && (
         <PaginationButton
           fetchAppointments={fetchAppointments}
           fetchAppointmentsByDoctorsID={fetchAppointmentsByDoctorsID}
@@ -856,7 +866,7 @@ const AppointmentDetailView = () => {
                     <Table.Cell className="py-2 whitespace-pre-wrap">
                       {prescriptionDate
                         ? moment(prescriptionDate).format("LL")
-                        : "N/A"}
+                        : "Not Assigned"}
                     </Table.Cell>
                   </Table.Row>
                   <Table.Row className="border-b border-gray-300">
@@ -864,7 +874,7 @@ const AppointmentDetailView = () => {
                       Prescription Details
                     </Table.Cell>
                     <Table.Cell className="py-2 whitespace-pre-wrap">
-                      {prescriptionDetails || "N/A"}
+                      {prescriptionDetails || "Not Assigned"}
                     </Table.Cell>
                   </Table.Row>
                   <Table.Row className="border-b border-gray-300">
@@ -872,8 +882,9 @@ const AppointmentDetailView = () => {
                       Doctor's Name
                     </Table.Cell>
                     <Table.Cell className="py-2 whitespace-pre-wrap">
-                      {doctorId?.doctor_firstName || "N/A"}{" "}
-                      {doctorId?.doctor_lastName || "N/A"}
+                      {doctorId.doctor_firstName
+                        ? `${doctorId.doctor_firstName} ${doctorId.doctor_lastName}`
+                        : "Not Assigned"}
                     </Table.Cell>
                   </Table.Row>
                   <Table.Row className="border-b border-gray-300">
@@ -1259,11 +1270,10 @@ const AppointmentDetailView = () => {
                 placeholder="Prescription Date"
                 value={
                   prescriptionDate
-                    ? new Date(prescriptionDate).toISOString().split("T")[0]
+                    ? moment(prescriptionDate).format("YYYY-MM-DD")
                     : ""
                 }
                 onChange={handleChange}
-                disabled
               />
             </div>
             <div className="mb-4">
@@ -1275,13 +1285,16 @@ const AppointmentDetailView = () => {
                 id="prescriptionDetails"
                 name="prescriptionDetails"
                 placeholder="Prescription Details"
-                defaultValue={`Medication:  
-Dosage: : 
+                onChange={handleChange}
+                value={
+                  prescriptionDetails?.trim() === ""
+                    ? `Medication:  
+Dosage: 
 Duration: 
 Frequency: 
-Additional Instructions: `}
-                onChange={handleChange}
-                value={prescriptionDetails}
+Additional Instructions: `
+                    : prescriptionDetails
+                }
                 className="w-full h-40 p-4"
               ></Textarea>
             </div>

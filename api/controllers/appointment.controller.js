@@ -163,7 +163,10 @@ export const getAppointmentByDoctorID = async (request, response, next) => {
     if (!appointments && !completeAppointment && !scheduledAppointment) {
       return next(errorHandler(404, "Appointments not found for this doctor"));
     }
-    const totalAppointments = await Appointment.countDocuments();
+    const totalAppointments = await Appointment.find({
+      doctor_id: doctorId,
+    }).countDocuments();
+
     response.status(200).json({
       appointments,
       totalAppointments,
@@ -255,7 +258,9 @@ export const getAppointmentByPatientID = async (request, response, next) => {
       return next(errorHandler(404, "Patient Appointments not found"));
     }
 
-    const totalAppointments = await Appointment.countDocuments();
+    const totalAppointments = await Appointment.find({
+      patient_id: patientId,
+    }).countDocuments();
     response.status(200).json({
       appointment,
       totalAppointments,
@@ -423,14 +428,38 @@ export const deleteAppointment = async (request, response, next) => {
     // Find and delete the appointment by its ID
     const deletedAppointment = await Appointment.findByIdAndDelete(
       appointmentId
-    );
+    )
+      .populate("patient_id")
+      .populate("doctor_id")
+      .lean();
 
     if (!deletedAppointment) {
       return next(errorHandler(404, "Appointment not found"));
     }
 
+    const patient = deletedAppointment.patient_id;
+    const doctor = deletedAppointment.doctor_id;
+    const appointmentDate = moment(deletedAppointment.appointment_date).format(
+      "LL"
+    );
+    const appointmentTime = moment(
+      deletedAppointment.appointment_time,
+      "h:mm A"
+    ).format("LT");
+
+    await createNotification(
+      doctor.user_id,
+      "Appointment Cancellation Notice",
+      `Your appointment with patient ${patient.patient_firstName} ${patient.patient_lastName} scheduled for ${appointmentDate} at ${appointmentTime} has been successfully deleted. Please check your schedule for any updates.`
+    );
+    await createNotification(
+      patient.user_id,
+      "Appointment Cancellation Confirmation",
+      `Your appointment with Dr. ${doctor.doctor_firstName} ${doctor.doctor_lastName} scheduled for ${appointmentDate} at ${appointmentTime} has been successfully canceled. Please contact us to reschedule or for any further assistance.`
+    );
     response.status(200).json("Appointment deleted successfully");
   } catch (error) {
+    console.log(error);
     next(errorHandler(500, "Error deleting appointment"));
   }
 };

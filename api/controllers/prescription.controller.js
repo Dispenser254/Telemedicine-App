@@ -1,5 +1,9 @@
+import moment from "moment";
+import Doctor from "../models/doctor.model.js";
+import Patient from "../models/patient.model.js";
 import Prescription from "../models/prescription.model.js";
 import { errorHandler } from "../utils/error.js";
+import { createNotification } from "./notification.controller.js";
 
 // Get all prescription
 export const getAllPrescriptions = async (request, response, next) => {
@@ -109,6 +113,8 @@ export const createPrescription = async (request, response, next) => {
   } = request.body;
 
   try {
+    // Accessing current patient user ID
+    const currentUserId = request.user._id;
     const newPrescription = new Prescription({
       patient_id,
       doctor_id,
@@ -117,6 +123,24 @@ export const createPrescription = async (request, response, next) => {
       prescription_details,
     });
     const savedPrescription = await newPrescription.save();
+    const formattedDate = moment(prescription_date).format("LL");
+    // Fetch the patient information
+    const patient = await Patient.findById(patient_id).populate("user_id");
+    const patientUserId = patient.user_id._id;
+    // Fetch the doctor information
+    const doctor = await Doctor.findById(doctor_id);
+
+    await createNotification(
+      currentUserId,
+      "Prescription Issued",
+      `You have successfully issued a new prescription for patient ${patient.patient_firstName} ${patient.patient_lastName}. Ensure the patient receives their medication as prescribed`
+    );
+    await createNotification(
+      patientUserId,
+      "Your Prescription is Ready",
+      `Dr. ${doctor.doctor_firstName} ${doctor.doctor_lastName} has created a new prescription for you on ${formattedDate}. Please check your appointment dashboard for details and instructions.`
+    );
+
     response.status(201).json(savedPrescription);
   } catch (error) {
     next(errorHandler(500, "Error creating prescription"));
@@ -126,20 +150,16 @@ export const createPrescription = async (request, response, next) => {
 // Update a prescription
 export const updatePrescription = async (request, response, next) => {
   const prescriptionId = request.params.id;
-  const {
-    patient_id,
-    doctor_id,
-    appointment_id,
-    prescription_date,
-    prescription_details,
-  } = request.body;
+  const { patient_id, doctor_id, prescription_date, prescription_details } =
+    request.body;
   try {
+    // Accessing current patient user ID
+    const currentUserId = request.user._id;
     const updatedPrescription = await Prescription.findByIdAndUpdate(
       prescriptionId,
       {
         patient_id,
         doctor_id,
-        appointment_id,
         prescription_date,
         prescription_details,
       },
@@ -148,8 +168,28 @@ export const updatePrescription = async (request, response, next) => {
     if (!updatedPrescription) {
       return next(errorHandler(404, "Prescription not found"));
     }
+
+    const formattedDate = moment(prescription_date).format("LL");
+    // Fetch the patient information
+    const patient = await Patient.findById(patient_id).populate("user_id");
+    const patientUserId = patient.user_id._id;
+    // Fetch the doctor information
+    const doctor = await Doctor.findById(doctor_id);
+
+    await createNotification(
+      currentUserId,
+      "Prescription Updated",
+      `The prescription for patient ${patient.patient_firstName} ${patient.patient_lastName} has been updated. Please review the updated prescription for any necessary actions`
+    );
+    await createNotification(
+      patientUserId,
+      "Your Prescription Has Been Updated",
+      `Your prescription has been updated by Dr. ${doctor.doctor_firstName} ${doctor.doctor_lastName} for you on ${formattedDate}. Please check your account for the latest prescription details.`
+    );
+
     response.status(200).json(updatedPrescription);
   } catch (error) {
+    console.log(error);
     next(errorHandler(500, "Error updating prescription"));
   }
 };
@@ -160,16 +200,32 @@ export const deletePrescription = async (request, response, next) => {
 
   try {
     // Find the prescription by ID to get the user_id
-    const prescription = await Prescription.findById(prescriptionId);
+    const prescription = await Prescription.findById(prescriptionId).populate(
+      "patient_id doctor_id"
+    );
 
     if (!prescription) {
       return next(errorHandler(404, "Prescription not found"));
     }
 
+    const patient = prescription.patient_id;
+    const doctor = prescription.doctor_id;
+
+    await createNotification(
+      doctor.user_id,
+      "Prescription Deleted",
+      `The prescription for patient ${patient.patient_firstName} ${patient.patient_lastName} has been successfully deleted. Please review the patient’s records for any necessary updates.`
+    );
+    await createNotification(
+      patient.user_id,
+      "Your Prescription Has Been Deleted",
+      `Your prescription has been removed from the system by Dr. ${doctor.doctor_firstName} ${doctor.doctor_lastName}. Please contact your doctor for further assistance or to discuss your treatment options.`
+    );
     // Delete the patient
     await Prescription.findByIdAndDelete(prescriptionId);
     response.status(200).json("Prescription deleted successfully");
   } catch (error) {
+    console.log(error);
     next(errorHandler(500, "Error deleting prescription"));
   }
 };

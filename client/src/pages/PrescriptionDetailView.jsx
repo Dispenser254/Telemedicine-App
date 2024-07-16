@@ -134,7 +134,8 @@ const PrescriptionDetailView = () => {
                         <Table.Cell className="whitespace-nowrap  p-4 text-base font-medium text-gray-900 dark:text-white">
                           {prescription?.appointment_id?.appointment_time
                             ? moment(
-                                prescription.appointment_id.appointment_time
+                                prescription.appointment_id.appointment_time,
+                                "h:mm A"
                               ).format("LT")
                             : "N/A"}
                         </Table.Cell>

@@ -76,7 +76,9 @@ export const getPaymentByPatientID = async (request, response, next) => {
     if (!payments) {
       return next(errorHandler(404, "Patient Payment not found"));
     }
-    const totalPayments = await Payment.countDocuments();
+    const totalPayments = await Payment.find({
+      patient_id: patientId,
+    }).countDocuments();
     response.status(200).json({ payments, totalPayments, page, limit });
   } catch (error) {
     console.log(error);

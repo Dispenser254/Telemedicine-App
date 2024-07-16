@@ -79,6 +79,9 @@ export const updateDepartment = async (request, response, next) => {
   const departmentId = request.params.id;
   const { department_name, department_description } = request.body;
   try {
+    // Accessing current admin user ID
+    const currentUserId = request.user._id;
+
     const updatedDepartment = await Department.findByIdAndUpdate(
       departmentId,
       { department_name, department_description },
@@ -87,6 +90,12 @@ export const updateDepartment = async (request, response, next) => {
     if (!updatedDepartment) {
       return next(errorHandler(404, "Department not found"));
     }
+
+    await createNotification(
+      currentUserId,
+      `Department Updated Successfully`,
+      `The department details have been updated successfully by the admin. Please review the changes to ensure all information is accurate.`
+    );
     response.status(200).json(updatedDepartment);
   } catch (error) {
     next(errorHandler(500, "Error updating department"));
@@ -98,6 +107,9 @@ export const deleteDepartment = async (request, response, next) => {
   const departmentId = request.params.id;
 
   try {
+    // Accessing current admin user ID
+    const currentUserId = request.user._id;
+
     // Find the department by ID to get the user_id
     const department = await Department.findById(departmentId);
 
@@ -107,6 +119,12 @@ export const deleteDepartment = async (request, response, next) => {
 
     // Delete the department
     await Department.findByIdAndDelete(departmentId);
+
+    await createNotification(
+      currentUserId,
+      `Department Deleted Successfully`,
+      `The department ${department.department_name} has been successfully deleted. All associated data has been removed. If you have any questions, please contact support`
+    );
     response.status(200).json("Department deleted successfully");
   } catch (error) {
     next(errorHandler(500, "Error deleting Department"));

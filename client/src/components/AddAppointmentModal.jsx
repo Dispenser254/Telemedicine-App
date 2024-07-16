@@ -134,7 +134,7 @@ const AddAppointmentModal = ({ onAppointmentAdded }) => {
               Add New <span className="text-yellow-300">Appointment</span>
             </h2>
             <form className="flex flex-col">
-              <div className="grid grid-cols-1 gap-2 lg:gap-6 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-1 gap-2 sm:gap-4 sm:grid-cols-2">
                 <div className="mb-4">
                   <Label htmlFor="appointmentDate" className="mb-2">
                     Appointment Date
