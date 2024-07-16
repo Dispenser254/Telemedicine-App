@@ -1,20 +1,22 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useSelector } from "react-redux";
 import NavbarSidebar from "../components/NavbarSideBar";
 import { useEffect, useState } from "react";
-import { HiChevronLeft, HiChevronRight, HiHome } from "react-icons/hi";
+import { HiHome } from "react-icons/hi";
 import {
   Breadcrumb,
   Button,
   Label,
   Modal,
+  Pagination,
   Select,
   Spinner,
   Table,
   TextInput,
 } from "flowbite-react";
 import { Link } from "react-router-dom";
-import { ScaleLoader } from "react-spinners";
+import { PropagateLoader, ScaleLoader } from "react-spinners";
 import { toast } from "react-toastify";
 import { FaEdit } from "react-icons/fa";
 import moment from "moment";
@@ -41,6 +43,11 @@ const VideoConsultationView = () => {
   const [appointmentTime, setAppointmentTime] = useState("");
   const [videoConsultationLink, setVideoConsultationLink] = useState("");
   const [consultationStatus, setConsultationStatus] = useState("");
+  const [patientVideoId, setPatientVideoId] = useState("");
+  const [doctorVideoId, setDoctorVideoId] = useState("");
+  const [totalVideos, setTotalVideos] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const videosPerPage = 10;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -49,52 +56,48 @@ const VideoConsultationView = () => {
     }
   };
 
-  const fetchVideoConsultations = async () => {
+  const fetchVideoConsultations = async (page = 1) => {
     try {
       setLoading(true);
       setErrorMessage(null);
 
+      let url = "";
       if (currentUser?.role === "admin") {
-        const response = await fetch("/mediclinic/video/getVideoConsultations");
-        if (!response.ok) {
-          setErrorMessage("Failed to fetch video consultations data.");
-          toast.error(errorMessage);
-          setLoading(false);
-        }
-        const data = await response.json();
-        setVideoConsultation(data.videoConsultations);
+        url = `/mediclinic/video/getVideoConsultations?page=${page}&limit=${videosPerPage}`;
       } else if (currentUser?.role === "doctor") {
-        const response = await fetch(
-          `/mediclinic/video/getVideoConsultations/doctor/${doctorId}`
+        url = `/mediclinic/video/getVideoConsultations/doctor/${doctorId}?page=${page}&limit=${videosPerPage}`;
+      } else if (currentUser?.role === "patient") {
+        url = `/mediclinic/video/getVideoConsultations/patient/${patientId}?page=${page}&limit=${videosPerPage}`;
+      }
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        const errorData = await response.json();
+        setErrorMessage(
+          errorData.message || "Failed to fetch video consultations data."
         );
-        if (!response.ok) {
-          setErrorMessage(
-            "Failed to fetch video consultations by doctor data."
-          );
-          toast.error(errorMessage);
-          setLoading(false);
-        }
-        const data = await response.json();
+        toast.error(
+          errorData.message || "Failed to fetch video consultations data."
+        );
+        setLoading(false);
+        return;
+      }
+
+      const data = await response.json();
+      if (currentUser?.role === "doctor") {
         setVideoConsultationsDoctor(data.videoConsultations);
       } else if (currentUser?.role === "patient") {
-        const response = await fetch(
-          `/mediclinic/video/getVideoConsultations/patient/${patientId}`
-        );
-        if (!response.ok) {
-          setErrorMessage(
-            "Failed to fetch video consultations by patients data."
-          );
-          toast.error(errorMessage);
-          setLoading(false);
-        }
-        const data = await response.json();
         setVideoConsultationsPatients(data.videoConsultations);
+      } else {
+        setVideoConsultation(data.videoConsultations);
       }
+      setTotalVideos(data.totalVideoConsultations);
 
       setLoading(false);
     } catch (error) {
       toast.error(error.message);
       setErrorMessage(error.message);
+      setLoading(false);
     }
   };
 
@@ -120,6 +123,8 @@ const VideoConsultationView = () => {
       setPatientLastName(data.patient_id.patient_lastName);
       setVideoConsultationLink(data.video_consultation_link);
       setConsultationStatus(data.consultation_status);
+      setPatientVideoId(data.patient_id._id);
+      setDoctorVideoId(data.appointment_id.doctor_id._id);
       setLoadingVideo(false);
     } catch (error) {
       toast.error(error.message);
@@ -140,6 +145,8 @@ const VideoConsultationView = () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            patient_id: patientVideoId,
+            doctor_id: doctorVideoId,
             consultation_status: consultationStatus,
           }),
         }
@@ -148,7 +155,8 @@ const VideoConsultationView = () => {
         toast.error("Failed to update video");
       }
       const data = await response.json();
-      fetchVideoConsultations();
+      fetchVideoConsultations(1);
+      setCurrentPage(1);
       // Combine data info with the success message and add line breaks
       const successMessage = `
         Consultation updated successfully:
@@ -165,8 +173,8 @@ const VideoConsultationView = () => {
   };
 
   useEffect(() => {
-    fetchVideoConsultations();
-  }, []);
+    fetchVideoConsultations(currentPage);
+  }, [currentPage]);
 
   return (
     <NavbarSidebar isFooter={false}>
@@ -229,7 +237,18 @@ const VideoConsultationView = () => {
                     <Table.HeadCell>Consultation Status</Table.HeadCell>
                     <Table.HeadCell>Join Meeting</Table.HeadCell>
                   </Table.Head>
-                  {videoConsultation.length > 0 ? (
+                  {errorMessage ? (
+                    <Table.Body>
+                      <Table.Row>
+                        <Table.Cell
+                          colSpan="8"
+                          className="whitespace-nowrap text-center p-4 text-lg font-medium bg-red-200 text-red-500"
+                        >
+                          {errorMessage}
+                        </Table.Cell>
+                      </Table.Row>
+                    </Table.Body>
+                  ) : videoConsultation.length > 0 ? (
                     videoConsultation.map((video) => (
                       <Table.Body
                         key={video._id}
@@ -329,7 +348,18 @@ const VideoConsultationView = () => {
                     <Table.HeadCell>Join Meeting</Table.HeadCell>
                     <Table.HeadCell>Action</Table.HeadCell>
                   </Table.Head>
-                  {videoConsultationsDoctor.length > 0 ? (
+                  {errorMessage ? (
+                    <Table.Body>
+                      <Table.Row>
+                        <Table.Cell
+                          colSpan="8"
+                          className="whitespace-nowrap text-center p-4 text-lg font-medium bg-red-200 text-red-500"
+                        >
+                          {errorMessage}
+                        </Table.Cell>
+                      </Table.Row>
+                    </Table.Body>
+                  ) : videoConsultationsDoctor.length > 0 ? (
                     videoConsultationsDoctor.map((video) => (
                       <Table.Body
                         key={video._id}
@@ -452,7 +482,18 @@ const VideoConsultationView = () => {
                     <Table.HeadCell>Consultation Status</Table.HeadCell>
                     <Table.HeadCell>Join Meeting</Table.HeadCell>
                   </Table.Head>
-                  {videoConsultationsPatients.length > 0 ? (
+                  {errorMessage ? (
+                    <Table.Body>
+                      <Table.Row>
+                        <Table.Cell
+                          colSpan="8"
+                          className="whitespace-nowrap text-center p-4 text-lg font-medium bg-red-200 text-red-500"
+                        >
+                          {errorMessage}
+                        </Table.Cell>
+                      </Table.Row>
+                    </Table.Body>
+                  ) : videoConsultationsPatients.length > 0 ? (
                     videoConsultationsPatients.map((video) => (
                       <Table.Body
                         key={video._id}
@@ -539,7 +580,13 @@ const VideoConsultationView = () => {
           </div>
         </div>
       )}
-      <Pagination />
+      <PaginationButton
+        fetchVideoConsultations={fetchVideoConsultations}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        totalVideos={totalVideos}
+        loading={loading}
+      />
       <Modal onClose={() => setVideoModal(false)} show={videoModal} size="md">
         <Modal.Header className="px-6 pb-0 pt-6">
           <span className="sr-only">Update Video</span>
@@ -709,52 +756,70 @@ const VideoConsultationView = () => {
   );
 };
 
-const Pagination = () => {
+const PaginationButton = ({
+  fetchVideoConsultations,
+  currentPage,
+  setCurrentPage,
+  totalVideos,
+  loading,
+}) => {
+  const videosPerPage = 10;
+  const [firstVideosIndex, setFirstVideosIndex] = useState(0);
+  const [lastVideosIndex, setLastVideosIndex] = useState(0);
+
+  useEffect(() => {
+    const calculateUserIndexes = () => {
+      const firstIndex = (currentPage - 1) * videosPerPage + 1;
+      const lastIndex = Math.min(currentPage * videosPerPage, totalVideos);
+      setFirstVideosIndex(firstIndex);
+      setLastVideosIndex(lastIndex);
+    };
+
+    calculateUserIndexes();
+  }, [currentPage, totalVideos]);
+
+  const totalPages = Math.ceil(totalVideos / videosPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchVideoConsultations(page);
+  };
   return (
-    <div className="sticky bottom-0 right-0 w-full items-center border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:flex sm:justify-between">
-      <div className="mb-4 flex items-center sm:mb-0">
-        <a
-          href="#"
-          className="inline-flex cursor-pointer justify-center rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-        >
-          <span className="sr-only">Previous page</span>
-          <HiChevronLeft className="text-2xl" />
-        </a>
-        <a
-          href="#"
-          className="mr-2 inline-flex cursor-pointer justify-center rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-        >
-          <span className="sr-only">Next page</span>
-          <HiChevronRight className="text-2xl" />
-        </a>
-        <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
-          Showing&nbsp;
-          <span className="font-semibold text-gray-900 dark:text-white">
-            1-20
-          </span>
-          &nbsp;of&nbsp;
-          <span className="font-semibold text-gray-900 dark:text-white">
-            2290
-          </span>
-        </span>
-      </div>
-      <div className="flex items-center space-x-3">
-        <a
-          href="#"
-          className="inline-flex flex-1 items-center justify-center rounded-lg bg-primary-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-        >
-          <HiChevronLeft className="mr-1 text-base" />
-          Previous
-        </a>
-        <a
-          href="#"
-          className="inline-flex flex-1 items-center justify-center rounded-lg bg-primary-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-        >
-          Next
-          <HiChevronRight className="ml-1 text-base" />
-        </a>
-      </div>
+    <div className="sm:flex sm:flex-1 sm:items-center sm:justify-between mt-6 mb-8 p-4">
+      {loading ? (
+        <div className="flex flex-col items-center gap-y-6 text-center">
+          <PropagateLoader size={5} color="#000000" />
+        </div>
+      ) : (
+        <>
+          <div>
+            <p className="flex gap-x-1 text-md text-gray-700">
+              Showing
+              <span className="font-semibold text-black">
+                {firstVideosIndex}
+              </span>
+              to
+              <span className="font-semibold text-black">
+                {lastVideosIndex}
+              </span>
+              of
+              <span className="font-semibold text-black">{totalVideos}</span>
+              video consultations
+            </p>
+          </div>
+          <div className="flex justify-center">
+            <Pagination
+              layout="navigation"
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              showIcons
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };
+
 export default VideoConsultationView;

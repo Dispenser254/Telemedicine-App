@@ -13,11 +13,17 @@ export const getVideoConsultationsByDoctorId = async (
   next
 ) => {
   const doctorId = request.params.doctor_id;
+  const limit = parseInt(request.query.limit, 10) || 0;
+  const { page = 1 } = request.query;
+  const skip = (page - 1) * limit;
 
   try {
     const videoConsultations = await VideoConsultation.find({
       doctor_id: doctorId,
     })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
       .populate({
         path: "patient_id",
         select: "patient_firstName patient_lastName",
@@ -32,6 +38,9 @@ export const getVideoConsultationsByDoctorId = async (
       })
       .lean();
 
+    if (!videoConsultations.length) {
+      return next(errorHandler(404, `Video Consultations database is empty.`));
+    }
     const totalVideoConsultations = await VideoConsultation.find({
       doctor_id: doctorId,
     }).countDocuments();
@@ -51,6 +60,8 @@ export const getVideoConsultationsByDoctorId = async (
       videoConsultations,
       totalVideoConsultations,
       lastMonthVideoConsultations,
+      page,
+      limit,
     });
   } catch (error) {
     next(errorHandler(500, "Error retrieving video consultations"));
@@ -64,6 +75,9 @@ export const getVideoConsultationsByPatientId = async (
   next
 ) => {
   const patientId = request.params.patient_id;
+  const limit = parseInt(request.query.limit, 10) || 0;
+  const { page = 1 } = request.query;
+  const skip = (page - 1) * limit;
 
   if (!patientId) {
     return next(errorHandler(400, "Patient ID is required"));
@@ -72,6 +86,9 @@ export const getVideoConsultationsByPatientId = async (
     const videoConsultations = await VideoConsultation.find({
       patient_id: patientId,
     })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
       .populate({
         path: "patient_id",
         select: "patient_firstName patient_lastName",
@@ -112,6 +129,8 @@ export const getVideoConsultationsByPatientId = async (
       videoConsultations,
       totalVideoConsultations,
       lastMonthVideoConsultations,
+      page,
+      limit,
     });
   } catch (error) {
     next(errorHandler(500, "Error retrieving video consultations"));
@@ -186,8 +205,14 @@ export const createVideoConsultation = async (request, next) => {
 
 // Get all Video Consultations
 export const getAllVideoConsultations = async (request, response, next) => {
+  const limit = parseInt(request.query.limit, 10) || 0;
+  const { page = 1 } = request.query;
+  const skip = (page - 1) * limit;
   try {
     const videoConsultations = await VideoConsultation.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
       .populate({
         path: "patient_id",
         select: "patient_firstName patient_lastName",
@@ -217,6 +242,8 @@ export const getAllVideoConsultations = async (request, response, next) => {
       videoConsultations,
       totalVideoConsultations,
       lastMonthVideoConsultations,
+      page,
+      limit,
     });
   } catch (error) {
     next(errorHandler(500, "Failed to retrieve video consultations"));
@@ -258,13 +285,7 @@ export const getVideoConsultationById = async (request, response, next) => {
 // Update Video Consultation
 export const updateVideoConsultation = async (request, response, next) => {
   const videoConsultationId = request.params.id;
-  const {
-    patient_id,
-    doctor_id,
-    video_consultation_link,
-    appointment_id,
-    consultation_status,
-  } = request.body;
+  const { patient_id, doctor_id, consultation_status } = request.body;
 
   try {
     const updatedConsultation = await VideoConsultation.findByIdAndUpdate(
@@ -272,8 +293,6 @@ export const updateVideoConsultation = async (request, response, next) => {
       {
         patient_id,
         doctor_id,
-        video_consultation_link,
-        appointment_id,
         consultation_status,
       },
       { new: true, runValidators: true }
@@ -283,27 +302,34 @@ export const updateVideoConsultation = async (request, response, next) => {
       return next(errorHandler(404, "Video consultation not found"));
     }
 
-    response.status(200).json(updatedConsultation);
-  } catch (error) {
-    next(errorHandler(500, "Failed to update video consultation"));
-  }
-};
+    // Fetch the patient information
+    const patient = await Patient.findById(patient_id).populate("user_id");
+    if (!patient || !patient.user_id) {
+      console.log("Patient or Patient user not found");
+    }
+    const patientUserId = patient.user_id._id;
 
-// Delete a Video Consultation
-export const deleteVideoConsultation = async (request, response, next) => {
-  const videoConsultationId = request.params.id;
+    // Fetch the doctor information
+    const doctor = await Doctor.findById(doctor_id).populate("user_id");
+    if (!doctor || !doctor.user_id) {
+      console.log(404, "Doctor or Doctor user not found");
+    }
+    const doctorUserId = doctor.user_id._id;
 
-  try {
-    const deletedConsultation = await VideoConsultation.findByIdAndDelete(
-      videoConsultationId
+    await createNotification(
+      doctorUserId,
+      "Video Consultation Updated",
+      `Your video consultation with patient ${patient.patient_firstName} ${patient.patient_lastName} has been updated. Please review the new details in your schedule. If you have any questions, contact the support team.`
     );
 
-    if (!deletedConsultation) {
-      return next(errorHandler(404, "Video consultation not found"));
-    }
-
-    response.status(200).json("Video consultation deleted");
+    await createNotification(
+      patientUserId,
+      "Video Consultation Updated",
+      `Your video consultation with Dr. ${doctor.doctor_firstName} ${doctor.doctor_lastName} has been updated. Please check your account for the latest appointment details. If you have any questions, contact our support team.`
+    );
+    response.status(200).json(updatedConsultation);
   } catch (error) {
-    next(errorHandler(500, "Failed to delete video consultation"));
+    console.log(error);
+    next(errorHandler(500, "Failed to update video consultation"));
   }
 };

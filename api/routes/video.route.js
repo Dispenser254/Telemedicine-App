@@ -2,7 +2,6 @@ import express from "express";
 import { verifyToken } from "../utils/verifyUser.js";
 import {
   createVideoConsultation,
-  deleteVideoConsultation,
   getAllVideoConsultations,
   getVideoConsultationById,
   getVideoConsultationsByDoctorId,
@@ -25,11 +24,10 @@ router.get(
   getVideoConsultationsByPatientId
 );
 router.post("/createVideoConsultation", verifyToken, createVideoConsultation);
-router.put("/getVideoConsultations/update/:id", verifyToken, updateVideoConsultation);
-router.delete(
-  "/getVideoConsultations/:id",
+router.put(
+  "/getVideoConsultations/update/:id",
   verifyToken,
-  deleteVideoConsultation
+  updateVideoConsultation
 );
 
 export default router;
