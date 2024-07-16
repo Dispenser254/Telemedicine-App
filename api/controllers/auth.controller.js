@@ -184,9 +184,13 @@ export const login = async (request, response, next) => {
       }
     }
 
-    const token = jwt.sign({ _id: validUser._id, username }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign(
+      { _id: validUser._id, username },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1h",
+      }
+    );
 
     const { password: pass, ...rest } = validUser._doc;
 
@@ -319,17 +323,56 @@ export const getAdminUsers = async (request, response, next) => {
 
 // Get all users
 export const getAllUsers = async (request, response, next) => {
+  const limit = parseInt(request.query.limit, 10) || 0;
+  const { page = 1 } = request.query;
+  const skip = (page - 1) * limit;
+
   try {
-    const users = await User.find();
-    if (!users) {
-      return next(errorHandler(404, "Users not found"));
+    let role = request.query.role;
+
+    // If no specific role is requested or 'all' is specified, fetch all roles
+    if (role === undefined || role === "all") {
+      role = { $in: ["admin", "doctor", "patient"] };
     }
+
+    const searchTerm = request.query.searchTerm || "";
+
+    // Find users by role and search term
+    const users = await User.find({
+      username: { $regex: searchTerm, $options: "i" },
+      role,
+    })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit));
+
+    if (!users.length) {
+      return next(
+        errorHandler(
+          404,
+          `Users not found for the specified search term, ${searchTerm}`
+        )
+      );
+    }
+
     // Remove the password field from each user object
     const usersWithoutPassword = users.map((user) => {
       const { password, ...userWithoutPassword } = user._doc;
       return userWithoutPassword;
     });
-    response.status(200).json(usersWithoutPassword);
+
+    // Get the total count of users for the given criteria
+    const totalUsers = await User.countDocuments({
+      username: { $regex: searchTerm, $options: "i" },
+      role,
+    });
+
+    response.status(200).json({
+      users: usersWithoutPassword,
+      page,
+      limit,
+      totalUsers,
+    });
   } catch (error) {
     next(errorHandler(500, "Error retrieving users from the database"));
   }
@@ -338,6 +381,12 @@ export const getAllUsers = async (request, response, next) => {
 export const deactivateUser = async (request, response, next) => {
   const userId = request.params.id;
   try {
+    // Access all admin user IDs
+    const adminUsers = await User.find({ role: "admin" });
+
+    if (!adminUsers || adminUsers.length === 0) {
+      return next(errorHandler(404, "Admin users not found"));
+    }
     // Find the user by their ID
     const user = await User.findById(userId);
     if (!user) {
@@ -347,6 +396,16 @@ export const deactivateUser = async (request, response, next) => {
     user.isactive = false;
     await user.save();
 
+    // Send notifications to all admin users
+    await Promise.all(
+      adminUsers.map((adminUser) =>
+        createNotification(
+          adminUser._id,
+          "Account Deactivated",
+          `${user.username}'s account has been successfully deactivated in our system. If you have any questions or need further assistance, please contact our support team. Thank you for being a part of our clinic.`
+        )
+      )
+    );
     response.status(200).json({
       message: "User account has been deactivated successfully",
     });
