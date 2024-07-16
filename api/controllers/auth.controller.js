@@ -329,7 +329,6 @@ export const getAllUsers = async (request, response, next) => {
 
   try {
     let role = request.query.role;
-
     // If no specific role is requested or 'all' is specified, fetch all roles
     if (role === undefined || role === "all") {
       role = { $in: ["admin", "doctor", "patient"] };

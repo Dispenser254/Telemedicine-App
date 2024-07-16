@@ -15,19 +15,15 @@ export const getAllDoctors = async (request, response, next) => {
     const skip = (page - 1) * limit;
     const searchTerm = request.query.searchTerm || "";
 
-    let query = {};
-
-    if (searchTerm) {
-      query = {
-        $or: [
-          { doctor_firstName: { $regex: searchTerm, $options: "i" } },
-          { doctor_lastName: { $regex: searchTerm, $options: "i" } },
-        ],
-      };
-    }
-
+    // Create a filter for searching doctors
+    const searchFilter = {
+      $or: [
+        { doctor_firstName: { $regex: searchTerm, $options: "i" } },
+        { doctor_lastName: { $regex: searchTerm, $options: "i" } },
+      ],
+    };
     // Find all doctors and populate the department information
-    const doctors = await Doctor.find(query)
+    const doctors = await Doctor.find(searchFilter)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(Number(limit))
@@ -41,7 +37,15 @@ export const getAllDoctors = async (request, response, next) => {
       })
       .lean();
 
-    const totalDoctors = await Doctor.countDocuments(query);
+    if (!doctors.length) {
+      return next(
+        errorHandler(
+          404,
+          `Doctors not found for the specified search term, ${searchTerm}`
+        )
+      );
+    }
+    const totalDoctors = await Doctor.countDocuments(searchFilter);
     response.status(200).json({ doctors, totalDoctors, page, limit });
   } catch (error) {
     console.log(error);
@@ -80,6 +84,8 @@ export const updateDoctor = async (request, response, next) => {
     doctor_profilePic,
   } = request.body;
   try {
+    // Accessing current patient user ID
+    const currentUserId = request.user._id;
     const updatedDoctor = await Doctor.findByIdAndUpdate(
       doctorId,
       {
@@ -95,8 +101,15 @@ export const updateDoctor = async (request, response, next) => {
     if (!updatedDoctor) {
       return next(errorHandler(404, "Doctor not found"));
     }
+
+    await createNotification(
+      currentUserId,
+      "Doctor Account Updated",
+      `Your account has been successfully updated. Please review your updated information to ensure accuracy. If you have any questions or need further assistance, please contact our support team.`
+    );
     response.status(200).json(updatedDoctor);
   } catch (error) {
+    console.log(error);
     next(errorHandler(500, "Error updating doctor"));
   }
 };
@@ -106,6 +119,12 @@ export const deleteDoctor = async (request, response, next) => {
   const doctorId = request.params.id;
 
   try {
+    // Access all admin user IDs
+    const adminUsers = await User.find({ role: "admin" });
+
+    if (!adminUsers || adminUsers.length === 0) {
+      return next(errorHandler(404, "Admin users not found"));
+    }
     // Find the Doctor by ID to get the user_id
     const doctor = await Doctor.findById(doctorId);
 
@@ -126,10 +145,21 @@ export const deleteDoctor = async (request, response, next) => {
       return next(errorHandler(404, "Associated user with ID not found."));
     }
 
+    // Send notifications to all admin users
+    await Promise.all(
+      adminUsers.map((adminUser) =>
+        createNotification(
+          adminUser._id,
+          "Doctor Account Deleted",
+          `Dr. ${doctor.doctor_firstName} ${doctor.doctor_lastName}'s account has been successfully deleted from our system. If you have any questions or need further assistance, please contact our support team. Thank you for being a part of our clinic.`
+        )
+      )
+    );
     response
       .status(200)
       .json("Doctor and associated user deleted successfully");
   } catch (error) {
+    console.log(error);
     next(errorHandler(500, "Error deleting doctor or associated user"));
   }
 };

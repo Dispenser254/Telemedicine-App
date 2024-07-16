@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/no-unescaped-entities */
 import { HiHome, HiOutlineExclamationCircle, HiTrash } from "react-icons/hi";
@@ -22,31 +23,49 @@ const DoctorDetailView = () => {
   const [isOpen, setOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
-  const doctorsPerPage = 5;
+  const doctorsPerPage = 10;
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalDoctors, setTotalDoctors] = useState(0);
 
-  const fetchDoctors = async (page = 1, term = "") => {
+  useEffect(() => {
+    fetchDoctors(currentPage); // Fetch doctors on initial load
+  }, [currentPage, searchTerm]);
+
+  const fetchDoctors = async (page = 1) => {
     try {
       setLoading(true);
       setErrorMessage(null);
+      const searchQuery = searchTerm ? `searchTerm=${searchTerm}` : "";
       const response = await fetch(
-        `/mediclinic/doctor/getDoctors?page=${page}&limit=${doctorsPerPage}&searchTerm=${encodeURIComponent(
-          term
-        )}`
+        `/mediclinic/doctor/getDoctors?${searchQuery}&page=${page}&limit=${doctorsPerPage}`
       );
       if (!response.ok) {
-        setErrorMessage("Failed to fetch doctors data.");
-        toast.error(errorMessage);
+        const errorData = await response.json();
+        setErrorMessage(errorData.message || "Failed to fetch doctor data.");
+        toast.error(errorData.message || "Failed to fetch doctor data.");
         setLoading(false);
+        return;
       }
       const data = await response.json();
       setDoctors(data.doctors);
+      setTotalDoctors(data.totalDoctors);
       setLoading(false);
     } catch (error) {
       toast.error(error.message);
       setErrorMessage(error.message);
       setLoading(false);
     }
+  };
+
+  const handleChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setCurrentPage(1); // Reset to first page on new search
+    fetchDoctors(1); // Fetch users with the current search query
   };
 
   const handleDelete = async () => {
@@ -66,7 +85,7 @@ const DoctorDetailView = () => {
       // Filter out the deleted doctor from the local state
       setDoctors(doctors.filter((doctor) => doctor._id !== userIdToDelete));
       // Fetch the updated list of doctor after deletion
-      fetchDoctors();
+      await fetchDoctors(currentPage);
       setLoading(false);
       toast.success("Doctor deleted successfully");
     } catch (error) {
@@ -74,20 +93,6 @@ const DoctorDetailView = () => {
       setErrorMessage(error.message);
     }
   };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    fetchDoctors(1, searchTerm);
-  };
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const searchTermFromUrl = urlParams.get("searchTerm");
-    if (searchTermFromUrl) {
-      setSearchTerm(searchTermFromUrl);
-    }
-    fetchDoctors(1, searchTermFromUrl || "");
-  }, [searchTerm]);
 
   return (
     <NavbarSidebar isFooter={false}>
@@ -109,20 +114,24 @@ const DoctorDetailView = () => {
             </h1>
           </div>
           <div className="sm:flex">
-            <div className="mb-3 hidden items-center dark:divide-gray-700 sm:mb-0 sm:flex sm:divide-x sm:divide-gray-100">
-              <form onSubmit={handleSubmit} className="lg:pr-3 flex">
-                <Label htmlFor="users-search" className="sr-only">
-                  Search
-                </Label>
-                <div className="relative mt-1 lg:w-64 xl:w-96">
-                  <TextInput
-                    id="users-search"
-                    name="users-search"
-                    placeholder="Search for doctors"
-                    className="bg-transparent focus:outline-none w-24 sm:w-64"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+            <div className="mb-3 items-center dark:divide-gray-700 sm:mb-0 sm:flex sm:divide-x sm:divide-gray-100">
+              <form
+                onSubmit={handleSubmit}
+                className="lg:pr-3 flex flex-col sm:flex-row justify-between"
+              >
+                <div className="flex flex-col sm:flex-row">
+                  <Label htmlFor="users-search" className="sr-only">
+                    Search
+                  </Label>
+                  <div className="relative mt-1 sm:mt-0 lg:w-64 xl:w-96">
+                    <TextInput
+                      id="users-search"
+                      name="users-search"
+                      placeholder="Search for doctors"
+                      value={searchTerm}
+                      onChange={handleChange}
+                    />
+                  </div>
                 </div>
               </form>
             </div>
@@ -149,7 +158,18 @@ const DoctorDetailView = () => {
                   <Table.HeadCell>Department Name</Table.HeadCell>
                   <Table.HeadCell>Actions</Table.HeadCell>
                 </Table.Head>
-                {doctors?.length > 0 ? (
+                {errorMessage ? (
+                  <Table.Body>
+                    <Table.Row>
+                      <Table.Cell
+                        colSpan="5"
+                        className="whitespace-nowrap text-center p-4 text-base font-medium bg-red-200 text-red-500"
+                      >
+                        {errorMessage}
+                      </Table.Cell>
+                    </Table.Row>
+                  </Table.Body>
+                ) : doctors?.length > 0 ? (
                   doctors.map((doctor) => (
                     <Table.Body
                       key={doctor._id}
@@ -216,7 +236,13 @@ const DoctorDetailView = () => {
           </div>
         </div>
       </div>
-      <PaginationButton fetchDoctors={fetchDoctors} />
+      <PaginationButton
+        fetchDoctors={fetchDoctors}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        totalDoctors={totalDoctors}
+        loading={loading}
+      />
       <Modal onClose={() => setOpen(false)} show={isOpen} size="md">
         <Modal.Header className="px-6 pb-0 pt-6">
           <span className="sr-only">Delete user</span>
@@ -248,47 +274,29 @@ const DoctorDetailView = () => {
   );
 };
 
-// eslint-disable-next-line react/prop-types
-const PaginationButton = ({ fetchDoctors }) => {
-  const [totalDoctors, setTotalDoctors] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
-  const doctorsPerPage = 5;
-  const [firstDoctorIndex, setFirstDoctorIndex] = useState(0);
-  const [lastDoctorIndex, setLastDoctorIndex] = useState(0);
-  const [loading, setLoading] = useState(false);
+const PaginationButton = ({
+  fetchDoctors,
+  currentPage,
+  setCurrentPage,
+  totalDoctors,
+  loading,
+}) => {
+  const usersPerPage = 10;
+  const [firstDoctorIndex, setFirstUserIndex] = useState(0);
+  const [lastDoctorIndex, setLastUserIndex] = useState(0);
 
   useEffect(() => {
-    const fetchDoctorsData = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(
-          `/mediclinic/doctor/getDoctors?page=${currentPage}&limit=${doctorsPerPage}`
-        );
-        if (!response.ok) {
-          toast.error("Failed to fetch doctors data.");
-        }
-        const data = await response.json();
-        setTotalDoctors(data.totalDoctors);
-        // Calculate the range of doctors being displayed
-        const firstIndex = (currentPage - 1) * doctorsPerPage + 1;
-        const lastIndex = Math.min(
-          currentPage * doctorsPerPage,
-          data.totalDoctors
-        );
-        setFirstDoctorIndex(firstIndex);
-        setLastDoctorIndex(lastIndex);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching doctors:", error);
-        toast.error(error.message);
-        setLoading(false);
-      }
+    const calculateUserIndexes = () => {
+      const firstIndex = (currentPage - 1) * usersPerPage + 1;
+      const lastIndex = Math.min(currentPage * usersPerPage, totalDoctors);
+      setFirstUserIndex(firstIndex);
+      setLastUserIndex(lastIndex);
     };
 
-    fetchDoctorsData();
-  }, [currentPage]);
+    calculateUserIndexes();
+  }, [currentPage, totalDoctors]);
 
-  const totalPages = Math.ceil(totalDoctors / doctorsPerPage);
+  const totalPages = Math.ceil(totalDoctors / usersPerPage);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
