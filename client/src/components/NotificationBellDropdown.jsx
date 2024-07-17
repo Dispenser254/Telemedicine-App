@@ -37,7 +37,7 @@ const NotificationBellDropdown = () => {
     }
   };
 
-  const fetchNotificationById = async () => {
+  const fetchNotificationById = async (notificationId) => {
     try {
       setLoadingNotification(true);
       setErrorMessage(null);

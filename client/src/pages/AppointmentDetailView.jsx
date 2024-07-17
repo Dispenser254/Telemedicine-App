@@ -532,7 +532,18 @@ const AppointmentDetailView = () => {
                     <Table.HeadCell>Prescribe</Table.HeadCell>
                     <Table.HeadCell>Actions</Table.HeadCell>
                   </Table.Head>
-                  {appointmentsDoctors.length > 0 ? (
+                  {errorMessage ? (
+                    <Table.Body>
+                      <Table.Row>
+                        <Table.Cell
+                          colSpan="8"
+                          className="whitespace-nowrap text-center p-4 text-lg font-semibold bg-red-200 text-red-500"
+                        >
+                          {errorMessage}
+                        </Table.Cell>
+                      </Table.Row>
+                    </Table.Body>
+                  ) : appointmentsDoctors.length > 0 ? (
                     appointmentsDoctors?.map((appointment) => (
                       <Table.Body
                         key={appointment._id}
@@ -656,7 +667,18 @@ const AppointmentDetailView = () => {
                     <Table.HeadCell>Appointment Status</Table.HeadCell>
                     <Table.HeadCell>Actions</Table.HeadCell>
                   </Table.Head>
-                  {appointmentsPatients?.length > 0 ? (
+                  {errorMessage ? (
+                    <Table.Body>
+                      <Table.Row>
+                        <Table.Cell
+                          colSpan="8"
+                          className="whitespace-nowrap text-center p-4 text-lg font-semibold bg-red-200 text-red-500"
+                        >
+                          {errorMessage}
+                        </Table.Cell>
+                      </Table.Row>
+                    </Table.Body>
+                  ) : appointmentsPatients?.length > 0 ? (
                     appointmentsPatients?.map((appointment) => (
                       <Table.Body
                         key={appointment._id}

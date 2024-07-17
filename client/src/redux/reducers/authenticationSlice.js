@@ -4,6 +4,7 @@ const initialState = {
   currentUser: null,
   error: null,
   loading: false,
+  globalLoading: false,
 };
 
 const authenticationSlice = createSlice({
@@ -13,6 +14,7 @@ const authenticationSlice = createSlice({
     signInStart: (state) => {
       state.loading = true;
       state.error = null;
+      state.globalLoading = true;
     },
     signInSuccess: (state, action) => {
       state.currentUser = action.payload;
@@ -22,16 +24,25 @@ const authenticationSlice = createSlice({
     signInFailure: (state, action) => {
       state.loading = false;
       state.error = action.payload;
+      state.globalLoading = false;
     },
     signoutSuccess: (state) => {
       state.currentUser = null;
       state.loading = false;
       state.error = null;
     },
+    setGlobalLoading(state, action) {
+      state.globalLoading = action.payload;
+    },
   },
 });
 
-export const { signInFailure, signInStart, signInSuccess, signoutSuccess } =
-  authenticationSlice.actions;
+export const {
+  signInFailure,
+  signInStart,
+  signInSuccess,
+  signoutSuccess,
+  setGlobalLoading,
+} = authenticationSlice.actions;
 
 export default authenticationSlice.reducer;

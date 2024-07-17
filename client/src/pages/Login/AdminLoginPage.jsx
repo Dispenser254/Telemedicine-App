@@ -16,7 +16,7 @@ import { toast } from "react-toastify";
 
 const AdminLoginPage = () => {
   const navigate = useNavigate();
-  const { loading } = useSelector(
+  const { loading, globalLoading } = useSelector(
     (state) => state.authentication
   );
   const dispatch = useDispatch();
@@ -40,7 +40,7 @@ const AdminLoginPage = () => {
       });
       const data = await response.json();
       if (data.success === false) {
-        toast.error(data.message)
+        toast.error(data.message);
         dispatch(signInFailure(data.message));
       }
       if (response.ok) {
@@ -49,7 +49,7 @@ const AdminLoginPage = () => {
         navigate("/admin-dashboard");
       }
     } catch (error) {
-      toast.error(error.message)
+      toast.error(error.message);
       dispatch(signInFailure(error.message));
     }
   };
@@ -57,7 +57,7 @@ const AdminLoginPage = () => {
   return (
     <>
       {/* Loader overlay */}
-      {loading && (
+      {globalLoading && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
           <RingLoader color="#FFFF00" size={150} />
         </div>
