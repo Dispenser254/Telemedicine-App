@@ -1,7 +1,7 @@
 import stripePackage from "stripe";
+import dotenv from "dotenv";
 
-const stripe = stripePackage(
-  "sk_test_51PV9JZF1q6QijgVWoFQkFn9uesaNjRh2YQwh1wwdlfP0BUPYYvhxKY1EHOCjORVj2agFnm817Xrk2G7uQUKON6PR00joScdxLR"
-);
+dotenv.config();
+const stripe = stripePackage(process.env.STRIPE_PRIVATE_KEY);
 
 export default stripe;

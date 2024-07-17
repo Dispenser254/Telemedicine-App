@@ -10,9 +10,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { toast } from "react-toastify";
 
-const stripePromise = loadStripe(
-  "pk_test_51PV9JZF1q6QijgVWvsu8XiBN8HQn3GQ8uqu3sjvnzTKbDgsDysSKvGmWlwka2JUo5J9t7wqR7NsyxI5vRHa9wOpN009GcWGQ7z"
-);
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 const AddPaymentModalWrapper = ({
   appointmentId,
