@@ -38,6 +38,8 @@ const DepartmentDetailView = () => {
   const [departmentDescription, setDepartmentDescription] = useState("");
   const departmentsPerPage = 5;
   const [searchTerm, setSearchTerm] = useState("");
+  const [totalDepartments, setTotalDepartments] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -48,22 +50,26 @@ const DepartmentDetailView = () => {
     }
   };
 
-  const fetchDepartments = async (page = 1, term = "") => {
+  const fetchDepartments = async (page) => {
     try {
       setLoading(true);
       setErrorMessage(null);
+      const searchQuery = searchTerm ? `searchTerm=${searchTerm}` : "";
       const response = await fetch(
-        `/mediclinic/department/getDepartments?page=${page}&limit=${departmentsPerPage}&searchTerm=${encodeURIComponent(
-          term
-        )}`
+        `/mediclinic/department/getDepartments?${searchQuery}&page=${page}&limit=${departmentsPerPage}`
       );
       if (!response.ok) {
-        setErrorMessage("Failed to fetch departments data.");
-        toast.error(errorMessage);
+        const errorData = await response.json();
+        setErrorMessage(
+          errorData.message || "Failed to fetch departments data."
+        );
+        toast.error(errorData.message || "Failed to fetch departments data.");
         setLoading(false);
+        return;
       }
       const data = await response.json();
       setDepartment(data.departments);
+      setTotalDepartments(data.totalDepartments);
       setLoading(false);
     } catch (error) {
       toast.error(error.message);
@@ -114,7 +120,7 @@ const DepartmentDetailView = () => {
         department.filter((dep) => dep._id !== departmentIdToDelete)
       );
       // Fetch the updated list of department after deletion
-      fetchDepartments();
+      await fetchDepartments(1);
       setLoading(false);
       toast.success("Department deleted successfully");
     } catch (error) {
@@ -144,12 +150,11 @@ const DepartmentDetailView = () => {
         toast.error("Failed to update department");
       }
       const data = await response.json();
-      fetchDepartments();
+      await fetchDepartments(1);
       // Combine data info with the success message and add line breaks
       const successMessage = `
       Department updated successfully:
       <br> <b>Department Name</b>: <i>${data.department_name}</i>
-      <br> <b>Department Description</b>: <i>${data.department_description}</i>
     `;
 
       // Show the success message as HTML
@@ -165,17 +170,13 @@ const DepartmentDetailView = () => {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    fetchDepartments(1, searchTerm);
+    setCurrentPage(1);
+    fetchDepartments(1);
   };
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const searchTermFromUrl = urlParams.get("searchTerm");
-    if (searchTermFromUrl) {
-      setSearchTerm(searchTermFromUrl);
-    }
-    fetchDepartments(1, searchTermFromUrl || "");
-  }, [searchTerm]);
+    fetchDepartments(currentPage);
+  }, [currentPage, searchTerm]);
 
   return (
     <NavbarSidebar isFooter={false}>
@@ -209,7 +210,6 @@ const DepartmentDetailView = () => {
                     id="users-search"
                     name="users-search"
                     placeholder="Search for departments"
-                    className="bg-transparent focus:outline-none w-24 sm:w-64"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -237,7 +237,18 @@ const DepartmentDetailView = () => {
                   <Table.HeadCell>Department Description</Table.HeadCell>
                   <Table.HeadCell>Actions</Table.HeadCell>
                 </Table.Head>
-                {department.length > 0 ? (
+                {errorMessage ? (
+                  <Table.Body>
+                    <Table.Row>
+                      <Table.Cell
+                        colSpan="5"
+                        className="whitespace-nowrap text-center p-4 text-lg font-semibold bg-red-200 text-red-500"
+                      >
+                        {errorMessage}
+                      </Table.Cell>
+                    </Table.Row>
+                  </Table.Body>
+                ) : department.length > 0 ? (
                   department.map((dep) => (
                     <Table.Body
                       key={dep._id}
@@ -316,7 +327,13 @@ const DepartmentDetailView = () => {
           </div>
         </div>
       </div>
-      <PaginationButton fetchDepartments={fetchDepartments} />
+      <PaginationButton
+        fetchDepartments={fetchDepartments}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        totalDepartments={totalDepartments}
+        loading={loading}
+      />
 
       <Modal onClose={() => setOpen(false)} show={isOpen} size="md">
         <Modal.Header className="px-6 pb-0 pt-6">
@@ -456,45 +473,30 @@ const DepartmentDetailView = () => {
   );
 };
 
-// eslint-disable-next-line react/prop-types
-const PaginationButton = ({ fetchDepartments }) => {
-  const [totalDepartments, setTotalDepartments] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
+const PaginationButton = ({
+  fetchDepartments,
+  currentPage,
+  setCurrentPage,
+  totalDepartments,
+  loading,
+}) => {
   const departmentsPerPage = 5;
   const [firstDepartmentIndex, setFirstDepartmentIndex] = useState(0);
   const [lastDepartmentIndex, setLastDepartmentIndex] = useState(0);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchDepartmentsData = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch(
-          `/mediclinic/department/getDepartments?page=${currentPage}&limit=${departmentsPerPage}`
-        );
-        if (!response.ok) {
-          toast.error("Failed to fetch departments data.");
-        }
-        const data = await response.json();
-        setTotalDepartments(data.totalDepartments);
-        // Calculate the range of departments being displayed
-        const firstIndex = (currentPage - 1) * departmentsPerPage + 1;
-        const lastIndex = Math.min(
-          currentPage * departmentsPerPage,
-          data.totalDepartments
-        );
-        setFirstDepartmentIndex(firstIndex);
-        setLastDepartmentIndex(lastIndex);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching departments:", error);
-        toast.error(error.message);
-        setLoading(false);
-      }
+    const calculateUserIndexes = () => {
+      const firstIndex = (currentPage - 1) * departmentsPerPage + 1;
+      const lastIndex = Math.min(
+        currentPage * departmentsPerPage,
+        totalDepartments
+      );
+      setFirstDepartmentIndex(firstIndex);
+      setLastDepartmentIndex(lastIndex);
     };
 
-    fetchDepartmentsData();
-  }, [currentPage]);
+    calculateUserIndexes();
+  }, [currentPage, totalDepartments]);
 
   const totalPages = Math.ceil(totalDepartments / departmentsPerPage);
 

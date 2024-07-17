@@ -46,7 +46,11 @@ const AppointmentDetailView = () => {
   const [loadingAppointments, setLoadingAppointments] = useState(false);
   const [loadingDoctors, setLoadingDoctors] = useState(false);
   const { currentUser } = useSelector((state) => state.authentication);
+  const doctorID = currentUser.doctor_id;
+  const patientID = currentUser.patient_id;
   const appointmentsPerPage = 5;
+  const [totalAppointments, setTotalAppointments] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [appointmentStatus, setAppointmentStatus] = useState("");
   const [appointmentDate, setAppointmentDate] = useState("");
@@ -60,14 +64,8 @@ const AppointmentDetailView = () => {
   const [prescriptionDate, setPrescriptionDate] = useState("");
 
   useEffect(() => {
-    if (currentUser?.role === "admin") {
-      fetchAppointments();
-    } else if (currentUser?.role === "doctor") {
-      fetchAppointmentsByDoctorsID(currentUser.doctor_id);
-    } else if (currentUser?.role === "patient") {
-      fetchAppointmentsByPatientsID(currentUser.patient_id);
-    }
-  }, [currentUser]);
+    fetchAppointments(currentPage);
+  }, [currentPage]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -82,13 +80,21 @@ const AppointmentDetailView = () => {
     }
   };
 
-  const fetchAppointments = async (page = 1) => {
+  const fetchAppointments = async (page) => {
     try {
       setLoading(true);
       setErrorMessage(null);
-      const response = await fetch(
-        `/mediclinic/appointment/getAppointments?page=${page}&limit=${appointmentsPerPage}`
-      );
+
+      let url = "";
+      if (currentUser?.role === "admin") {
+        url = `/mediclinic/appointment/getAppointments?page=${page}&limit=${appointmentsPerPage}`;
+      } else if (currentUser?.role === "doctor") {
+        url = `/mediclinic/appointment/getAppointments/doctor/${doctorID}?page=${page}&limit=${appointmentsPerPage}`;
+      } else if (currentUser?.role === "patient") {
+        url = `/mediclinic/appointment/getAppointments/patient/${patientID}?page=${page}&limit=${appointmentsPerPage}`;
+      }
+
+      const response = await fetch(url);
       if (!response.ok) {
         const errorData = await response.json();
         setErrorMessage(
@@ -98,8 +104,17 @@ const AppointmentDetailView = () => {
         setLoading(false);
         return;
       }
+
       const data = await response.json();
-      setAppointments(data.appointments);
+      if (currentUser?.role === "doctor") {
+        setAppointmentsDoctors(data.appointments);
+      } else if (currentUser?.role === "patient") {
+        setAppointmentsPatients(data.appointment);
+      } else {
+        setAppointments(data.appointments);
+      }
+
+      setTotalAppointments(data.totalAppointments);
       setLoading(false);
     } catch (error) {
       toast.error(error.message);
@@ -184,72 +199,9 @@ const AppointmentDetailView = () => {
         )
       );
       // Fetch the updated list of doctor after deletion
-      if (currentUser?.role === "admin") {
-        fetchAppointments();
-      } else if (currentUser?.role === "patient") {
-        fetchAppointmentsByPatientsID(currentUser.patient_id);
-      }
+      await fetchAppointments(1);
       setLoading(false);
       toast.success("Appointment deleted successfully");
-    } catch (error) {
-      toast.error(error.message);
-      setErrorMessage(error.message);
-    }
-  };
-
-  const fetchAppointmentsByPatientsID = async (patientId, page = 1) => {
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `/mediclinic/appointment/getAppointments/patient/${patientId}?page=${page}&limit=${appointmentsPerPage}`
-      );
-
-      if (!response.ok) {
-        setErrorMessage("Failed to fetch patient appointments data.");
-        const errorData = await response.json();
-        setErrorMessage(
-          errorData.message ||
-            "Failed to fetch patient appointments by patient id data."
-        );
-        toast.error(
-          errorData.message ||
-            "Failed to fetch patient appointments by patient id data."
-        );
-        setLoading(false);
-        return;
-      }
-      const data = await response.json();
-      setAppointmentsPatients(data.appointment);
-      setLoading(false);
-    } catch (error) {
-      toast.error(error.message);
-      setErrorMessage(error.message);
-    }
-  };
-
-  const fetchAppointmentsByDoctorsID = async (doctorId, page = 1) => {
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `/mediclinic/appointment/getAppointments/doctor/${doctorId}?page=${page}&limit=${appointmentsPerPage}`
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        setErrorMessage(
-          errorData.message ||
-            "Failed to fetch patient appointments by doctor id data."
-        );
-        toast.error(
-          errorData.message ||
-            "Failed to fetch patient appointments by doctor id data."
-        );
-        setLoading(false);
-        return;
-      }
-      const data = await response.json();
-      setAppointmentsDoctors(data.appointments);
-      setLoading(false);
     } catch (error) {
       toast.error(error.message);
       setErrorMessage(error.message);
@@ -322,7 +274,7 @@ const AppointmentDetailView = () => {
       }
       // eslint-disable-next-line no-unused-vars
       const updatedAppointment = await response.json();
-      fetchAppointments();
+      await fetchAppointments(1);
       toast.success("Appointment updated successfully");
       setAppointmentModal(false);
       setLoading(false);
@@ -376,7 +328,7 @@ const AppointmentDetailView = () => {
 
       // eslint-disable-next-line no-unused-vars
       const prescription = await response.json();
-      fetchAppointmentsByDoctorsID(currentUser.doctor_id);
+      await fetchAppointments(1);
       toast.success(
         prescriptionId
           ? "Prescription updated successfully"
@@ -412,20 +364,6 @@ const AppointmentDetailView = () => {
             </h1>
           </div>
           <div className="sm:flex">
-            <div className="mb-3 hidden items-center dark:divide-gray-700 sm:mb-0 sm:flex sm:divide-x sm:divide-gray-100">
-              <form className="lg:pr-3">
-                <Label htmlFor="users-search" className="sr-only">
-                  Search
-                </Label>
-                <div className="relative mt-1 lg:w-64 xl:w-96">
-                  <TextInput
-                    id="users-search"
-                    name="users-search"
-                    placeholder="Search for users"
-                  />
-                </div>
-              </form>
-            </div>
             {currentUser?.role === "patient" && (
               <div className="ml-auto flex items-center space-x-2 sm:space-x-3 bg-green-200 hover:bg-green-300 cursor-pointer rounded-lg">
                 <AddAppointmentModal onAppointmentAdded={fetchAppointments} />
@@ -456,7 +394,18 @@ const AppointmentDetailView = () => {
                     <Table.HeadCell>Appointment Status</Table.HeadCell>
                     <Table.HeadCell>Actions</Table.HeadCell>
                   </Table.Head>
-                  {appointments.length > 0 ? (
+                  {errorMessage ? (
+                    <Table.Body>
+                      <Table.Row>
+                        <Table.Cell
+                          colSpan="8"
+                          className="whitespace-nowrap text-center p-4 text-lg font-semibold bg-red-200 text-red-500"
+                        >
+                          {errorMessage}
+                        </Table.Cell>
+                      </Table.Row>
+                    </Table.Body>
+                  ) : appointments.length > 0 ? (
                     appointments.map((appointment) => (
                       <Table.Body
                         key={appointment._id}
@@ -797,16 +746,20 @@ const AppointmentDetailView = () => {
           </div>
         </div>
       )}
+
       {((currentUser?.role === "admin" && appointments.length > 0) ||
         (currentUser?.role === "doctor" && appointmentsDoctors.length > 0) ||
         (currentUser?.role === "patient" &&
           appointmentsPatients.length > 0)) && (
         <PaginationButton
           fetchAppointments={fetchAppointments}
-          fetchAppointmentsByDoctorsID={fetchAppointmentsByDoctorsID}
-          fetchAppointmentsByPatientsID={fetchAppointmentsByPatientsID}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          totalAppointments={totalAppointments}
+          loading={loading}
         />
       )}
+
       <Modal onClose={() => setOpen(false)} show={isOpen} size="md">
         <Modal.Header className="px-6 pb-0 pt-6 text-2xl font-bold mb-4 text-center uppercase">
           Delete <span className="text-yellow-300">Appointment</span>
@@ -1322,73 +1275,34 @@ Additional Instructions: `
 
 const PaginationButton = ({
   fetchAppointments,
-  fetchAppointmentsByDoctorsID,
-  fetchAppointmentsByPatientsID,
+  currentPage,
+  setCurrentPage,
+  totalAppointments,
+  loading,
 }) => {
-  const [totalAppointments, setTotalAppointments] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
   const appointmentsPerPage = 5;
   const [firstAppointmentIndex, setFirstAppointmentIndex] = useState(0);
   const [lastAppointmentIndex, setLastAppointmentIndex] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const { currentUser } = useSelector((state) => state.authentication);
-  const patientID = currentUser.patient_id;
-  const doctorID = currentUser.doctor_id;
 
   useEffect(() => {
-    const fetchAppointmentsData = async () => {
-      setLoading(true);
-      try {
-        let response;
-        if (currentUser?.role === "admin") {
-          response = await fetch(
-            `/mediclinic/appointment/getAppointments?page=${currentPage}&limit=${appointmentsPerPage}`
-          );
-        } else if (currentUser?.role === "doctor") {
-          response = await fetch(
-            `/mediclinic/appointment/getAppointments/doctor/${doctorID}?page=${currentPage}&limit=${appointmentsPerPage}`
-          );
-        } else if (currentUser?.role === "patient") {
-          response = await fetch(
-            `/mediclinic/appointment/getAppointments/patient/${patientID}?page=${currentPage}&limit=${appointmentsPerPage}`
-          );
-        }
-
-        if (!response.ok) {
-          toast.error("Failed to fetch appointments data.");
-        }
-        const data = await response.json();
-        setTotalAppointments(data.totalAppointments);
-        // Calculate the range of appointments being displayed
-        const firstIndex = (currentPage - 1) * appointmentsPerPage + 1;
-        const lastIndex = Math.min(
-          currentPage * appointmentsPerPage,
-          data.totalAppointments
-        );
-        setFirstAppointmentIndex(firstIndex);
-        setLastAppointmentIndex(lastIndex);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching appointments:", error);
-        toast.error(error.message);
-        setLoading(false);
-      }
+    const calculateUserIndexes = () => {
+      const firstIndex = (currentPage - 1) * appointmentsPerPage + 1;
+      const lastIndex = Math.min(
+        currentPage * appointmentsPerPage,
+        totalAppointments
+      );
+      setFirstAppointmentIndex(firstIndex);
+      setLastAppointmentIndex(lastIndex);
     };
 
-    fetchAppointmentsData();
-  }, [currentPage, currentUser]);
+    calculateUserIndexes();
+  }, [currentPage, totalAppointments]);
 
   const totalPages = Math.ceil(totalAppointments / appointmentsPerPage);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    if (currentUser?.role === "admin") {
-      fetchAppointments(page);
-    } else if (currentUser?.role === "doctor") {
-      fetchAppointmentsByDoctorsID(doctorID, page);
-    } else if (currentUser?.role === "patient") {
-      fetchAppointmentsByPatientsID(patientID, page);
-    }
+    fetchAppointments(page);
   };
 
   return (

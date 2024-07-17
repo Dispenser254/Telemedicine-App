@@ -6,6 +6,7 @@ import { errorHandler } from "../utils/error.js";
 import bcryptjs from "bcryptjs";
 import mongoose from "mongoose";
 import { createNotification } from "./notification.controller.js";
+import Notification from "../models/notification.model.js";
 
 // Get all doctors
 export const getAllDoctors = async (request, response, next) => {
@@ -138,6 +139,8 @@ export const deleteDoctor = async (request, response, next) => {
 
     // Delete the doctor
     await Doctor.findByIdAndDelete(doctorId);
+    // Delete related notifications
+    await Notification.deleteMany({ user_id: userId });
 
     // Delete the associated user
     const deletedUser = await User.findByIdAndDelete(userId);

@@ -41,7 +41,7 @@ export const getNotificationsByUserId = async (request, response, next) => {
   const { page = 1 } = request.query;
   // Calculate the number of documents to skip
   const skip = (page - 1) * limit;
-  
+
   try {
     const notifications = await Notification.find({ user_id: userId })
       .sort({ createdAt: -1 })
@@ -56,7 +56,7 @@ export const getNotificationsByUserId = async (request, response, next) => {
     // Count total notifications
     const totalNotifications = await Notification.countDocuments({
       user_id: userId,
-    });
+    })
 
     response.status(200).json({
       notifications,

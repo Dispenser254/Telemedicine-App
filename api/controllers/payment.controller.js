@@ -8,7 +8,7 @@ import { createNotification } from "./notification.controller.js";
 // Get all payments
 export const getAllPayments = async (request, response, next) => {
   const limit = parseInt(request.query.limit, 10) || 0;
-  const { page = 1 } = request.query;
+  const { page } = request.query;
   const skip = (page - 1) * limit;
 
   try {
@@ -26,6 +26,9 @@ export const getAllPayments = async (request, response, next) => {
       })
       .lean();
 
+    if (!payments.length) {
+      return next(errorHandler(404, "Payment not found"));
+    }
     const totalPayments = await Payment.countDocuments();
     const now = new Date();
     const oneMonthAgo = new Date(
@@ -50,7 +53,7 @@ export const getAllPayments = async (request, response, next) => {
 export const getPaymentByPatientID = async (request, response, next) => {
   const patientId = request.params.patient_id;
   const limit = parseInt(request.query.limit, 10) || 0;
-  const { page = 1 } = request.query;
+  const { page } = request.query || 0;
   const skip = (page - 1) * limit;
 
   if (!patientId) {
@@ -73,7 +76,7 @@ export const getPaymentByPatientID = async (request, response, next) => {
       })
       .lean();
 
-    if (!payments) {
+    if (!payments.length) {
       return next(errorHandler(404, "Patient Payment not found"));
     }
     const totalPayments = await Payment.find({

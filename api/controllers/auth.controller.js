@@ -204,6 +204,7 @@ export const login = async (request, response, next) => {
         appointment_id: appointmentId,
       });
   } catch (error) {
+    console.log(error);
     next(errorHandler(500, "Error signing in."));
   }
 };

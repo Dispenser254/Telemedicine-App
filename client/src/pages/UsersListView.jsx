@@ -244,7 +244,7 @@ const UsersListView = () => {
                     <Table.Row>
                       <Table.Cell
                         colSpan="5"
-                        className="whitespace-nowrap text-center p-4 text-base font-medium text-red-500"
+                        className="whitespace-nowrap text-center p-4 text-lg font-semibold bg-red-200 text-red-500"
                       >
                         {errorMessage}
                       </Table.Cell>

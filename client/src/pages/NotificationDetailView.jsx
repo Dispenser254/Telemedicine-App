@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable react/no-unescaped-entities */
 /* eslint-disable react-hooks/exhaustive-deps */
 import {
@@ -37,8 +38,10 @@ const NotificationDetailView = () => {
   const { currentUser } = useSelector((state) => state.authentication);
   const userID = currentUser._id;
   const notificationsPerPage = 10;
+  const [totalNotifications, setTotalNotifications] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const fetchNotificationByUserID = async (userID, page = 1) => {
+  const fetchNotificationByUserID = async (page) => {
     try {
       setLoading(true);
       setErrorMessage(null);
@@ -47,12 +50,19 @@ const NotificationDetailView = () => {
         `/mediclinic/notification/getNotifications/user/${userID}?page=${page}&limit=${notificationsPerPage}`
       );
       if (!response.ok) {
-        setErrorMessage("Failed to fetch notification for user data.");
-        toast.error(errorMessage);
+        const errorData = await response.json();
+        setErrorMessage(
+          errorData.message || "Failed to fetch notification for user data."
+        );
+        toast.error(
+          errorData.message || "Failed to fetch notification for user data."
+        );
         setLoading(false);
+        return;
       }
       const data = await response.json();
       setNotifications(data.notifications);
+      setTotalNotifications(data.totalNotifications);
       setLoading(false);
     } catch (error) {
       toast.error(error.message);
@@ -104,6 +114,7 @@ const NotificationDetailView = () => {
           (notification) => notification._id !== notificationIdToDelete
         )
       );
+      await fetchNotificationByUserID(1);
       setLoading(false);
       setOpen(false);
       toast.success("Notification deleted successfully");
@@ -130,6 +141,7 @@ const NotificationDetailView = () => {
       }
 
       setNotifications([]); // Clear notifications locally
+      await fetchNotificationByUserID(1);
       setLoading(false);
       setOpenModal(false);
       toast.success("All notifications deleted successfully");
@@ -194,7 +206,7 @@ const NotificationDetailView = () => {
         )
       );
       toast.success("Marked all messages as read successfully!");
-      fetchNotificationByUserID(userID);
+      await fetchNotificationByUserID(1);
       setLoading(false);
     } catch (error) {
       toast.error(error.message);
@@ -203,8 +215,8 @@ const NotificationDetailView = () => {
   };
 
   useEffect(() => {
-    fetchNotificationByUserID(userID);
-  }, []);
+    fetchNotificationByUserID(currentPage);
+  }, [currentPage]);
 
   return (
     <NavbarSidebar isFooter={false}>
@@ -266,7 +278,18 @@ const NotificationDetailView = () => {
                   <Table.HeadCell>Date</Table.HeadCell>
                   <Table.HeadCell>Status</Table.HeadCell>
                 </Table.Head>
-                {notifications.length > 0 ? (
+                {errorMessage ? (
+                  <Table.Body>
+                    <Table.Row>
+                      <Table.Cell
+                        colSpan="8"
+                        className="whitespace-nowrap text-center p-4 text-lg font-semibold bg-red-200 text-red-500"
+                      >
+                        {errorMessage}
+                      </Table.Cell>
+                    </Table.Row>
+                  </Table.Body>
+                ) : notifications.length > 0 ? (
                   notifications.map((notification) => (
                     <Table.Body
                       key={notification._id}
@@ -368,7 +391,15 @@ const NotificationDetailView = () => {
           </div>
         </div>
       </div>
-      <PaginationButton fetchNotificationByUserID={fetchNotificationByUserID} />
+      {notifications.length > 0 && (
+        <PaginationButton
+          fetchNotificationByUserID={fetchNotificationByUserID}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          totalNotifications={totalNotifications}
+          loading={loading}
+        />
+      )}
 
       <Modal onClose={() => setOpen(false)} show={isOpen} size="md">
         <Modal.Header className="px-6 pb-0 pt-6">
@@ -470,53 +501,36 @@ const NotificationDetailView = () => {
   );
 };
 
-// eslint-disable-next-line react/prop-types
-const PaginationButton = ({ fetchNotificationByUserID }) => {
-  const [totalNotifications, setTotalNotifications] = useState(0);
-  const [currentPage, setCurrentPage] = useState(1);
+const PaginationButton = ({
+  fetchNotificationByUserID,
+  currentPage,
+  totalNotifications,
+  setCurrentPage,
+  loading,
+}) => {
   const notificationsPerPage = 10;
   const [firstNotificationIndex, setFirstNotificationIndex] = useState(0);
   const [lastNotificationIndex, setLastNotificationIndex] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const { currentUser } = useSelector((state) => state.authentication);
-  const userID = currentUser._id;
 
   useEffect(() => {
-    const fetchNotificationsData = async (userID) => {
-      setLoading(true);
-      try {
-        const response = await fetch(
-          `/mediclinic/notification/getNotifications/user/${userID}?page=${currentPage}&limit=${notificationsPerPage}`
-        );
-        if (!response.ok) {
-          toast.error("Failed to fetch notifications data.");
-        }
-        const data = await response.json();
-        setTotalNotifications(data.totalNotifications);
-        // Calculate the range of notification being displayed
-        const firstIndex = (currentPage - 1) * notificationsPerPage + 1;
-        const lastIndex = Math.min(
-          currentPage * notificationsPerPage,
-          data.totalNotifications
-        );
-        setFirstNotificationIndex(firstIndex);
-        setLastNotificationIndex(lastIndex);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching notifications:", error);
-        toast.error(error.message);
-        setLoading(false);
-      }
+    const calculateUserIndexes = () => {
+      const firstIndex = (currentPage - 1) * notificationsPerPage + 1;
+      const lastIndex = Math.min(
+        currentPage * notificationsPerPage,
+        totalNotifications
+      );
+      setFirstNotificationIndex(firstIndex);
+      setLastNotificationIndex(lastIndex);
     };
 
-    fetchNotificationsData(userID);
-  }, [currentPage]);
+    calculateUserIndexes();
+  }, [currentPage, totalNotifications]);
 
   const totalPages = Math.ceil(totalNotifications / notificationsPerPage);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    fetchNotificationByUserID(userID, page);
+    fetchNotificationByUserID(page);
   };
 
   return (

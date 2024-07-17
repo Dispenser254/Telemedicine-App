@@ -10,22 +10,21 @@ export const getAllDepartments = async (request, response, next) => {
     // Calculate the number of documents to skip
     const skip = (page - 1) * limit;
     const searchTerm = request.query.searchTerm || "";
-    let query = {};
 
-    if (searchTerm) {
-      query = {
-        $or: [
-          { department_name: { $regex: searchTerm, $options: "i" } },
-          { department_description: { $regex: searchTerm, $options: "i" } },
-        ],
-      };
-    }
-    const departments = await Department.find(query)
+    // Create a filter for searching doctors
+    const searchFilter = {
+      $or: [{ department_name: { $regex: searchTerm, $options: "i" } }],
+    };
+    const departments = await Department.find(searchFilter)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(Number(limit));
 
-    const totalDepartments = await Department.countDocuments(query);
+    if (!departments.length) {
+      return next(errorHandler(404, "Department name not found"));
+    }
+
+    const totalDepartments = await Department.countDocuments(searchFilter);
     response.status(200).json({ departments, totalDepartments, page, limit });
   } catch (error) {
     next(errorHandler(500, "Error retrieving departments from the database"));

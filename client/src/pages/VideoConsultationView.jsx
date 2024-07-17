@@ -56,7 +56,7 @@ const VideoConsultationView = () => {
     }
   };
 
-  const fetchVideoConsultations = async (page = 1) => {
+  const fetchVideoConsultations = async (page) => {
     try {
       setLoading(true);
       setErrorMessage(null);
@@ -155,8 +155,7 @@ const VideoConsultationView = () => {
         toast.error("Failed to update video");
       }
       const data = await response.json();
-      fetchVideoConsultations(1);
-      setCurrentPage(1);
+      await fetchVideoConsultations(1);
       // Combine data info with the success message and add line breaks
       const successMessage = `
         Consultation updated successfully:
@@ -198,22 +197,6 @@ const VideoConsultationView = () => {
               All Video Consultations
             </h1>
           </div>
-          <div className="sm:flex">
-            <div className="mb-3 hidden items-center dark:divide-gray-700 sm:mb-0 sm:flex sm:divide-x sm:divide-gray-100">
-              <form className="lg:pr-3">
-                <Label htmlFor="users-search" className="sr-only">
-                  Search
-                </Label>
-                <div className="relative mt-1 lg:w-64 xl:w-96">
-                  <TextInput
-                    id="users-search"
-                    name="users-search"
-                    placeholder="Search for users"
-                  />
-                </div>
-              </form>
-            </div>
-          </div>
         </div>
       </div>
       {loading && (
@@ -242,7 +225,7 @@ const VideoConsultationView = () => {
                       <Table.Row>
                         <Table.Cell
                           colSpan="8"
-                          className="whitespace-nowrap text-center p-4 text-lg font-medium bg-red-200 text-red-500"
+                          className="whitespace-nowrap text-center p-4 text-lg font-semibold bg-red-200 text-red-500"
                         >
                           {errorMessage}
                         </Table.Cell>
@@ -353,7 +336,7 @@ const VideoConsultationView = () => {
                       <Table.Row>
                         <Table.Cell
                           colSpan="8"
-                          className="whitespace-nowrap text-center p-4 text-lg font-medium bg-red-200 text-red-500"
+                          className="whitespace-nowrap text-center p-4 text-lg font-semibold bg-red-200 text-red-500"
                         >
                           {errorMessage}
                         </Table.Cell>
@@ -487,7 +470,7 @@ const VideoConsultationView = () => {
                       <Table.Row>
                         <Table.Cell
                           colSpan="8"
-                          className="whitespace-nowrap text-center p-4 text-lg font-medium bg-red-200 text-red-500"
+                          className="whitespace-nowrap text-center p-4 text-lg font-semibold bg-red-200 text-red-500"
                         >
                           {errorMessage}
                         </Table.Cell>
@@ -580,13 +563,19 @@ const VideoConsultationView = () => {
           </div>
         </div>
       )}
-      <PaginationButton
-        fetchVideoConsultations={fetchVideoConsultations}
-        currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
-        totalVideos={totalVideos}
-        loading={loading}
-      />
+      {((currentUser?.role === "admin" && videoConsultation.length > 0) ||
+        (currentUser?.role === "doctor" &&
+          videoConsultationsDoctor.length > 0) ||
+        (currentUser?.role === "patient" &&
+          videoConsultationsPatients.length > 0)) && (
+        <PaginationButton
+          fetchVideoConsultations={fetchVideoConsultations}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          totalVideos={totalVideos}
+          loading={loading}
+        />
+      )}
       <Modal onClose={() => setVideoModal(false)} show={videoModal} size="md">
         <Modal.Header className="px-6 pb-0 pt-6">
           <span className="sr-only">Update Video</span>

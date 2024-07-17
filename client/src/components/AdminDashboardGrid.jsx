@@ -43,7 +43,9 @@ const AdminDashboardGrid = () => {
     try {
       const response = await fetch("/mediclinic/payment/getAllPayments");
       if (!response.ok) {
-        toast.error("Failed to fetch payments data");
+        const errorData = await response.json();
+        toast.error(errorData.message || "Failed to fetch payments data");
+        return;
       }
       const data = await response.json();
       setTotalPayments(data.totalPayments);
@@ -57,7 +59,11 @@ const AdminDashboardGrid = () => {
     try {
       const response = await fetch("/mediclinic/video/getVideoConsultations");
       if (!response.ok) {
-        toast.error("Failed to fetch video consultation data");
+        const errorData = await response.json();
+        toast.error(
+          errorData.message || "Failed to fetch video consultation data"
+        );
+        return;
       }
       const data = await response.json();
       setTotalVideoConsultations(data.totalVideoConsultations);
@@ -71,7 +77,8 @@ const AdminDashboardGrid = () => {
     try {
       const response = await fetch("/mediclinic/appointment/getAppointments");
       if (!response.ok) {
-        toast.error("Failed to fetch appointments data");
+        const errorData = await response.json();
+        toast.error(errorData.message || "Failed to fetch appointments data.");
         return;
       }
       const data = await response.json();

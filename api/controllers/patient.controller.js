@@ -4,6 +4,7 @@ import User from "../models/user.model.js";
 import { errorHandler } from "../utils/error.js";
 import bcryptjs from "bcryptjs";
 import { createNotification } from "./notification.controller.js";
+import Notification from "../models/notification.model.js";
 
 // Get all patients
 export const getAllPatients = async (request, response, next) => {
@@ -262,6 +263,8 @@ export const deletePatient = async (request, response, next) => {
 
     // Delete the patient
     await Patient.findByIdAndDelete(patientId);
+    // Delete related notifications
+    await Notification.deleteMany({ user_id: userId });
 
     // Delete the associated user
     const deletedUser = await User.findByIdAndDelete(userId);

@@ -1,6 +1,10 @@
 import Appointment from "../models/appointment.model.js";
 import Doctor from "../models/doctor.model.js";
 import Patient from "../models/patient.model.js";
+import Payment from "../models/payment.model.js";
+import Prescription from "../models/prescription.model.js";
+import User from "../models/user.model.js";
+import VideoConsultation from "../models/videoconsultation.model.js";
 import { errorHandler } from "../utils/error.js";
 import { createNotification } from "./notification.controller.js";
 import { createVideoConsultation } from "./video.controller.js";
@@ -31,6 +35,9 @@ export const getAllAppointments = async (request, response, next) => {
       })
       .lean();
 
+    if (!appointments.length) {
+      return next(errorHandler(404, "Appointment not found"));
+    }
     const totalAppointments = await Appointment.countDocuments();
     const totalPendingAppointments = await Appointment.countDocuments({
       appointment_status: "Pending with admin",
@@ -118,6 +125,10 @@ export const getAppointmentByDoctorID = async (request, response, next) => {
       })
       .lean();
 
+    if (!appointments.length) {
+      return next(errorHandler(404, "Appointment not found"));
+    }
+
     // Fetch the completed appointment
     const completeAppointment = await Appointment.findOne({
       doctor_id: doctorId,
@@ -185,7 +196,7 @@ export const getAppointmentByDoctorID = async (request, response, next) => {
 export const getAppointmentByPatientID = async (request, response, next) => {
   const patientId = request.params.patient_id;
   const limit = parseInt(request.query.limit, 10) || 0;
-  const { page = 1 } = request.query;
+  const { page } = request.query;
   const skip = (page - 1) * limit;
 
   if (!patientId) {
@@ -212,6 +223,9 @@ export const getAppointmentByPatientID = async (request, response, next) => {
       })
       .lean();
 
+    if (!appointment.length) {
+      return next(errorHandler(404, "Appointment not found"));
+    }
     // Fetch the latest "Pending with admin" appointment
     const pendingAppointment = await Appointment.findOne({
       patient_id: patientId,
@@ -270,6 +284,7 @@ export const getAppointmentByPatientID = async (request, response, next) => {
       limit,
     });
   } catch (error) {
+    console.log(error);
     next(
       errorHandler(
         500,
@@ -425,38 +440,66 @@ export const deleteAppointment = async (request, response, next) => {
   const appointmentId = request.params.id;
 
   try {
-    // Find and delete the appointment by its ID
-    const deletedAppointment = await Appointment.findByIdAndDelete(
-      appointmentId
-    )
-      .populate("patient_id")
-      .populate("doctor_id")
-      .lean();
+    const appointment = await Appointment.findById(appointmentId).populate(
+      "patient_id doctor_id appointment_date appointment_time"
+    );
 
-    if (!deletedAppointment) {
+    if (!appointment) {
       return next(errorHandler(404, "Appointment not found"));
     }
 
-    const patient = deletedAppointment.patient_id;
-    const doctor = deletedAppointment.doctor_id;
-    const appointmentDate = moment(deletedAppointment.appointment_date).format(
-      "LL"
-    );
+    const patient = appointment.patient_id;
+    const doctor = appointment.doctor_id;
+    const appointmentDate = moment(appointment.appointment_date).format("LL");
     const appointmentTime = moment(
-      deletedAppointment.appointment_time,
+      appointment.appointment_time,
       "h:mm A"
     ).format("LT");
 
-    await createNotification(
-      doctor.user_id,
-      "Appointment Cancellation Notice",
-      `Your appointment with patient ${patient.patient_firstName} ${patient.patient_lastName} scheduled for ${appointmentDate} at ${appointmentTime} has been successfully deleted. Please check your schedule for any updates.`
-    );
+    if (doctor) {
+      await createNotification(
+        doctor.user_id,
+        "Appointment Cancellation Notice",
+        `Your appointment with patient ${patient.patient_firstName} ${patient.patient_lastName} scheduled for ${appointmentDate} at ${appointmentTime} has been successfully deleted. Please check your schedule for any updates.`
+      );
+    }
     await createNotification(
       patient.user_id,
       "Appointment Cancellation Confirmation",
-      `Your appointment with Dr. ${doctor.doctor_firstName} ${doctor.doctor_lastName} scheduled for ${appointmentDate} at ${appointmentTime} has been successfully canceled. Please contact us to reschedule or for any further assistance.`
+      `Your appointment${
+        doctor
+          ? ` with Dr. ${doctor.doctor_firstName} ${doctor.doctor_lastName}`
+          : ""
+      } scheduled for ${appointmentDate} at ${appointmentTime} has been successfully canceled. Please contact us to reschedule or for any further assistance.`
     );
+
+    // Fetch all admin users
+    const admins = await User.find({ role: "admin" });
+
+    // Send notification to all admins
+    for (const admin of admins) {
+      await createNotification(
+        admin._id,
+        "Appointment Deleted",
+        `An appointment scheduled for ${appointmentDate} at ${appointmentTime} with patient ${
+          patient.patient_firstName
+        } ${patient.patient_lastName}${
+          doctor
+            ? ` and Dr. ${doctor.doctor_firstName} ${doctor.doctor_lastName}`
+            : ""
+        } has been successfully deleted.`
+      );
+    }
+
+    // Delete related payments
+    await Payment.deleteMany({ appointment_id: appointmentId });
+    // Delete related prescriptions
+    await Prescription.deleteMany({ appointment_id: appointmentId });
+    // Delete related video consultations
+    await VideoConsultation.deleteMany({ appointment_id: appointmentId });
+
+    // Delete the appointment
+    await Appointment.findByIdAndDelete(appointmentId);
     response.status(200).json("Appointment deleted successfully");
   } catch (error) {
     console.log(error);

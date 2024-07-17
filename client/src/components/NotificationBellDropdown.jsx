@@ -18,7 +18,7 @@ const NotificationBellDropdown = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const notificationsPerPage = 5;
 
-  const fetchNotifications = async (userID) => {
+  const fetchNotifications = async () => {
     try {
       setErrorMessage(null);
       const response = await fetch(
@@ -37,7 +37,7 @@ const NotificationBellDropdown = () => {
     }
   };
 
-  const fetchNotificationById = async (notificationId) => {
+  const fetchNotificationById = async () => {
     try {
       setLoadingNotification(true);
       setErrorMessage(null);
@@ -82,7 +82,7 @@ const NotificationBellDropdown = () => {
             : notification
         )
       );
-      fetchNotifications(userID);
+      fetchNotifications();
     } catch (error) {
       toast.error(error.message);
       setErrorMessage(error.message);
@@ -92,7 +92,7 @@ const NotificationBellDropdown = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       fetchNotifications(userID);
-    }, 10000); // Fetch notifications every 5 seconds
+    }, 5000); // Fetch notifications every 5 seconds
 
     // Initial fetch on component mount
     fetchNotifications(userID);

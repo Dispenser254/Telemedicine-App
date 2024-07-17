@@ -103,7 +103,7 @@ export const getVideoConsultationsByPatientId = async (
       })
       .lean();
 
-    if (!videoConsultations) {
+    if (!videoConsultations.length) {
       return next(
         errorHandler(404, "No video consultations found for this patient")
       );
@@ -227,6 +227,9 @@ export const getAllVideoConsultations = async (request, response, next) => {
       })
       .lean();
 
+    if (!videoConsultations.length) {
+      return next(errorHandler(404, `Video Consultations database is empty.`));
+    }
     const totalVideoConsultations = await VideoConsultation.countDocuments();
     const now = new Date();
     const oneMonthAgo = new Date(

@@ -7,8 +7,15 @@ import { createNotification } from "./notification.controller.js";
 
 // Get all prescription
 export const getAllPrescriptions = async (request, response, next) => {
+  const limit = parseInt(request.query.limit, 10) || 0;
+  const { page = 1 } = request.query;
+  const skip = (page - 1) * limit;
+
   try {
     const prescriptions = await Prescription.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
       .populate({
         path: "patient_id",
         select: "patient_firstName patient_lastName",
@@ -23,8 +30,13 @@ export const getAllPrescriptions = async (request, response, next) => {
       })
       .lean();
 
+    if (!prescriptions.length) {
+      return next(errorHandler(404, "Prescription not found"));
+    }
     const totalPrescriptions = await Prescription.countDocuments();
-    response.status(200).json({ prescriptions, totalPrescriptions });
+    response
+      .status(200)
+      .json({ prescriptions, totalPrescriptions, page, limit });
   } catch (error) {
     next(errorHandler(500, "Error retrieving prescriptions from the database"));
   }
@@ -47,15 +59,24 @@ export const getPrescriptionByID = async (request, response, next) => {
 // Fetch prescriptions by doctor ID
 export const getPrescriptionsByDoctorID = async (request, response, next) => {
   const doctorId = request.params.doctor_id;
+  const limit = parseInt(request.query.limit, 10) || 0;
+  const { page = 1 } = request.query;
+  const skip = (page - 1) * limit;
 
   try {
-    const prescriptions = await Prescription.find({ doctor_id: doctorId });
+    const prescriptions = await Prescription.find({ doctor_id: doctorId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit));
 
     if (!prescriptions || prescriptions.length === 0) {
       return next(errorHandler(404, "No prescriptions found for this doctor"));
     }
 
-    response.status(200).json(prescriptions);
+    const totalPrescriptions = await Prescription.find({ doctor_id: doctorId }).countDocuments();
+    response
+      .status(200)
+      .json({ prescriptions, totalPrescriptions, page, limit });
   } catch (error) {
     next(errorHandler(500, "Error retrieving prescriptions from the database"));
   }
@@ -64,15 +85,24 @@ export const getPrescriptionsByDoctorID = async (request, response, next) => {
 // Adjusted function to fetch prescription by patient ID
 export const getPrescriptionByPatientID = async (request, response, next) => {
   const patientId = request.params.patient_id;
+  const limit = parseInt(request.query.limit, 10) || 0;
+  const { page = 1 } = request.query;
+  const skip = (page - 1) * limit;
 
   try {
-    const prescriptions = await Prescription.find({ patient_id: patientId });
+    const prescriptions = await Prescription.find({ patient_id: patientId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit));
 
-    if (!prescriptions) {
+    if (!prescriptions.length) {
       return next(errorHandler(404, "No prescriptions found for the patient"));
     }
 
-    response.status(200).json(prescriptions);
+        const totalPrescriptions = await Prescription.find({ patient_id: patientId }).countDocuments();
+    response
+      .status(200)
+      .json({ prescriptions, totalPrescriptions, page, limit });
   } catch (error) {
     next(errorHandler(500, "Error retrieving prescriptions from the database"));
   }
@@ -221,7 +251,7 @@ export const deletePrescription = async (request, response, next) => {
       "Your Prescription Has Been Deleted",
       `Your prescription has been removed from the system by Dr. ${doctor.doctor_firstName} ${doctor.doctor_lastName}. Please contact your doctor for further assistance or to discuss your treatment options.`
     );
-    // Delete the patient
+    // Delete the prescription
     await Prescription.findByIdAndDelete(prescriptionId);
     response.status(200).json("Prescription deleted successfully");
   } catch (error) {
