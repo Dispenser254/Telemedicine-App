@@ -1,4 +1,4 @@
-import { Badge, Button, Dropdown, Modal, Spinner } from "flowbite-react";
+import { Button, Dropdown, Modal, Spinner } from "flowbite-react";
 import { useEffect, useState } from "react";
 import { HiBell, HiEye } from "react-icons/hi";
 import { toast } from "react-toastify";
@@ -112,12 +112,9 @@ const NotificationBellDropdown = () => {
             <span className="sr-only">Notifications</span>
             <HiBell className="text-2xl text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white " />
             {unreadCount > 0 && (
-              <Badge
-                className="absolute -top-1 -right-1 rounded-full bg-green-200 text-gray-800"
-                size="sm"
-              >
+              <div className="absolute inline-flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-red-500 border-2 border-white rounded-full -top-1 -end-1 dark:border-gray-900">
                 {unreadCount > 9 ? "9+" : unreadCount}
-              </Badge>
+              </div>
             )}
           </span>
         }

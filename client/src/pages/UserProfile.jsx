@@ -3,10 +3,10 @@
 /* eslint-disable react/no-unescaped-entities */
 import { HiHome, HiOutlineExclamationCircle, HiTrash } from "react-icons/hi";
 import {
-  Avatar,
   Breadcrumb,
   Button,
   Card,
+  FileInput,
   Label,
   Modal,
   Select,
@@ -15,10 +15,20 @@ import {
 } from "flowbite-react";
 import NavbarSidebar from "../components/NavbarSideBar";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScaleLoader } from "react-spinners";
 import { toast } from "react-toastify";
 import { signoutSuccess } from "../redux/reducers/authenticationSlice";
+import {
+  getDownloadURL,
+  getStorage,
+  ref,
+  uploadBytesResumable,
+} from "firebase/storage";
+import { app } from "../firebase";
+// Import react-circular-progressbar module and styles
+import { CircularProgressbar } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
 
 const UserProfile = () => {
   const [departments, setDepartments] = useState([]);
@@ -48,22 +58,35 @@ const UserProfile = () => {
   const [doctorFirstName, setDoctorFirstName] = useState("");
   const [doctorLastName, setDoctorLastName] = useState("");
   const [doctorNumber, setDoctorNumber] = useState("");
-  const [doctorPic, setDoctorPic] = useState("");
   const [doctorDepartment, setDoctorDepartment] = useState("");
   const [doctorIdNumber, setDoctorIdNumber] = useState("");
 
-  const [username, setUsername] = useState("");
+  const [patientUsername, setPatientUsername] = useState("");
   const [doctorUsername, setDoctorUsername] = useState("");
-  const [email, setEmail] = useState("");
+  const [doctorProfile, setDoctorProfile] = useState("");
+  const [patientProfile, setPatientProfile] = useState("");
+  const [patientEmail, setPatientEmail] = useState("");
   const [doctorEmail, setDoctorEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [patientPassword, setPatientPassword] = useState("");
   const [doctorPassword, setDoctorPassword] = useState("");
   const [loadingPatient, setLoadingPatient] = useState(false);
   const [loadingDoctor, setLoadingDoctor] = useState(false);
 
-  const handleChange = (e) => {
+  const [imageFile, setImageFile] = useState(null);
+  const [imageFileUploadProgress, setImageFileUploadProgress] = useState(null);
+  const [imageFileUrl, setImageFileUrl] = useState(null);
+  const filePickerRef = useRef();
+  const [imageFileUploading, setImageFileUploading] = useState(false);
+
+  const handlePatientUserChange = (e) => {
     const { name, value } = e.target;
-    if (name === "patientFirstName") {
+    if (name === "patientUsername") {
+      setPatientUsername(value);
+    } else if (name === "patientEmail") {
+      setPatientEmail(value);
+    } else if (name === "patientPassword") {
+      setPatientPassword(value);
+    } else if (name === "patientFirstName") {
       setPatientFirstName(value);
     } else if (name === "patientLastName") {
       setPatientLastName(value);
@@ -77,17 +100,6 @@ const UserProfile = () => {
       setContactNumber(value);
     } else if (name === "address") {
       setAddress(value);
-    }
-  };
-
-  const handleUserChange = (e) => {
-    const { name, value } = e.target;
-    if (name === "username") {
-      setUsername(value);
-    } else if (name === "email") {
-      setEmail(value);
-    } else if (name === "password") {
-      setPassword(value);
     }
   };
 
@@ -177,9 +189,8 @@ const UserProfile = () => {
         setLoadingDoctor(false);
       }
       const data = await response.json();
-      setDoctorPic(data.doctor_profilePic || "N/A");
       setDoctorNumber(data.doctor_number || "N/A");
-      setDoctorDepartment(data.department_id.department_name || "N/A");
+      setDoctorDepartment(data.department_id || "N/A");
       setDoctorIdNumber(data.doctor_idNumber || "N/A");
       setDoctorFirstName(data.doctor_firstName || "N/A");
       setDoctorLastName(data.doctor_lastName || "N/A");
@@ -207,8 +218,9 @@ const UserProfile = () => {
           setLoadingPatient(false);
         }
         const data = await response.json();
-        setUsername(data.username || "N/A");
-        setEmail(data.email || "N/A");
+        setPatientProfile(data.user_profile || "N/A");
+        setPatientUsername(data.username || "N/A");
+        setPatientEmail(data.email || "N/A");
         setLoading(false);
         setLoadingPatient(false);
       } else if (currentUser?.role === "doctor") {
@@ -221,6 +233,7 @@ const UserProfile = () => {
           setLoadingDoctor(false);
         }
         const data = await response.json();
+        setDoctorProfile(data.user_profile || "N/A");
         setDoctorUsername(data.username || "N/A");
         setDoctorEmail(data.email || "N/A");
         setLoading(false);
@@ -350,7 +363,6 @@ const UserProfile = () => {
         department_id: doctorDepartment,
         doctor_firstName: doctorFirstName,
         doctor_lastName: doctorLastName,
-        doctor_profilePic: doctorPic,
         doctor_idNumber: doctorIdNumber,
         doctor_number: doctorNumber,
       };
@@ -384,15 +396,21 @@ const UserProfile = () => {
     }
   };
 
-  const handleUserSubmit = async (e) => {
+  const handlePatientUserSubmit = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
+      if (imageFileUploading) {
+        toast.error("Please wait for image to upload");
+        return;
+      }
       const updatedData = {
-        username: username,
-        email: email,
-        password: password,
+        user_profile: patientProfile,
+        username: patientUsername,
+        email: patientEmail,
+        password: patientPassword,
       };
+
       const response = await fetch(`/mediclinic/auth/update/${userId}`, {
         method: "PUT",
         headers: {
@@ -424,6 +442,7 @@ const UserProfile = () => {
     try {
       setLoading(true);
       const updatedData = {
+        user_profile: doctorProfile,
         username: doctorUsername,
         email: doctorEmail,
         password: doctorPassword,
@@ -454,6 +473,52 @@ const UserProfile = () => {
     }
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImageFileUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const uploadImage = async () => {
+    setImageFileUploading(true);
+    const storage = getStorage(app);
+    const fileName = new Date().getTime() + imageFile.name;
+    const storageRef = ref(storage, fileName);
+    const uploadTask = uploadBytesResumable(storageRef, imageFile);
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => {
+        const progress =
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setImageFileUploadProgress(progress.toFixed(0));
+      },
+      // eslint-disable-next-line no-unused-vars
+      (error) => {
+        toast.error("Could not upload image (File must be less than 2MB)");
+        setImageFileUploadProgress(null);
+        setImageFile(null);
+        setImageFileUrl(null);
+        setImageFileUploading(false);
+      },
+      () => {
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadUrl) => {
+          setImageFileUrl(downloadUrl);
+          if (currentUser?.role === "doctor") {
+            setDoctorProfile(downloadUrl);
+          } else if (currentUser?.role === "patient") {
+            setPatientProfile(downloadUrl);
+          }
+
+          setImageFileUploading(false);
+          setImageFileUploadProgress(null);
+          toast.success("Image upload completed successfully.");
+        });
+      }
+    );
+  };
+
   useEffect(() => {
     fetchUsersByID(userId);
     if (currentUser?.role === "doctor") {
@@ -462,7 +527,11 @@ const UserProfile = () => {
     } else if (currentUser?.role === "patient") {
       fetchPatientsByID(patientId);
     }
-  }, [currentUser]);
+
+    if (imageFile) {
+      uploadImage();
+    }
+  }, [currentUser, imageFile]);
 
   return (
     <NavbarSidebar isFooter={true}>
@@ -586,7 +655,7 @@ const UserProfile = () => {
                           id="doctorDepartment"
                           name="doctorDepartment"
                           type="text"
-                          value={doctorDepartment}
+                          value={doctorDepartment.department_name}
                           disabled
                           placeholder="Enter Department Name"
                           required
@@ -610,8 +679,46 @@ const UserProfile = () => {
                       Other Details
                     </h1>
                     <div className="grid grid-cols-1 md:grid-cols-2 items-center">
-                      <div>
-                        <Avatar bordered color="success" size="xl" />
+                      <FileInput
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        ref={filePickerRef}
+                        className="hidden"
+                      />
+                      <div
+                        className="relative mx-auto w-24 h-24 md:w-32 md:h-32 cursor-pointer shadow-md overflow-hidden rounded-full"
+                        onClick={() => filePickerRef.current.click()}
+                      >
+                        {imageFileUploadProgress && (
+                          <CircularProgressbar
+                            value={imageFileUploadProgress || 0}
+                            text={`${imageFileUploadProgress}%`}
+                            strokeWidth={5}
+                            styles={{
+                              root: {
+                                width: "100%",
+                                height: "100%",
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                              },
+                              path: {
+                                stroke: `rgba(75,255,94, ${
+                                  imageFileUploadProgress / 100
+                                })`,
+                              },
+                            }}
+                          />
+                        )}
+                        <img
+                          src={imageFileUrl || doctorProfile}
+                          alt="profile"
+                          className={`w-full h-full object-cover border-4 border-green-500 rounded-full ${
+                            imageFileUploadProgress &&
+                            imageFileUploadProgress < 100 &&
+                            "opacity-60"
+                          }`}
+                        />
                       </div>
                       <div className="mt-2">
                         <div className="mb-4">
@@ -627,7 +734,7 @@ const UserProfile = () => {
                             type="text"
                             value={doctorUsername}
                             onChange={handleDoctorUserChange}
-                            placeholder="Enter Doctor Name"
+                            placeholder="Enter Username"
                           />
                         </div>
                         <div className="mb-4">
@@ -648,14 +755,14 @@ const UserProfile = () => {
                         </div>
                         <div className="mb-4">
                           <Label
-                            htmlFor="departmentName"
+                            htmlFor="doctorPassword"
                             className="mb-2 block text-gray-700"
                           >
                             Password
                           </Label>
                           <TextInput
-                            id="departmentName"
-                            name="departmentName"
+                            id="doctorPassword"
+                            name="doctorPassword"
                             type="password"
                             value={doctorPassword}
                             onChange={handleDoctorUserChange}
@@ -851,66 +958,109 @@ const UserProfile = () => {
                   </Card>
                 </div>
                 <div>
-                  <Card>
+                  <Card className="">
                     <h1 className="text-xl mx-10 font-semibold text-gray-900 dark:text-white sm:text-2xl">
                       Other Details
                     </h1>
-                    <div className="mx-10">
-                      <div className="mb-4">
-                        <Label
-                          htmlFor="username"
-                          className="mb-2 block text-gray-700"
-                        >
-                          Username
-                        </Label>
-                        <TextInput
-                          id="username"
-                          name="username"
-                          type="text"
-                          value={username}
-                          onChange={handleUserChange}
-                          placeholder="Enter Username"
-                          required
+                    <div className="grid grid-cols-1 md:grid-cols-2 items-center">
+                      <FileInput
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        ref={filePickerRef}
+                        className="hidden"
+                      />
+                      <div
+                        className="relative mx-auto w-24 h-24 md:w-32 md:h-32 cursor-pointer shadow-md overflow-hidden rounded-full"
+                        onClick={() => filePickerRef.current.click()}
+                      >
+                        {imageFileUploadProgress && (
+                          <CircularProgressbar
+                            value={imageFileUploadProgress || 0}
+                            text={`${imageFileUploadProgress}%`}
+                            strokeWidth={5}
+                            styles={{
+                              root: {
+                                width: "100%",
+                                height: "100%",
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                              },
+                              path: {
+                                stroke: `rgba(75,255,94, ${
+                                  imageFileUploadProgress / 100
+                                })`,
+                              },
+                            }}
+                          />
+                        )}
+                        <img
+                          src={imageFileUrl || patientProfile}
+                          alt="profile"
+                          className={`w-full h-full object-cover border-4 border-green-500 rounded-full ${
+                            imageFileUploadProgress &&
+                            imageFileUploadProgress < 100 &&
+                            "opacity-60"
+                          }`}
                         />
                       </div>
-                      <div className="mb-4">
-                        <Label
-                          htmlFor="email"
-                          className="mb-2 block text-gray-700"
-                        >
-                          Email Address
-                        </Label>
-                        <TextInput
-                          id="email"
-                          name="email"
-                          type="text"
-                          value={email}
-                          onChange={handleUserChange}
-                          placeholder="Enter User Email"
-                        />
-                      </div>
-                      <div className="mb-4">
-                        <Label
-                          htmlFor="email"
-                          className="mb-2 block text-gray-700"
-                        >
-                          Password
-                        </Label>
-                        <TextInput
-                          id="password"
-                          name="password"
-                          type="password"
-                          value={password}
-                          onChange={handleUserChange}
-                          placeholder="password"
-                        />
+                      <div className="mt-2">
+                        <div className="mb-4">
+                          <Label
+                            htmlFor="patientUsername"
+                            className="mb-2 block text-gray-700"
+                          >
+                            Username
+                          </Label>
+                          <TextInput
+                            id="patientUsername"
+                            name="patientUsername"
+                            type="text"
+                            value={patientUsername}
+                            onChange={handlePatientUserChange}
+                            placeholder="Enter Username"
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <Label
+                            htmlFor="patientEmail"
+                            className="mb-2 block text-gray-700"
+                          >
+                            Email Address
+                          </Label>
+                          <TextInput
+                            id="patientEmail"
+                            name="patientEmail"
+                            type="email"
+                            value={patientEmail}
+                            onChange={handlePatientUserChange}
+                            placeholder="Enter Email Address"
+                          />
+                        </div>
+                        <div className="mb-4">
+                          <Label
+                            htmlFor="patientPassword"
+                            className="mb-2 block text-gray-700"
+                          >
+                            Password
+                          </Label>
+                          <TextInput
+                            id="patientPassword"
+                            name="patientPassword"
+                            type="password"
+                            value={patientPassword}
+                            onChange={handlePatientUserChange}
+                            placeholder="password"
+                          />
+                        </div>
                       </div>
                     </div>
+
                     <Button
                       gradientDuoTone="purpleToPink"
                       onClick={(e) => {
                         e.preventDefault();
-                        handleUserSubmit(e);
+                        handlePatientUserSubmit(e);
                       }}
                     >
                       Update User
@@ -1038,7 +1188,7 @@ const UserProfile = () => {
                   name="patientFirstName"
                   type="text"
                   value={patientFirstName}
-                  onChange={handleChange}
+                  onChange={handlePatientUserChange}
                   placeholder="Enter Patient's First Name"
                   required
                 />
@@ -1055,7 +1205,7 @@ const UserProfile = () => {
                   name="patientLastName"
                   type="text"
                   value={patientLastName}
-                  onChange={handleChange}
+                  onChange={handlePatientUserChange}
                   placeholder="Enter Patient's Last Name"
                   required
                 />
@@ -1074,7 +1224,7 @@ const UserProfile = () => {
                   name="patientIdNumber"
                   type="text"
                   value={patientIdNumber}
-                  onChange={handleChange}
+                  onChange={handlePatientUserChange}
                   placeholder="Enter Patient's ID Number"
                   required
                 />
@@ -1091,7 +1241,7 @@ const UserProfile = () => {
                   name="patientDob"
                   type="text"
                   value={new Date(patientDob).toLocaleDateString()}
-                  onChange={handleChange}
+                  onChange={handlePatientUserChange}
                   placeholder="Enter Patient's Date of Birth"
                   required
                 />
@@ -1110,7 +1260,7 @@ const UserProfile = () => {
                   name="patientGender"
                   type="text"
                   value={patientGender}
-                  onChange={handleChange}
+                  onChange={handlePatientUserChange}
                   placeholder="Enter Patient Gender"
                   required
                 />
@@ -1127,7 +1277,7 @@ const UserProfile = () => {
                   name="contactNumber"
                   type="text"
                   value={contactNumber}
-                  onChange={handleChange}
+                  onChange={handlePatientUserChange}
                   placeholder="Enter Patient Contact"
                   required
                 />
@@ -1142,7 +1292,7 @@ const UserProfile = () => {
                 name="address"
                 type="text"
                 value={address}
-                onChange={handleChange}
+                onChange={handlePatientUserChange}
                 placeholder="Enter Address"
                 required
               />
@@ -1274,7 +1424,7 @@ const UserProfile = () => {
                   ) : (
                     <>
                       <option value={doctorDepartment}>
-                        {doctorDepartment}
+                        {doctorDepartment.department_name}
                       </option>
                       {departments?.map((dep) => (
                         <option key={dep?._id} value={dep?._id}>

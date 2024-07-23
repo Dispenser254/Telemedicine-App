@@ -105,7 +105,7 @@ const NavbarPage = () => {
                   Contact Us
                 </a>
               </li>
-              <Link to={"/landing-page"} className="md:ml-6 mt-3 md:mt-0">
+              <Link to={"/login"} className="md:ml-6 mt-3 md:mt-0">
                 <Button className="inline-block font-semibold px-4 py-2 text-white bg-blue-600 md:bg-transparent md:text-white border border-white rounded-lg hover:opacity-80">
                   Book Appointment
                 </Button>

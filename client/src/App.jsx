@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import HomePage from "./pages/HomePage";
-import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/Login/LoginPage";
 import RegisterPage from "./pages/Login/RegisterPage";
 import OnlyAdminPrivateRoute from "./components/OnlyAdminPrivateRoute";
@@ -34,7 +33,6 @@ const App = () => {
       <ToastContainer />
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/landing-page" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/admin-login" element={<AdminLoginPage />} />
         <Route path="/doctor-login" element={<DoctorLoginPage />} />
@@ -51,7 +49,10 @@ const App = () => {
             path="/video-consultation"
             element={<VideoConsultationView />}
           />
-          <Route path="/notification-list" element={<NotificationDetailView />} />
+          <Route
+            path="/notification-list"
+            element={<NotificationDetailView />}
+          />
           <Route path="/user-profile" element={<UserProfile />} />
         </Route>
 

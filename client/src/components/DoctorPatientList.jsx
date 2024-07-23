@@ -1,10 +1,17 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable react/no-unescaped-entities */
-import { HiChevronLeft, HiChevronRight, HiHome } from "react-icons/hi";
-import { Breadcrumb, Label, Table, TextInput } from "flowbite-react";
+import { HiHome } from "react-icons/hi";
+import {
+  Breadcrumb,
+  Label,
+  Pagination,
+  Table,
+  TextInput,
+} from "flowbite-react";
 import NavbarSidebar from "../components/NavbarSideBar";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import { ScaleLoader } from "react-spinners";
+import { PropagateLoader, ScaleLoader } from "react-spinners";
 import { useSelector } from "react-redux";
 
 const DoctorPatientList = () => {
@@ -12,14 +19,17 @@ const DoctorPatientList = () => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const { currentUser } = useSelector((state) => state.authentication);
-  const doctorId = currentUser.doctor_id;
+  const doctorID = currentUser.doctor_id;
+  const patientsPerPage = 5;
+  const [totalPatients, setTotalPatients] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  const fetchPatients = async (doctorId) => {
+  const fetchPatients = async (page) => {
     try {
       setLoading(true);
       setErrorMessage(null);
       const response = await fetch(
-        `/mediclinic/appointment/getAppointments/doctor/${doctorId}`
+        `/mediclinic/appointment/getAppointments/doctor/${doctorID}?page=${page}&limit=${patientsPerPage}`
       );
       if (!response.ok) {
         setErrorMessage("Failed to fetch patient data.");
@@ -28,6 +38,7 @@ const DoctorPatientList = () => {
       }
       const data = await response.json();
       setPatients(data.appointments);
+      setTotalPatients(data.totalAppointments);
       setLoading(false);
     } catch (error) {
       toast.error(error.message);
@@ -36,9 +47,9 @@ const DoctorPatientList = () => {
   };
 
   useEffect(() => {
-    fetchPatients(doctorId);
+    fetchPatients(currentPage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [currentPage]);
 
   return (
     <NavbarSidebar isFooter={false}>
@@ -94,7 +105,18 @@ const DoctorPatientList = () => {
                   <Table.HeadCell>Appointment Type</Table.HeadCell>
                   <Table.HeadCell>Appointment Status</Table.HeadCell>
                 </Table.Head>
-                {patients.length > 0 ? (
+                {errorMessage ? (
+                  <Table.Body>
+                    <Table.Row>
+                      <Table.Cell
+                        colSpan="5"
+                        className="whitespace-nowrap text-center p-4 text-lg font-semibold bg-red-200 text-red-500"
+                      >
+                        {errorMessage}
+                      </Table.Cell>
+                    </Table.Row>
+                  </Table.Body>
+                ) : patients?.length > 0 ? (
                   patients.map((patient) => (
                     <Table.Body
                       key={patient._id}
@@ -137,57 +159,82 @@ const DoctorPatientList = () => {
           </div>
         </div>
       </div>
-
-      <Pagination />
+      {patients?.length > 0 && (
+        <PaginationButton
+          fetchPatients={fetchPatients}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          totalPatients={totalPatients}
+          loading={loading}
+        />
+      )}
     </NavbarSidebar>
   );
 };
 
-const Pagination = () => {
+const PaginationButton = ({
+  fetchPatients,
+  currentPage,
+  setCurrentPage,
+  totalPatients,
+  loading,
+}) => {
+  const patientsPerPage = 5;
+  const [firstPatientIndex, setFirstPatientIndex] = useState(0);
+  const [lastPatientIndex, setLastPatientIndex] = useState(0);
+
+  useEffect(() => {
+    const calculateUserIndexes = () => {
+      const firstIndex = (currentPage - 1) * patientsPerPage + 1;
+      const lastIndex = Math.min(currentPage * patientsPerPage, totalPatients);
+      setFirstPatientIndex(firstIndex);
+      setLastPatientIndex(lastIndex);
+    };
+
+    calculateUserIndexes();
+  }, [currentPage, totalPatients]);
+
+  const totalPages = Math.ceil(totalPatients / patientsPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchPatients(page);
+  };
+
   return (
-    <div className="sticky bottom-0 right-0 w-full items-center border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800 sm:flex sm:justify-between">
-      <div className="mb-4 flex items-center sm:mb-0">
-        <a
-          href="#"
-          className="inline-flex cursor-pointer justify-center rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-        >
-          <span className="sr-only">Previous page</span>
-          <HiChevronLeft className="text-2xl" />
-        </a>
-        <a
-          href="#"
-          className="mr-2 inline-flex cursor-pointer justify-center rounded p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
-        >
-          <span className="sr-only">Next page</span>
-          <HiChevronRight className="text-2xl" />
-        </a>
-        <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
-          Showing&nbsp;
-          <span className="font-semibold text-gray-900 dark:text-white">
-            1-20
-          </span>
-          &nbsp;of&nbsp;
-          <span className="font-semibold text-gray-900 dark:text-white">
-            2290
-          </span>
-        </span>
-      </div>
-      <div className="flex items-center space-x-3">
-        <a
-          href="#"
-          className="inline-flex flex-1 items-center justify-center rounded-lg bg-primary-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-        >
-          <HiChevronLeft className="mr-1 text-base" />
-          Previous
-        </a>
-        <a
-          href="#"
-          className="inline-flex flex-1 items-center justify-center rounded-lg bg-primary-700 px-3 py-2 text-center text-sm font-medium text-white hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-        >
-          Next
-          <HiChevronRight className="ml-1 text-base" />
-        </a>
-      </div>
+    <div className="sm:flex sm:flex-1 sm:items-center sm:justify-between mt-6 mb-8 p-4">
+      {loading ? (
+        <div className="flex flex-col items-center gap-y-6 text-center">
+          <PropagateLoader size={5} color="#000000" />
+        </div>
+      ) : (
+        <>
+          <div>
+            <p className="flex gap-x-1 text-md text-gray-700">
+              Showing
+              <span className="font-semibold text-black">
+                {firstPatientIndex}
+              </span>
+              to
+              <span className="font-semibold text-black">
+                {lastPatientIndex}
+              </span>
+              of
+              <span className="font-semibold text-black">{totalPatients}</span>
+              patients
+            </p>
+          </div>
+          <div className="flex justify-center">
+            <Pagination
+              layout="navigation"
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              showIcons
+            />
+          </div>
+        </>
+      )}
     </div>
   );
 };

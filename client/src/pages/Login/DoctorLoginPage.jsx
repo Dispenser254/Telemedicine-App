@@ -13,6 +13,7 @@ import {
   signInSuccess,
 } from "../../redux/reducers/authenticationSlice";
 import { RingLoader } from "react-spinners";
+import { toast } from "react-toastify";
 
 const DoctorLoginPage = () => {
   const [showModal, setShowModal] = useState(false);
@@ -34,6 +35,7 @@ const DoctorLoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.username || !formData.password) {
+      toast.error("Please fillout all the fields.");
       return dispatch(signInFailure("Please fillout all the fields."));
     }
     try {
@@ -46,10 +48,12 @@ const DoctorLoginPage = () => {
       const data = await response.json();
       if (data.success === false) {
         dispatch(signInFailure(data.message));
+        toast.error(data.message);
         setShowModal(true);
       }
       if (response.ok) {
         dispatch(signInSuccess(data));
+        toast.success("User signed in successfully");
         navigate("/doctor-dashboard");
       }
     } catch (error) {

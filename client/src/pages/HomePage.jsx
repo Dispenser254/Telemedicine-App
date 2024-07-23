@@ -1,21 +1,62 @@
+/* eslint-disable react/no-unescaped-entities */
 import { Button } from "flowbite-react";
 import { MdHome, MdVerifiedUser } from "react-icons/md";
 import NavbarPage from "../components/NavbarPage";
 import { Link } from "react-router-dom";
 import FooterPage from "../components/FooterPage";
+import {
+  FaStethoscope,
+  FaUserMd,
+  FaXRay,
+  FaAmbulance,
+  FaSyringe,
+  FaTeethOpen,
+} from "react-icons/fa";
 
 const HomePage = () => {
+  const departments = [
+    {
+      name: "Cardiology",
+      description: "Specialized in heart and cardiovascular system.",
+      icon: FaStethoscope,
+    },
+    {
+      name: "Dermatology",
+      description: "Focused on skin-related issues.",
+      icon: FaUserMd,
+    },
+    {
+      name: "Radiology",
+      description: "Imaging for accurate diagnosis.",
+      icon: FaXRay,
+    },
+    {
+      name: "Emergency Medicine",
+      description: "Immediate care for urgent conditions.",
+      icon: FaAmbulance,
+    },
+    {
+      name: "Anesthesiology",
+      description: "Pain management and anesthesia.",
+      icon: FaSyringe,
+    },
+    {
+      name: "Dentistry",
+      description: "Dental care and oral health.",
+      icon: FaTeethOpen,
+    },
+  ];
   return (
     <div className="bg-gray-100 w-full">
       <NavbarPage />
       {/* Start hero */}
       <section
-        className="cover relative bg-blue-400 px-4 sm:px-8 lg:px-16 xl:px-40 2xl:px-64 overflow-hidden py-48 flex
+        className="cover relative bg-gradient-to-r from-blue-300 via-blue-500 to-blue-700 px-4 sm:px-8 lg:px-16 xl:px-40 2xl:px-64 overflow-hidden py-48 flex
       items-center min-h-screen"
       >
         <div className="h-full absolute">
           <img
-            src="images/cover-bg.jpg"
+            src="https://marketplace.canva.com/EAEoiwyZqL8/4/0/1600w/canva-blue-and-white-medical-outline-illustrated-designing-vaccines-education-presentation-fAD-TvwS1-Y.jpg"
             alt=""
             className="w-full h-full object-cover opacity-20"
           />
@@ -28,7 +69,7 @@ const HomePage = () => {
             <p className="text-blue-100 text-center md:text-start text-xl md:text-2xl leading-snug">
               Find the best doctors and book instant appointments
             </p>
-            <Link to={"/landing-page"}>
+            <Link to={"/login"}>
               <Button
                 className="px-8 py-4 text-lg uppercase font-medium shadow-lg hover:opacity-80"
                 gradientDuoTone="tealToLime"
@@ -52,10 +93,12 @@ const HomePage = () => {
               Excellence in service providence at the Heart of Nairobi
             </p>
             <p className="mt-2 leading-relaxed">
-              Lorem ipsum dolor sit amet consectetur adipisicing elit.
-              Molestiae, quia ullam. Perferendis rerum illo voluptate sunt,
-              nulla dolore eos aspernatur quasi quam, dolorem blanditiis? Quod
-              accusantium molestiae reiciendis dolorem mollitia?
+              At MediClinic, we are dedicated to providing top-notch healthcare
+              services with a focus on patient satisfaction. Our
+              state-of-the-art facilities and experienced medical professionals
+              ensure you receive the best care possible. Whether it's routine
+              check-ups or specialized treatments, we are here to meet all your
+              healthcare needs.
             </p>
           </div>
           <div className="w-full lg:w-1/2 lg:px-8 mt-12 lg:mt-0">
@@ -68,10 +111,11 @@ const HomePage = () => {
                   Everything You Need Under One Roof
                 </h4>
                 <p className="leading-relaxed mt-2">
-                  Lorem ipsum dolor sit amet consectetur adipisicing elit. Rerum
-                  repellendus iste illum nobis velit earum laudantium, itaque
-                  vitae, iusto et commodi tempore quibusdam aperiam odio ducimus
-                  enim quia aliquid distinctio.
+                  From diagnostics to treatment, MediClinic offers a
+                  comprehensive range of medical services in one convenient
+                  location. Our multi-disciplinary team works together to
+                  provide seamless and integrated care tailored to each
+                  patient's unique needs.
                 </p>
               </div>
             </div>
@@ -84,75 +128,47 @@ const HomePage = () => {
                   Our Patient-Focused Approach
                 </h4>
                 <p className="mt-2 leading-relaxed">
-                  Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                  Porro, facere soluta? Labore, esse minima corrupti nemo
-                  excepturi illum optio quas veniam rerum assumenda neque alias
-                  iusto fuga dolor mollitia vel!
+                  We prioritize your health and comfort with a compassionate and
+                  patient-centered approach. Our dedicated staff ensures that
+                  you are informed and comfortable throughout your medical
+                  journey, offering personalized care and attention to detail in
+                  every aspect of our service.
                 </p>
               </div>
             </div>
           </div>
         </div>
-        <div className="md:flex md:flex-wrap mt-24 text-center md:-mx-4 md:items-center">
-          <div className="md:w-1/2 md:px-4 lg:w-1/4">
-            <div className="bg-white rounded-lg border border-gray-300 p-8 flex flex-col items-center gap-2">
-              <img
-                src="images/teeth-whitening.svg"
-                alt=""
-                className="h-20 mx-auto"
-              />
-              <h4 className="">Teeth Whitening</h4>
-              <p className="mt-1">Let us show you our experience</p>
-              <Button href="" outline color="blue">
-                Read More
-              </Button>
-            </div>
+      </section>
+      {/* End about */}
+
+      <section className="bg-white dark:bg-gray-900 px-4 sm:px-8 lg:px-16 xl:px-40 py-16 lg:py-16">
+        <div className="py-8 px-4 mx-auto max-w-screen-xl sm:py-16 lg:px-6">
+          <div className="max-w-screen-md mb-8 lg:mb-16">
+            <h2 className="mb-4 text-4xl tracking-tight font-extrabold text-gray-900 dark:text-white">
+              Our Medical Departments
+            </h2>
+            <p className="text-gray-500 sm:text-xl dark:text-gray-400">
+              Our clinic offers a variety of specialized departments to cater to
+              your health needs.
+            </p>
           </div>
-          <div className="md:w-1/2 md:px-4 mt-4 md:mt-0 lg:w-1/4">
-            <div className="bg-white rounded-lg border border-gray-300 p-8 flex flex-col items-center gap-2">
-              <img
-                src="images/oral-surgery.svg"
-                alt=""
-                className="h-20 mx-auto"
-              />
-              <h4 className="text-xl font-bold mt-4">Oral Surgery</h4>
-              <p className="mt-1">Let us show you our experience</p>
-              <Button href="" outline color="blue">
-                Read More
-              </Button>
-            </div>
-          </div>
-          <div className="md:w-1/2 md:px-4 mt-4 md:mt-8 lg:mt-0 lg:w-1/4">
-            <div className="bg-white rounded-lg border border-gray-300 p-8 flex flex-col items-center gap-2">
-              <img
-                src="images/painless-dentistry.svg"
-                alt=""
-                className="h-20 mx-auto"
-              />
-              <h4 className="text-xl font-bold mt-4">Painless Dentistry</h4>
-              <p className="mt-1">Let us show you our experience</p>
-              <Button href="" outline color="blue">
-                Read More
-              </Button>
-            </div>
-          </div>
-          <div className="md:w-1/2 md:px-4 mt-4 md:mt-8 lg:mt-0 lg:w-1/4">
-            <div className="bg-white rounded-lg border border-gray-300 p-8 flex flex-col items-center gap-2">
-              <img
-                src="images/periodontics.svg"
-                alt=""
-                className="h-20 mx-auto"
-              />
-              <h4 className="text-xl font-bold mt-4">Periodontics</h4>
-              <p className="mt-1">Let us show you our experience</p>
-              <Button href="" outline color="blue">
-                Read More
-              </Button>
-            </div>
+          <div className="space-y-8 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-12 md:space-y-0">
+            {departments.map((department) => (
+              <div key={department.name}>
+                <div className="flex justify-center items-center mb-4 w-10 h-10 rounded-full bg-primary-100 lg:h-12 lg:w-12 dark:bg-primary-900">
+                  <department.icon className="w-5 h-5 text-primary-600 lg:w-6 lg:h-6 dark:text-primary-300" />
+                </div>
+                <h3 className="mb-2 text-xl font-bold dark:text-white">
+                  {department.name}
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  {department.description}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
-      {/* End about */}
 
       {/* Start testimonials */}
       <section className="relative bg-gray-100 px-4 sm:px-8 lg:px-16 xl:px-40 py-16 lg:py-32">
@@ -161,27 +177,162 @@ const HomePage = () => {
             <h2 className="text-3xl leading-tight font-bold mt-4">
               Why choose the MediClinic Center?
             </h2>
+            <h4 className="m-2 leading-relaxed">
+              At MediClinic Center, we prioritize your health and well-being
+              with:
+            </h4>
+            <ul className="list-disc list-inside">
+              <li>
+                <span className="font-semibold">Expert Medical Staff:</span> Our
+                team comprises highly qualified and experienced healthcare
+                professionals dedicated to providing the best care.
+              </li>
+              <li>
+                <span className="font-semibold">Comprehensive Services:</span>{" "}
+                From routine check-ups to specialized treatments, we offer a
+                wide range of medical services under one roof.
+              </li>
+              <li>
+                <span className="font-semibold">
+                  State-of-the-Art Facilities:
+                </span>{" "}
+                Our advanced medical equipment and modern facilities ensure you
+                receive the highest standard of care.
+              </li>
+              <li>
+                <span className="font-semibold">
+                  Patient-Centered Approach:
+                </span>{" "}
+                We focus on personalized care tailored to meet your individual
+                health needs and preferences.
+              </li>
+              <li>
+                <span className="font-semibold">Convenient Location:</span>{" "}
+                Easily accessible location with ample parking and a comfortable
+                environment designed for your convenience and comfort.
+              </li>
+              <li>
+                <span className="font-semibold">Commitment to Excellence:</span>{" "}
+                We strive for continuous improvement and excellence in all
+                aspects of healthcare delivery.
+              </li>
+            </ul>
             <p className="mt-2 leading-relaxed">
-              Aenean ut tellus tellus. Suspendisse potenti. Nullam tincidunt
-              lacus tellus, sed aliquam est vehicula a. Pellentesque consectetur
-              condimentum nulla, eleifend condimentum purus vehicula in. Donec
-              convallis sollicitudin facilisis. Integer nisl ligula, accumsan
-              non tincidunt ac, imperdiet in enim. Donec efficitur ullamcorper
-              metus, eu venenatis nunc. Nam eget neque tempus, mollis sem a,
-              faucibus mi.
+              Choose MediClinic Center for quality healthcare you can trust.
             </p>
           </div>
 
-          <div className="w-full md:max-w-md md:mx-auto lg:w-1/2 lg:px-8 mt-12 mt:md-0">
-            <div className="bg-gray-400 w-full h-72 rounded-lg"></div>
+          <div className="w-full flex flex-col items-center justify-center md:max-w-md md:mx-auto lg:w-1/2 lg:px-8 mt-12 mt:md-0">
+            <div id="gallery" className="relative w-full" data-carousel="slide">
+              <div className="relative h-56 overflow-hidden rounded-lg md:h-96">
+                <div
+                  className="hidden duration-700 ease-in-out"
+                  data-carousel-item
+                >
+                  <img
+                    src="https://t4.ftcdn.net/jpg/07/14/61/65/360_F_714616599_Tx0VNp4FOxcn7r7wq93DTxUPlBBGzeqz.jpg"
+                    className="absolute block w-full h-full object-cover"
+                    alt="MediClinic Equipment 1"
+                  />
+                </div>
+                <div
+                  className="duration-700 ease-in-out"
+                  data-carousel-item="active"
+                >
+                  <img
+                    src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?fm=jpg&w=3000&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8bWVkaWNhbCUyMGVxdWlwbWVudHxlbnwwfHwwfHx8MA=="
+                    className="absolute block w-full h-full object-cover"
+                    alt="MediClinic Equipment 2"
+                  />
+                </div>
+                <div
+                  className="hidden duration-700 ease-in-out"
+                  data-carousel-item
+                >
+                  <img
+                    src="https://images.unsplash.com/photo-1518152006812-edab29b069ac?fm=jpg&w=3000&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8bWVkaWNhbCUyMGVxdWlwbWVudHxlbnwwfHwwfHx8MA=="
+                    className="absolute block w-full h-full object-cover"
+                    alt="MediClinic Equipment 3"
+                  />
+                </div>
+                <div
+                  className="hidden duration-700 ease-in-out"
+                  data-carousel-item
+                >
+                  <img
+                    src="https://media.gettyimages.com/id/913784822/photo/surgeon-picking-up-surgical-tool-from-tray.jpg?s=612x612&w=0&k=20&c=YGHZLnzywJaAB4BvXKDZIpdId1ImdN8JaIupyHXcuOA="
+                    className="absolute block w-full h-full object-cover"
+                    alt="MediClinic Equipment 4"
+                  />
+                </div>
+                <div
+                  className="hidden duration-700 ease-in-out"
+                  data-carousel-item
+                >
+                  <img
+                    src="https://media.gettyimages.com/id/1318505406/photo/mri-scanner-in-hospital.jpg?s=612x612&w=0&k=20&c=UHUDvI-6jqF9Vg4iRoTzaYcNuwymRpsuzvB1FF9E8IM="
+                    className="absolute block w-full h-full object-cover"
+                    alt="MediClinic Equipment 5"
+                  />
+                </div>
+              </div>
 
-            <p className="italic text-sm mt-2 text-center">
+              <button
+                type="button"
+                className="absolute top-0 left-0 z-30 flex items-center justify-center h-full px-4 cursor-pointer group focus:outline-none"
+                data-carousel-prev
+              >
+                <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/30 group-hover:bg-white/50 focus:ring-4 focus:ring-white focus:outline-none">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M15 19l-7-7 7-7"
+                    ></path>
+                  </svg>
+                  <span className="sr-only">Previous</span>
+                </span>
+              </button>
+              <button
+                type="button"
+                className="absolute top-0 right-0 z-30 flex items-center justify-center h-full px-4 cursor-pointer group focus:outline-none"
+                data-carousel-next
+              >
+                <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white/30 group-hover:bg-white/50 focus:ring-4 focus:ring-white focus:outline-none">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M9 5l7 7-7 7"
+                    ></path>
+                  </svg>
+                  <span className="sr-only">Next</span>
+                </span>
+              </button>
+            </div>
+
+            <figcaption className="mt-2 text-sm text-center text-gray-500 dark:text-gray-400">
               Modern MediClinic Equipments.
-            </p>
+            </figcaption>
           </div>
         </div>
       </section>
       {/* End testimonials */}
+
       <FooterPage />
     </div>
   );

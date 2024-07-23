@@ -29,6 +29,7 @@ const AdminLoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.username || !formData.password) {
+      toast.error("Please fillout all the fields.");
       return dispatch(signInFailure("Please fillout all the fields."));
     }
     try {

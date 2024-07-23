@@ -84,7 +84,12 @@ const NavbarHeader = () => {
                 label={
                   <span>
                     <span className="sr-only">User menu</span>
-                    <Avatar alt="" img="" rounded size="sm" />
+                    <Avatar
+                      alt="user"
+                      img={currentUser.user_profile}
+                      rounded
+                      size="sm"
+                    />
                   </span>
                 }
               >
@@ -96,34 +101,56 @@ const NavbarHeader = () => {
                 </Dropdown.Header>
                 {currentUser.role === "admin" && (
                   <>
-                    <Link to={"/admin-dashboard"} as="div">
+                    <Link to={"/admin-dashboard"}>
                       <Dropdown.Item>Dashboard</Dropdown.Item>
                     </Link>
-                    <Link to={"/department-list"} as="div">
-                      <Dropdown.Item>Departments</Dropdown.Item>
+                    <Link to={"/department-list"}>
+                      <Dropdown.Item as="div">Departments</Dropdown.Item>
                     </Link>
-                    <Link to={"/doctors-list"} as="div">
-                      <Dropdown.Item>Doctors</Dropdown.Item>
+                    <Link to={"/doctors-list"}>
+                      <Dropdown.Item as="div">Doctors</Dropdown.Item>
                     </Link>
-                    <Dropdown.Item>Earnings</Dropdown.Item>
+                  </>
+                )}
+                {currentUser.role === "doctor" && (
+                  <>
+                    <Link to={"/dashboard"}>
+                      <Dropdown.Item as="div">Dashboard</Dropdown.Item>
+                    </Link>
+                    <Link to={"/appointment-list"}>
+                      <Dropdown.Item as="div">My Appointments</Dropdown.Item>
+                    </Link>
+                    <Link to={"/doctor-patients"}>
+                      <Dropdown.Item as="div">My Patients</Dropdown.Item>
+                    </Link>
+                    <Link to={"/video-consultation"}>
+                      <Dropdown.Item as="div">
+                        My Video Consultation
+                      </Dropdown.Item>
+                    </Link>
+                    <Link to={"/user-profile"}>
+                      <Dropdown.Item as="div">My Profile</Dropdown.Item>
+                    </Link>
                   </>
                 )}
                 {currentUser.role === "patient" && (
                   <>
-                    <Link to={"/dashboard"} as="div">
-                      <Dropdown.Item>Dashboard</Dropdown.Item>
+                    <Link to={"/dashboard"}>
+                      <Dropdown.Item as="div">Dashboard</Dropdown.Item>
                     </Link>
-                    <Link to={"/appointment-list"} as="div">
-                      <Dropdown.Item>My Appointments</Dropdown.Item>
+                    <Link to={"/appointment-list"}>
+                      <Dropdown.Item as="div">My Appointments</Dropdown.Item>
                     </Link>
-                    <Link to={"/payments-list"} as="div">
-                      <Dropdown.Item>My Payments</Dropdown.Item>
+                    <Link to={"/payments-list"}>
+                      <Dropdown.Item as="div">My Payments</Dropdown.Item>
                     </Link>
-                    <Link to={"/video-consultation"} as="div">
-                      <Dropdown.Item>My Video Consultation</Dropdown.Item>
+                    <Link to={"/video-consultation"}>
+                      <Dropdown.Item as="div">
+                        My Video Consultation
+                      </Dropdown.Item>
                     </Link>
-                    <Link to={"/user-profile"} as="div">
-                      <Dropdown.Item>My Profile</Dropdown.Item>
+                    <Link to={"/user-profile"}>
+                      <Dropdown.Item as="div">My Profile</Dropdown.Item>
                     </Link>
                   </>
                 )}

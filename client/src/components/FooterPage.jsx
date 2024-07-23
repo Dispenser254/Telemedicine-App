@@ -1,142 +1,147 @@
 /* eslint-disable react/no-unescaped-entities */
-import { Button, Footer, Label, TextInput } from "flowbite-react";
+import { Footer } from "flowbite-react";
 import {
   MdLocationPin,
   MdMail,
   MdOutlineLockClock,
   MdPhone,
 } from "react-icons/md";
-import { BsFacebook, BsInstagram, BsTwitter, BsGithub } from "react-icons/bs";
+import {
+  FaXTwitter,
+  FaFacebookF,
+  FaLinkedinIn,
+  FaInstagram,
+} from "react-icons/fa6";
+import { GiMedicalPack } from "react-icons/gi";
 
 const FooterPage = () => {
   return (
-    <Footer className="relative px-4 sm:px-8 lg:px-16 xl:px-40 pt-16 pb-4 md:pb-16 bg-gray-900 text-white">
-      <div className="flex flex-col md:flex-row">
-        <div className="w-full lg:w-2/6 lg:mx-4 lg:pr-8 md:flex md:flex-col md:items-center">
-          <h3 className="font-bold text-2xl">MediClinic Center</h3>
-          <p className="text-gray-400">
-            Lorem ipsum dolor sit amet consectetur adipisicing elit.
-          </p>
-          <form className="flex items-center mt-6">
-            <div className="w-full">
-              <Label className="block uppercase tracking-wide text-gray-600 text-xs font-bold mb-2">
-                Subscribe for our Newsletter
-              </Label>
-              <div className="flex flex-row md:flex-col gap-4">
-                <TextInput
-                  type="email"
-                  placeholder="Enter your Email Address"
-                  className=""
-                />
-                <Button type="submit" className="">
-                  Subscribe
-                </Button>
-              </div>
+    <footer className="bg-blue-800 text-white py-12">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {/* Company Info */}
+          <div>
+            <h3 className="text-4xl font-bold mb-4 flex items-center">
+              <span className="mr-2">
+                <GiMedicalPack className="h-5 w-5" />
+              </span>
+              Medi<span className="text-red-500 mr-2">Clinic</span>
+            </h3>
+            <p className="text-gray-200 mb-4">
+              Providing world-class healthcare services to our community with
+              compassion and excellence.
+            </p>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h3 className="uppercase tracking-wider font-semibold text-gray-800 mb-4">
+              Quick Links
+            </h3>
+            <ul className="space-y-2">
+              <li>
+                <a href="/" className="opacity-75 hover:opacity-100">
+                  Home
+                </a>
+              </li>
+              <li>
+                <a href="/about" className="opacity-75 hover:opacity-100">
+                  About Us
+                </a>
+              </li>
+              <li>
+                <a href="/departments" className="opacity-75 hover:opacity-100">
+                  Departments
+                </a>
+              </li>
+              <li>
+                <a href="/contact" className="opacity-75 hover:opacity-100">
+                  Contact
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Social Media */}
+          <div>
+            <h5 className="uppercase tracking-wider font-semibold text-gray-800 mb-4">
+              We're Social
+            </h5>
+            <div className="flex space-x-4">
+              <a href="#" className="text-gray-400 hover:text-white">
+                <FaFacebookF />
+              </a>
+              <a href="#" className="text-gray-400 hover:text-white">
+                <FaXTwitter />
+              </a>
+              <a href="#" className="text-gray-400 hover:text-white">
+                <FaInstagram />
+              </a>
+              <a href="#" className="text-gray-400 hover:text-white">
+                <FaLinkedinIn />
+              </a>
             </div>
-          </form>
+          </div>
+
+          {/* Newsletter */}
+          <div>
+            <h5 className="uppercase tracking-wider font-bold text-gray-800">
+              Contact Details
+            </h5>
+            <ul className="mt-4">
+              <li className="mb-2">
+                <a
+                  href="#"
+                  className="flex items-center opacity-75 hover:opacity-100"
+                >
+                  <MdLocationPin className="h-5 w-5" />
+                  <span className="ml-3">Embakasi, Nairobi, Kenya</span>
+                </a>
+              </li>
+              <li className="mb-2">
+                <a
+                  href="#"
+                  className="flex items-center opacity-75 hover:opacity-100"
+                >
+                  <MdPhone className="h-5 w-5" />
+                  <span className="ml-3">+254 111 111 111</span>
+                </a>
+              </li>
+              <li className="mb-2">
+                <a
+                  href="#"
+                  className="flex items-center opacity-75 hover:opacity-100"
+                >
+                  <MdMail className="h-5 w-5" />
+                  <span className="ml-3">mediclinic@outlook.com</span>
+                </a>
+              </li>
+              <li className="mb-2">
+                <a
+                  href="#"
+                  className="flex items-center opacity-75 hover:opacity-100"
+                >
+                  <MdOutlineLockClock className="h-5 w-5" />
+                  <span className="ml-3">
+                    Mon - Fri: 9:00 - 17:00 hrs <br />
+                    Closed on Weekends
+                  </span>
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
-        <div className="w-full lg:w-1/6 mt-8 lg:mt-0 md:flex md:flex-col md:items-center">
-          <h5 className="uppercase tracking-wider font-semibold text-gray-500">
-            Treatments
-          </h5>
-          <ul className="mt-4">
-            <li className="mt-2">
-              <a href="" className="opacity-75 hover:opacity-100">
-                General
-              </a>
-            </li>
-            <li className="mt-2">
-              <a href="" className="opacity-75 hover:opacity-100">
-                General
-              </a>
-            </li>
-            <li className="mt-2">
-              <a href="" className="opacity-75 hover:opacity-100">
-                General
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div className="w-full lg:w-2/6 mt-8 lg:mt-0 lg:mx-4 lg:pr-8 md:flex md:flex-col md:items-center">
-          <h5 className="uppercase tracking-wider font-semibold text-gray-500">
-            Contact Details
-          </h5>
-          <ul className="mt-4">
-            <li className="mb-2">
-              <a
-                href="#"
-                className="flex items-center opacity-75 hover:opacity-100"
-              >
-                <MdLocationPin className="h-5 w-5" />
-                <span className="ml-3">Embakasi, Nairobi, Kenya</span>
-              </a>
-            </li>
-            <li className="mb-2">
-              <a
-                href="#"
-                className="flex items-center opacity-75 hover:opacity-100"
-              >
-                <MdPhone className="h-5 w-5" />
-                <span className="ml-3">+254 111 111 111</span>
-              </a>
-            </li>
-            <li className="mb-2">
-              <a
-                href="#"
-                className="flex items-center opacity-75 hover:opacity-100"
-              >
-                <MdMail className="h-5 w-5" />
-                <span className="ml-3">mediclinic@outlook.com</span>
-              </a>
-            </li>
-            <li className="mb-2">
-              <a
-                href="#"
-                className="flex items-center opacity-75 hover:opacity-100"
-              >
-                <MdOutlineLockClock className="h-5 w-5" />
-                <span className="ml-3">
-                  Mon - Fri: 9:00 - 17:00 hrs <br />
-                  Closed on Weekends
-                </span>
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div className="w-full lg:w-1/6 mt-6 lg:mt-0 lg:mx-4 md:flex md:flex-col md:items-center">
-          <h5 className="uppercase tracking-wider font-semibold text-gray-500">
-            We're Social
-          </h5>
-          <ul className="mt-4 flex gap-4 mb-4">
-            <li>
-              <a href="">
-                <BsFacebook />
-              </a>
-            </li>
-            <li>
-              <a href="">
-                <BsGithub />
-              </a>
-            </li>
-            <li>
-              <a href="">
-                <BsInstagram />
-              </a>
-            </li>
-            <li>
-              <a href="">
-                <BsTwitter />
-              </a>
-            </li>
-          </ul>
+
+        {/* Footer Bottom */}
+        <div className="border-t border-gray-300 mt-8 pt-8">
           <Footer.Copyright
-            by="FrodenZ Labs"
+            by="FrodenZ Labs. All rights reserved."
             href="#"
             year={new Date().getFullYear()}
           />
         </div>
       </div>
-    </Footer>
+    </footer>
   );
 };
 

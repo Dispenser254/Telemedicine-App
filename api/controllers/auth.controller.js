@@ -77,6 +77,8 @@ export const signup = async (request, response, next) => {
     //Create new user
     const hashedPassword = bcryptjs.hashSync(password, 10);
     const validUser = await User({
+      user_profile:
+        "https://imgs.search.brave.com/gV6Xy99WsNTWpgT2KUNxopKhP45u8QMrrL2DGi5HYxg/rs:fit:500:0:0/g:ce/aHR0cHM6Ly90NC5m/dGNkbi5uZXQvanBn/LzAyLzE1Lzg0LzQz/LzM2MF9GXzIxNTg0/NDMyNV90dFg5WWlJ/SXllYVI3TmU2RWFM/TGpNQW15NEd2UEM2/OS5qcGc",
       username,
       email,
       password: hashedPassword,
@@ -223,7 +225,7 @@ export const signout = (request, response, next) => {
 export const updateUserById = async (request, response, next) => {
   const userId = request.params.id;
   try {
-    const { username, password, email } = request.body;
+    const { user_profile, username, password, email } = request.body;
     const updates = {};
 
     if (username) {
@@ -235,6 +237,10 @@ export const updateUserById = async (request, response, next) => {
       updates.username = username;
     }
 
+    if (user_profile) {
+      updates.user_profile = user_profile;
+    }
+    
     if (password) {
       if (password.length < 6) {
         return next(
