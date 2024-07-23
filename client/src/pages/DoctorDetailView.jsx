@@ -178,8 +178,8 @@ const DoctorDetailView = () => {
                       <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
                         <Table.Cell className="mr-12 flex items-center space-x-6 whitespace-nowrap p-4 lg:mr-0">
                           <img
-                            className="h-10 w-10 rounded-full"
-                            src={doctor.doctor_profilePic}
+                            className="h-16 w-16 object-cover rounded-full"
+                            src={doctor?.user_id?.user_profile}
                             alt="Avatar"
                           />
                           <div className="text-sm font-normal text-gray-500 dark:text-gray-400">

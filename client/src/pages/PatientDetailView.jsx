@@ -237,8 +237,21 @@ const PatientDetailView = () => {
                       className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800"
                     >
                       <Table.Row className="hover:bg-gray-100 dark:hover:bg-gray-700 text-center">
-                        <Table.Cell className="whitespace-nowrap text-center p-4 text-base font-medium text-gray-900 dark:text-white">
-                          {patient.patient_firstName} {patient.patient_lastName}
+                        <Table.Cell className="mr-12 flex items-center space-x-6 whitespace-nowrap p-4 lg:mr-0">
+                          <img
+                            className="h-16 w-16 object-cover rounded-full"
+                            src={patient?.user_id?.user_profile}
+                            alt="Avatar"
+                          />
+                          <div className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                            <div className="text-base font-semibold text-gray-900 dark:text-white">
+                              {patient.patient_firstName}{" "}
+                              {patient.patient_lastName}
+                            </div>
+                            <div className="text-sm font-normal text-gray-500 dark:text-gray-400">
+                              {patient?.user_id?.email}
+                            </div>
+                          </div>
                         </Table.Cell>
                         <Table.Cell className="whitespace-nowrap p-4 text-base font-medium text-gray-900 dark:text-white">
                           {patient.age}

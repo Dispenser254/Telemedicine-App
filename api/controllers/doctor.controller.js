@@ -35,7 +35,7 @@ export const getAllDoctors = async (request, response, next) => {
       })
       .populate({
         path: "user_id",
-        select: "email username",
+        select: "email username user_profile",
       })
       .lean();
 
@@ -62,7 +62,7 @@ export const getDoctorById = async (request, response, next) => {
   try {
     const doctor = await Doctor.findById(doctorId)
       .populate("department_id", "department_name")
-      .populate("user_id", "username email");
+      .populate("user_id", "username email user_profile");
 
     if (!doctor) {
       return next(errorHandler(404, "Doctor not found"));

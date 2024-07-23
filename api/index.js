@@ -32,6 +32,7 @@ app.use(cookieParser());
 
 // Middleware to serve static files
 app.use("/images", express.static(path.join(__dirname, "public/images")));
+app.use(express.static(path.join(__dirname, "/client/dist")));
 
 // Routes
 app.use("/mediclinic/auth", authRoutes);
