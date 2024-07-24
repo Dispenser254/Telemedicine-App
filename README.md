@@ -2,16 +2,6 @@
 ## Introduction
 Welcome to the Telemedicine App repository! This application aims to provide a seamless experience for patients and doctors to manage appointments, consultations, and medical records online. Built with the MERN stack (MongoDB, Express.js, React, Node.js), this project leverages modern web development technologies to deliver a robust telemedicine solution.
 
-## Table of Contents
-Features
-Installation
-Usage
-Architecture
-API Endpoints
-Contributing
-License
-Contact
-
 ## Features
 - **User Authentication**: Secure login and registration for patients and doctors.
 - **Appointment Management**: Schedule, view, and manage appointments.
@@ -95,5 +85,5 @@ This project is licensed under the MIT License. See the LICENSE file for details
 ## Contact
 For any questions or inquiries, please contact:
 
-Email: **stevensonkibs55@gmail.com**
-GitHub: **Dispenser254**
+- Email: **stevensonkibs55@gmail.com**
+- GitHub: **Dispenser254**
