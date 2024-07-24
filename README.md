@@ -86,4 +86,4 @@ This project is licensed under the MIT License. See the LICENSE file for details
 For any questions or inquiries, please contact:
 
 - Email: **stevensonkibs55@gmail.com**
-- GitHub: **Dispenser254**
+- GitHub: **[Dispenser254](https://github.com/Dispenser254)**
